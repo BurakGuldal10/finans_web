@@ -375,3 +375,22 @@ Kontrol:
 npm run lint
 npm run build
 ```
+
+## Mevcut Durum - Trade Gunlugu
+
+Eklenenler:
+
+- Dashboard altina trade gunlugu bolumu eklendi.
+- Kayit alanlari: sembol, zaman dilimi, yon, giris, stop, hedef, miktar, strateji, durum ve not.
+- "Analizden doldur" butonu secili varligin analiz seviyelerini forma aktarir.
+- Kayitlar tarayicida `localStorage` ile saklanir.
+- Kayit durumu sonradan Plan, Acik, Kar, Zarar veya Basabas olarak degistirilebilir.
+- Kayit silme eklendi.
+- Ozet metrikler eklendi: toplam kayit, acik islem, win rate ve planlanan risk.
+
+Kontrol:
+
+```text
+npm run lint
+npm run build
+```
