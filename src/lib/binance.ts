@@ -10,6 +10,7 @@ export type BinanceTicker = {
 };
 
 const DEFAULT_SYMBOLS = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "XRPUSDT"];
+const SYMBOL_PATTERN = /^[A-Z0-9]{3,20}USDT$/;
 
 export async function fetchTickers(symbols = DEFAULT_SYMBOLS) {
   const url = "https://api.binance.com/api/v3/ticker/24hr";
@@ -36,8 +37,9 @@ export async function fetchTickers(symbols = DEFAULT_SYMBOLS) {
 }
 
 export async function fetchCandles(symbol: string, interval = "1h", limit = 120) {
+  const normalizedSymbol = normalizeSymbol(symbol);
   const params = new URLSearchParams({
-    symbol,
+    symbol: normalizedSymbol,
     interval,
     limit: String(limit),
   });
@@ -64,4 +66,25 @@ export async function fetchCandles(symbol: string, interval = "1h", limit = 120)
 
 export function getDefaultSymbols() {
   return DEFAULT_SYMBOLS;
+}
+
+export function normalizeSymbol(symbol: string) {
+  return symbol.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+}
+
+export function isSupportedUsdtSymbol(symbol: string) {
+  return SYMBOL_PATTERN.test(normalizeSymbol(symbol));
+}
+
+export function parseSymbolList(value: string | null) {
+  if (!value) {
+    return DEFAULT_SYMBOLS;
+  }
+
+  const symbols = value
+    .split(",")
+    .map(normalizeSymbol)
+    .filter(isSupportedUsdtSymbol);
+
+  return Array.from(new Set(symbols)).slice(0, 20);
 }

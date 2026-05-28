@@ -5,11 +5,13 @@ import {
   AlertTriangle,
   BarChart3,
   Clock3,
+  Plus,
   RefreshCcw,
   ShieldCheck,
   Target,
   TrendingDown,
   TrendingUp,
+  X,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -47,21 +49,27 @@ type AnalyzeResponse = {
 };
 
 const symbols = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "XRPUSDT"];
+const watchlistStorageKey = "finansman-watchlist";
 
 export function MarketDashboard() {
+  const [watchlist, setWatchlist] = useState(symbols);
   const [selectedSymbol, setSelectedSymbol] = useState(symbols[0]);
+  const [newSymbol, setNewSymbol] = useState("");
+  const [formMessage, setFormMessage] = useState<string | null>(null);
   const [market, setMarket] = useState<MarketResponse | null>(null);
   const [analysisData, setAnalysisData] = useState<AnalyzeResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const loadMarket = useCallback(async () => {
-    const response = await fetch("/api/market", { cache: "no-store" });
+    const response = await fetch(`/api/market?symbols=${watchlist.join(",")}`, {
+      cache: "no-store",
+    });
     if (!response.ok) {
       throw new Error("Piyasa verisi alinamadi.");
     }
     setMarket(await response.json());
-  }, []);
+  }, [watchlist]);
 
   const loadAnalysis = useCallback(async (symbol: string) => {
     const response = await fetch(`/api/analyze?symbol=${symbol}`, { cache: "no-store" });
@@ -85,6 +93,38 @@ export function MarketDashboard() {
   }, [loadAnalysis, loadMarket]);
 
   useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const saved = window.localStorage.getItem(watchlistStorageKey);
+      if (!saved) {
+        return;
+      }
+
+      try {
+        const parsed = JSON.parse(saved) as unknown;
+        if (Array.isArray(parsed)) {
+          const normalized = parsed
+            .filter((item): item is string => typeof item === "string")
+            .map(normalizeSymbol)
+            .filter(isValidUsdtSymbol);
+
+          if (normalized.length > 0) {
+            setWatchlist(Array.from(new Set(normalized)).slice(0, 20));
+            setSelectedSymbol(normalized[0]);
+          }
+        }
+      } catch {
+        window.localStorage.removeItem(watchlistStorageKey);
+      }
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem(watchlistStorageKey, JSON.stringify(watchlist));
+  }, [watchlist]);
+
+  useEffect(() => {
     const initialTimer = window.setTimeout(() => {
       refresh(selectedSymbol);
     }, 0);
@@ -97,6 +137,47 @@ export function MarketDashboard() {
       window.clearInterval(timer);
     };
   }, [refresh, selectedSymbol]);
+
+  function addSymbol(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const symbol = normalizeSymbol(newSymbol);
+
+    if (!isValidUsdtSymbol(symbol)) {
+      setFormMessage("USDT paritesi girin. Ornek: AVAXUSDT");
+      return;
+    }
+
+    if (watchlist.includes(symbol)) {
+      setFormMessage(`${symbol} zaten listede.`);
+      return;
+    }
+
+    if (watchlist.length >= 20) {
+      setFormMessage("Izleme listesi en fazla 20 sembol olabilir.");
+      return;
+    }
+
+    setWatchlist((current) => [...current, symbol]);
+    setSelectedSymbol(symbol);
+    setNewSymbol("");
+    setFormMessage(`${symbol} eklendi.`);
+  }
+
+  function removeSymbol(symbol: string) {
+    if (watchlist.length === 1) {
+      setFormMessage("Listede en az bir sembol kalmali.");
+      return;
+    }
+
+    setWatchlist((current) => {
+      const next = current.filter((item) => item !== symbol);
+      if (symbol === selectedSymbol) {
+        setSelectedSymbol(next[0]);
+      }
+      return next;
+    });
+    setFormMessage(`${symbol} kaldirildi.`);
+  }
 
   const selectedTicker = useMemo(
     () => market?.tickers.find((ticker) => ticker.symbol === selectedSymbol),
@@ -151,42 +232,85 @@ export function MarketDashboard() {
             <BarChart3 className="text-emerald-200" size={20} />
           </div>
 
+          <form className="mb-4 flex gap-2" onSubmit={addSymbol}>
+            <input
+              aria-label="Yeni sembol"
+              className="h-10 min-w-0 flex-1 rounded-md border border-[var(--border)] bg-black/20 px-3 font-mono text-sm text-white outline-none transition placeholder:text-[var(--muted)] focus:border-emerald-300"
+              onChange={(event) => {
+                setNewSymbol(event.target.value);
+                setFormMessage(null);
+              }}
+              placeholder="AVAXUSDT"
+              value={newSymbol}
+            />
+            <button
+              aria-label="Sembol ekle"
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-[var(--border)] bg-white/[0.04] text-white transition hover:border-emerald-300 hover:bg-emerald-300/10"
+              type="submit"
+            >
+              <Plus size={17} />
+            </button>
+          </form>
+
+          {formMessage ? (
+            <p className="mb-3 rounded-md border border-white/5 bg-white/[0.03] px-3 py-2 text-xs text-[var(--muted)]">
+              {formMessage}
+            </p>
+          ) : null}
+
           <div className="space-y-2">
-            {(market?.tickers ?? symbols.map((symbol) => ({ symbol } as Ticker))).map((ticker) => {
+            {(market?.tickers ?? watchlist.map((symbol) => ({ symbol } as Ticker))).map((ticker) => {
               const active = ticker.symbol === selectedSymbol;
               const positive = (ticker.changePercent ?? 0) >= 0;
 
               return (
-                <button
+                <div
                   className={`grid w-full grid-cols-[1fr_auto] gap-3 rounded-md border p-3 text-left transition ${
                     active
                       ? "border-emerald-300 bg-emerald-300/10"
                       : "border-transparent bg-white/[0.03] hover:border-[var(--border)]"
                   }`}
                   key={ticker.symbol}
-                  onClick={() => setSelectedSymbol(ticker.symbol)}
-                  type="button"
                 >
-                  <span>
+                  <button
+                    className="min-w-0 text-left"
+                    onClick={() => setSelectedSymbol(ticker.symbol)}
+                    type="button"
+                  >
                     <span className="block text-sm font-semibold text-white">{ticker.symbol}</span>
                     <span className="mt-1 block text-xs text-[var(--muted)]">
                       24s hacim {ticker.quoteVolume ? compactNumber(ticker.quoteVolume) : "..."}
                     </span>
-                  </span>
-                  <span className="text-right">
-                    <span className="block font-mono text-sm text-white">
-                      {ticker.price ? formatPrice(ticker.price) : "..."}
-                    </span>
-                    <span
-                      className={`mt-1 inline-flex items-center gap-1 text-xs ${
-                        positive ? "text-emerald-200" : "text-red-200"
-                      }`}
+                  </button>
+                  <span className="flex items-start gap-2 text-right">
+                    <button
+                      aria-label={`${ticker.symbol} sec`}
+                      className="min-w-[88px] text-right"
+                      onClick={() => setSelectedSymbol(ticker.symbol)}
+                      type="button"
                     >
-                      {positive ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
-                      {ticker.changePercent ? ticker.changePercent.toFixed(2) : "0.00"}%
-                    </span>
+                      <span className="block font-mono text-sm text-white">
+                        {ticker.price ? formatPrice(ticker.price) : "..."}
+                      </span>
+                      <span
+                        className={`mt-1 inline-flex items-center gap-1 text-xs ${
+                          positive ? "text-emerald-200" : "text-red-200"
+                        }`}
+                      >
+                        {positive ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
+                        {ticker.changePercent ? ticker.changePercent.toFixed(2) : "0.00"}%
+                      </span>
+                    </button>
+                    <button
+                      aria-label={`${ticker.symbol} kaldir`}
+                      className="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-[var(--muted)] transition hover:bg-white/10 hover:text-white"
+                      onClick={() => removeSymbol(ticker.symbol)}
+                      type="button"
+                    >
+                      <X size={14} />
+                    </button>
                   </span>
-                </button>
+                </div>
               );
             })}
           </div>
@@ -390,4 +514,12 @@ function compactNumber(value: number) {
     notation: "compact",
     maximumFractionDigits: 1,
   }).format(value);
+}
+
+function normalizeSymbol(symbol: string) {
+  return symbol.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+}
+
+function isValidUsdtSymbol(symbol: string) {
+  return /^[A-Z0-9]{3,20}USDT$/.test(symbol);
 }

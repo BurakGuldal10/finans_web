@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
-import { fetchTickers } from "@/lib/binance";
+import { fetchTickers, parseSymbolList } from "@/lib/binance";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const tickers = await fetchTickers();
+    const url = new URL(request.url);
+    const tickers = await fetchTickers(parseSymbolList(url.searchParams.get("symbols")));
     return NextResponse.json({
       source: "binance",
       updatedAt: new Date().toISOString(),

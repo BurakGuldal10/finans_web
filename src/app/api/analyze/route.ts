@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { analyzeCandles } from "@/lib/analysis";
-import { fetchCandles, getDefaultSymbols } from "@/lib/binance";
+import { fetchCandles, isSupportedUsdtSymbol, normalizeSymbol } from "@/lib/binance";
 
 export async function GET(request: NextRequest) {
-  const symbol = request.nextUrl.searchParams.get("symbol")?.toUpperCase() ?? "BTCUSDT";
+  const symbol = normalizeSymbol(request.nextUrl.searchParams.get("symbol") ?? "BTCUSDT");
 
-  if (!getDefaultSymbols().includes(symbol)) {
+  if (!isSupportedUsdtSymbol(symbol)) {
     return NextResponse.json(
-      { error: "Bu ilk surumde sadece varsayilan izleme listesi analiz ediliyor." },
+      { error: "Sadece Binance USDT pariteleri analiz ediliyor. Ornek: BTCUSDT" },
       { status: 400 },
     );
   }

@@ -324,3 +324,27 @@ Notlar:
 - Uygulama su an yalnizca kripto tarafinda canli veri cekiyor.
 - ABD hisseleri, BIST, portfoy ve bilanco analizi sonraki asamalarda eklenecek.
 - Npm kurulumunda 2 adet moderate seviyede audit uyarisi goruldu; henuz `npm audit fix --force` uygulanmadi.
+
+## Mevcut Durum - Izleme Listesi Guncellemesi
+
+Eklenenler:
+
+- Izleme listesi artik arayuzden yeni Binance USDT paritesi eklemeye izin veriyor.
+- Eklenen semboller tarayicida `localStorage` ile saklaniyor.
+- Izleme listesinden sembol kaldirma eklendi.
+- `/api/market` endpoint'i `symbols` query parametresi alabiliyor.
+- `/api/analyze` endpoint'i varsayilan listeyle sinirli degil; gecerli USDT paritesi geldigi surece analiz uretir.
+
+Ornekler:
+
+```text
+/api/market?symbols=BTCUSDT,AVAXUSDT
+/api/analyze?symbol=AVAXUSDT
+```
+
+Kontrol:
+
+```text
+npm run lint
+npm run build
+```
