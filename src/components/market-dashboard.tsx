@@ -42,18 +42,28 @@ type MarketResponse = {
 
 type AnalyzeResponse = {
   source: string;
-  interval: string;
+  interval: Timeframe;
   updatedAt: string;
   analysis: AnalysisResult;
   candles: Candle[];
 };
 
+type Timeframe = "15m" | "1h" | "4h" | "1d";
+
 const symbols = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "XRPUSDT"];
+const timeframes: Array<{ label: string; value: Timeframe }> = [
+  { label: "15m", value: "15m" },
+  { label: "1s", value: "1h" },
+  { label: "4s", value: "4h" },
+  { label: "1g", value: "1d" },
+];
 const watchlistStorageKey = "finansman-watchlist";
+const timeframeStorageKey = "finansman-timeframe";
 
 export function MarketDashboard() {
   const [watchlist, setWatchlist] = useState(symbols);
   const [selectedSymbol, setSelectedSymbol] = useState(symbols[0]);
+  const [selectedTimeframe, setSelectedTimeframe] = useState<Timeframe>("1h");
   const [newSymbol, setNewSymbol] = useState("");
   const [formMessage, setFormMessage] = useState<string | null>(null);
   const [market, setMarket] = useState<MarketResponse | null>(null);
@@ -71,20 +81,23 @@ export function MarketDashboard() {
     setMarket(await response.json());
   }, [watchlist]);
 
-  const loadAnalysis = useCallback(async (symbol: string) => {
-    const response = await fetch(`/api/analyze?symbol=${symbol}`, { cache: "no-store" });
+  const loadAnalysis = useCallback(async (symbol: string, interval: Timeframe) => {
+    const response = await fetch(`/api/analyze?symbol=${symbol}&interval=${interval}`, {
+      cache: "no-store",
+    });
     if (!response.ok) {
-      throw new Error("Analiz verisi alinamadi.");
+      const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+      throw new Error(payload?.error ?? "Analiz verisi alinamadi.");
     }
     setAnalysisData(await response.json());
   }, []);
 
-  const refresh = useCallback(async (symbol: string) => {
+  const refresh = useCallback(async (symbol: string, interval: Timeframe) => {
     setError(null);
     setLoading(true);
 
     try {
-      await Promise.all([loadMarket(), loadAnalysis(symbol)]);
+      await Promise.all([loadMarket(), loadAnalysis(symbol, interval)]);
     } catch (currentError) {
       setError(currentError instanceof Error ? currentError.message : "Bilinmeyen hata.");
     } finally {
@@ -95,6 +108,11 @@ export function MarketDashboard() {
   useEffect(() => {
     const timer = window.setTimeout(() => {
       const saved = window.localStorage.getItem(watchlistStorageKey);
+      const savedTimeframe = window.localStorage.getItem(timeframeStorageKey);
+      if (isValidTimeframe(savedTimeframe)) {
+        setSelectedTimeframe(savedTimeframe);
+      }
+
       if (!saved) {
         return;
       }
@@ -125,20 +143,24 @@ export function MarketDashboard() {
   }, [watchlist]);
 
   useEffect(() => {
+    window.localStorage.setItem(timeframeStorageKey, selectedTimeframe);
+  }, [selectedTimeframe]);
+
+  useEffect(() => {
     const initialTimer = window.setTimeout(() => {
-      refresh(selectedSymbol);
+      refresh(selectedSymbol, selectedTimeframe);
     }, 0);
     const timer = window.setInterval(() => {
-      refresh(selectedSymbol);
+      refresh(selectedSymbol, selectedTimeframe);
     }, 30000);
 
     return () => {
       window.clearTimeout(initialTimer);
       window.clearInterval(timer);
     };
-  }, [refresh, selectedSymbol]);
+  }, [refresh, selectedSymbol, selectedTimeframe]);
 
-  function addSymbol(event: React.FormEvent<HTMLFormElement>) {
+  async function addSymbol(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const symbol = normalizeSymbol(newSymbol);
 
@@ -157,10 +179,27 @@ export function MarketDashboard() {
       return;
     }
 
-    setWatchlist((current) => [...current, symbol]);
-    setSelectedSymbol(symbol);
-    setNewSymbol("");
-    setFormMessage(`${symbol} eklendi.`);
+    setFormMessage(`${symbol} kontrol ediliyor...`);
+
+    try {
+      const response = await fetch(`/api/symbol?symbol=${symbol}`, { cache: "no-store" });
+      const payload = (await response.json().catch(() => null)) as {
+        valid?: boolean;
+        reason?: string;
+      } | null;
+
+      if (!response.ok || !payload?.valid) {
+        setFormMessage(payload?.reason ?? `${symbol} Binance spot USDT paritesi degil.`);
+        return;
+      }
+
+      setWatchlist((current) => [...current, symbol]);
+      setSelectedSymbol(symbol);
+      setNewSymbol("");
+      setFormMessage(`${symbol} eklendi.`);
+    } catch {
+      setFormMessage("Sembol kontrolu yapilamadi. Baglantiyi kontrol edin.");
+    }
   }
 
   function removeSymbol(symbol: string) {
@@ -183,13 +222,17 @@ export function MarketDashboard() {
     () => market?.tickers.find((ticker) => ticker.symbol === selectedSymbol),
     [market, selectedSymbol],
   );
+  const displayedTickers = useMemo(
+    () =>
+      watchlist.map((symbol) => {
+        return market?.tickers.find((ticker) => ticker.symbol === symbol) ?? ({ symbol } as Ticker);
+      }),
+    [market, watchlist],
+  );
   const analysis = analysisData?.analysis;
   const chartData =
     analysisData?.candles.map((candle) => ({
-      time: new Date(candle.openTime).toLocaleTimeString("tr-TR", {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
+      time: formatCandleTime(candle.openTime, selectedTimeframe),
       close: candle.close,
     })) ?? [];
 
@@ -212,7 +255,7 @@ export function MarketDashboard() {
 
         <button
           className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-[var(--border)] bg-[var(--panel)] px-4 text-sm font-medium text-white transition hover:border-emerald-300 hover:bg-[var(--panel-strong)]"
-          onClick={() => refresh(selectedSymbol)}
+          onClick={() => refresh(selectedSymbol, selectedTimeframe)}
           type="button"
         >
           <RefreshCcw size={16} />
@@ -259,7 +302,7 @@ export function MarketDashboard() {
           ) : null}
 
           <div className="space-y-2">
-            {(market?.tickers ?? watchlist.map((symbol) => ({ symbol } as Ticker))).map((ticker) => {
+            {displayedTickers.map((ticker) => {
               const active = ticker.symbol === selectedSymbol;
               const positive = (ticker.changePercent ?? 0) >= 0;
 
@@ -339,6 +382,27 @@ export function MarketDashboard() {
                     : "Bekleniyor"}
                 </span>
               </div>
+            </div>
+
+            <div className="mt-5 flex flex-wrap gap-2">
+              {timeframes.map((timeframe) => {
+                const active = timeframe.value === selectedTimeframe;
+
+                return (
+                  <button
+                    className={`h-9 min-w-12 rounded-md border px-3 text-sm font-medium transition ${
+                      active
+                        ? "border-emerald-300 bg-emerald-300/10 text-emerald-100"
+                        : "border-[var(--border)] bg-white/[0.03] text-[var(--muted)] hover:border-emerald-300 hover:text-white"
+                    }`}
+                    key={timeframe.value}
+                    onClick={() => setSelectedTimeframe(timeframe.value)}
+                    type="button"
+                  >
+                    {timeframe.label}
+                  </button>
+                );
+              })}
             </div>
 
             <div className="mt-5 h-[320px] w-full">
@@ -516,10 +580,30 @@ function compactNumber(value: number) {
   }).format(value);
 }
 
+function formatCandleTime(openTime: number, timeframe: Timeframe) {
+  const date = new Date(openTime);
+
+  if (timeframe === "1d") {
+    return date.toLocaleDateString("tr-TR", {
+      day: "2-digit",
+      month: "2-digit",
+    });
+  }
+
+  return date.toLocaleTimeString("tr-TR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 function normalizeSymbol(symbol: string) {
   return symbol.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
 }
 
 function isValidUsdtSymbol(symbol: string) {
   return /^[A-Z0-9]{3,20}USDT$/.test(symbol);
+}
+
+function isValidTimeframe(value: string | null): value is Timeframe {
+  return value === "15m" || value === "1h" || value === "4h" || value === "1d";
 }

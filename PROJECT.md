@@ -348,3 +348,30 @@ Kontrol:
 npm run lint
 npm run build
 ```
+
+## Mevcut Durum - Kripto Temelini Saglamlastirma
+
+Eklenenler:
+
+- Binance `exchangeInfo` uzerinden gercek sembol dogrulama eklendi.
+- `/api/symbol?symbol=AVAXUSDT` endpoint'i eklendi.
+- Gecerli olmayan veya aktif spot USDT paritesi olmayan semboller listeye eklenmeden reddedilir.
+- Analiz endpoint'i zaman dilimi alir: `15m`, `1h`, `4h`, `1d`.
+- Dashboard'a zaman dilimi secimi eklendi.
+- Secilen zaman dilimi tarayicida `localStorage` ile saklanir.
+- Grafik etiketleri secilen zaman dilimine gore saat veya tarih formatina uyarlanir.
+- Izleme listesi artik fiyat API'sinden donmeyen sembolleri kaybetmeden gostermeye devam eder.
+
+Ornekler:
+
+```text
+/api/symbol?symbol=AVAXUSDT
+/api/analyze?symbol=BTCUSDT&interval=4h
+```
+
+Kontrol:
+
+```text
+npm run lint
+npm run build
+```
