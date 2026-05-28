@@ -414,3 +414,24 @@ Kontrol:
 npm run lint
 npm run build
 ```
+
+## Mevcut Durum - Analiz Motoru Gelistirmesi
+
+Eklenenler:
+
+- Son mumlardan destek ve direnc bolgesi hesaplama eklendi.
+- Son aralik dusuk/yuksek seviyeleri analiz sonucuna eklendi.
+- Trend gucu skoru eklendi.
+- ATR / fiyat oranina gore volatilite yuzdesi ve volatilite rejimi eklendi.
+- Analiz skoru destek/direnc, trend gucu ve volatilite ile daha kapsamli hale getirildi.
+- Analiz sonucu artik olumlu gerekceler ile riskleri ayri listeler.
+- Kisa aksiyon ozeti eklendi: takip edilebilir, notr veya riskli gibi yorum uretir.
+- Dashboard karar destek bolumunde destek, direnc, trend gucu ve volatilite gosterilir.
+- Gerekceler bolumunde aksiyon ozeti ve risk maddeleri ayrica gosterilir.
+
+Kontrol:
+
+```text
+npm run lint
+npm run build
+```

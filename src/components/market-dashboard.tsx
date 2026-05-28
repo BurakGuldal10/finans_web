@@ -482,6 +482,14 @@ export function MarketDashboard() {
                   <Metric label="Stop loss" tone="danger" value={formatPrice(analysis.stopLoss)} />
                   <Metric label="Hedef 1" tone="positive" value={formatPrice(analysis.targetOne)} />
                   <Metric label="Hedef 2" tone="positive" value={formatPrice(analysis.targetTwo)} />
+                  <Metric label="Destek" value={formatPrice(analysis.levels.support)} />
+                  <Metric label="Direnc" value={formatPrice(analysis.levels.resistance)} />
+                  <Metric label="Trend gucu" value={`${analysis.trendStrength}/100`} />
+                  <Metric
+                    label="Volatilite"
+                    tone={analysis.volatility.regime === "high" ? "danger" : "default"}
+                    value={`${analysis.volatility.percent.toFixed(2)}%`}
+                  />
                 </div>
               ) : (
                 <LoadingPanel error={error} loading={loading} />
@@ -496,12 +504,23 @@ export function MarketDashboard() {
 
               {analysis ? (
                 <div className="mt-4 space-y-3">
+                  <p className="rounded-md border border-emerald-300/20 bg-emerald-300/10 p-3 text-sm leading-6 text-emerald-50">
+                    {analysis.actionSummary}
+                  </p>
                   {analysis.reasons.map((reason) => (
                     <p
                       className="rounded-md border border-white/5 bg-white/[0.03] p-3 text-sm leading-6 text-[var(--muted)]"
                       key={reason}
                     >
                       {reason}
+                    </p>
+                  ))}
+                  {analysis.risks.map((risk) => (
+                    <p
+                      className="rounded-md border border-red-300/20 bg-red-300/10 p-3 text-sm leading-6 text-red-100"
+                      key={risk}
+                    >
+                      {risk}
                     </p>
                   ))}
                   <p className="flex gap-2 rounded-md border border-yellow-300/20 bg-yellow-300/10 p-3 text-sm leading-6 text-yellow-100">
