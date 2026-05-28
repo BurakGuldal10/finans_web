@@ -394,3 +394,23 @@ Kontrol:
 npm run lint
 npm run build
 ```
+
+## Mevcut Durum - Portfoy Ekrani
+
+Eklenenler:
+
+- Dashboard altina portfoy bolumu eklendi.
+- Secili sembol icin pozisyon ekleme formu eklendi.
+- Kayit alanlari: sembol, miktar, ortalama maliyet, stop ve not.
+- "Fiyati kullan" butonu secili sembolun canli fiyatini ortalama maliyet alanina aktarir.
+- Portfoy kayitlari tarayicida `localStorage` ile saklanir.
+- Canli fiyat gelen semboller icin piyasa degeri, maliyet, kar/zarar ve yuzdesel kar/zarar hesaplanir.
+- Stop seviyesi girildiyse pozisyon bazli risk ve toplam stop riski hesaplanir.
+- Pozisyon silme eklendi.
+
+Kontrol:
+
+```text
+npm run lint
+npm run build
+```

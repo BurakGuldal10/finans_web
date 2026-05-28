@@ -24,6 +24,7 @@ import {
   YAxis,
 } from "recharts";
 import { formatPrice, type AnalysisResult, type Candle } from "@/lib/analysis";
+import { PortfolioPanel } from "@/components/portfolio-panel";
 import { TradeJournal } from "@/components/trade-journal";
 
 type Ticker = {
@@ -513,6 +514,12 @@ export function MarketDashboard() {
               )}
             </div>
           </section>
+
+          <PortfolioPanel
+            currentPrice={selectedTicker?.price}
+            selectedSymbol={selectedSymbol}
+            tickers={displayedTickers}
+          />
 
           <TradeJournal
             analysis={analysis}
