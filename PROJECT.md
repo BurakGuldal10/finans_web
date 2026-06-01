@@ -463,3 +463,37 @@ Kontrol:
 npm run lint
 npm run build
 ```
+
+## Mevcut Durum - Temel Analiz Iskeleti
+
+Eklenenler:
+
+- ABD hisseleri icin temel analiz endpoint'i eklendi: `/api/fundamentals?market=stocks&symbol=AAPL`.
+- Financial Modeling Prep veri saglayicisi icin `FMP_API_KEY` desteklendi.
+- `.env.example` dosyasina `FMP_API_KEY=` eklendi.
+- API key yoksa endpoint kontrollu sekilde 501 dondurur ve kullaniciya anahtar gerektigini bildirir.
+- Temel analiz modeli eklendi:
+  - Piyasa degeri
+  - F/K
+  - Gelir buyumesi
+  - Net kar marji
+  - Borc / ozsermaye
+  - Cari oran
+  - Serbest nakit akisi
+  - ROE
+- Bu metriklerden temel analiz skoru ve sirket sagligi yorumu uretilir.
+- Dashboard'da ABD Hisse seciliyken temel analiz karti gosterilir.
+- Kripto seciliyken temel analiz karti gizlenir.
+
+Canli temel analiz icin yerel `.env.local` dosyasina su eklenmeli:
+
+```text
+FMP_API_KEY=...
+```
+
+Kontrol:
+
+```text
+npm run lint
+npm run build
+```

@@ -23,7 +23,9 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { FundamentalsPanel } from "@/components/fundamentals-panel";
 import { formatPrice, type AnalysisResult, type Candle } from "@/lib/analysis";
+import type { FundamentalAnalysis } from "@/lib/fundamentals";
 import type { MarketKind } from "@/lib/markets";
 import { PortfolioPanel } from "@/components/portfolio-panel";
 import { TradeJournal } from "@/components/trade-journal";
@@ -51,6 +53,13 @@ type AnalyzeResponse = {
   updatedAt: string;
   analysis: AnalysisResult;
   candles: Candle[];
+};
+
+type FundamentalsResponse = {
+  market: MarketKind;
+  source: string;
+  updatedAt: string;
+  fundamentals: FundamentalAnalysis;
 };
 
 type Timeframe = "15m" | "1h" | "4h" | "1d";
@@ -84,6 +93,9 @@ export function MarketDashboard() {
   const [formMessage, setFormMessage] = useState<string | null>(null);
   const [market, setMarket] = useState<MarketResponse | null>(null);
   const [analysisData, setAnalysisData] = useState<AnalyzeResponse | null>(null);
+  const [fundamentalsData, setFundamentalsData] = useState<FundamentalsResponse | null>(null);
+  const [fundamentalsError, setFundamentalsError] = useState<string | null>(null);
+  const [fundamentalsLoading, setFundamentalsLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const watchlist = watchlists[selectedMarket];
@@ -109,18 +121,61 @@ export function MarketDashboard() {
     setAnalysisData(await response.json());
   }, []);
 
+  const loadFundamentals = useCallback(async (market: MarketKind, symbol: string) => {
+    if (market !== "stocks") {
+      setFundamentalsData(null);
+      setFundamentalsError(null);
+      setFundamentalsLoading(false);
+      return;
+    }
+
+    setFundamentalsError(null);
+    setFundamentalsLoading(true);
+
+    try {
+      const response = await fetch(`/api/fundamentals?market=${market}&symbol=${symbol}`, {
+        cache: "no-store",
+      });
+      const payload = (await response.json().catch(() => null)) as
+        | FundamentalsResponse
+        | { error?: string }
+        | null;
+
+      if (!response.ok) {
+        setFundamentalsData(null);
+        setFundamentalsError(
+          payload && "error" in payload && payload.error
+            ? payload.error
+            : "Temel analiz verisi alinamadi.",
+        );
+        return;
+      }
+
+      setFundamentalsData(payload as FundamentalsResponse);
+    } catch {
+      setFundamentalsData(null);
+      setFundamentalsError("Temel analiz baglantisi kurulamadi.");
+    } finally {
+      setFundamentalsLoading(false);
+    }
+  }, []);
+
   const refresh = useCallback(async (market: MarketKind, symbol: string, interval: Timeframe) => {
     setError(null);
     setLoading(true);
 
     try {
-      await Promise.all([loadMarket(), loadAnalysis(market, symbol, interval)]);
+      await Promise.all([
+        loadMarket(),
+        loadAnalysis(market, symbol, interval),
+        loadFundamentals(market, symbol),
+      ]);
     } catch (currentError) {
       setError(currentError instanceof Error ? currentError.message : "Bilinmeyen hata.");
     } finally {
       setLoading(false);
     }
-  }, [loadAnalysis, loadMarket]);
+  }, [loadAnalysis, loadFundamentals, loadMarket]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -287,6 +342,8 @@ export function MarketDashboard() {
     setFormMessage(null);
     setMarket(null);
     setAnalysisData(null);
+    setFundamentalsData(null);
+    setFundamentalsError(null);
   }
 
   const selectedTicker = useMemo(
@@ -631,6 +688,14 @@ export function MarketDashboard() {
             selectedSymbol={selectedSymbol}
             tickers={displayedTickers}
           />
+
+          {selectedMarket === "stocks" ? (
+            <FundamentalsPanel
+              data={fundamentalsData}
+              error={fundamentalsError}
+              loading={fundamentalsLoading}
+            />
+          ) : null}
 
           <TradeJournal
             analysis={analysis}
