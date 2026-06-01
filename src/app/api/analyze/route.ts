@@ -7,12 +7,28 @@ import {
   normalizeSymbol,
   validateSpotUsdtSymbol,
 } from "@/lib/binance";
+import { normalizeMarket } from "@/lib/markets";
+import {
+  fetchYahooCandles,
+  isSupportedStockSymbol,
+  normalizeStockSymbol,
+  validateStockSymbol,
+} from "@/lib/yahoo";
 
 export async function GET(request: NextRequest) {
-  const symbol = normalizeSymbol(request.nextUrl.searchParams.get("symbol") ?? "BTCUSDT");
+  const market = normalizeMarket(request.nextUrl.searchParams.get("market"));
+  const rawSymbol = request.nextUrl.searchParams.get("symbol") ?? (market === "stocks" ? "AAPL" : "BTCUSDT");
+  const symbol = market === "stocks" ? normalizeStockSymbol(rawSymbol) : normalizeSymbol(rawSymbol);
   const interval = normalizeInterval(request.nextUrl.searchParams.get("interval"));
 
-  if (!isSupportedUsdtSymbol(symbol)) {
+  if (market === "stocks" && !isSupportedStockSymbol(symbol)) {
+    return NextResponse.json(
+      { error: "ABD hisse sembolu girin. Ornek: AAPL" },
+      { status: 400 },
+    );
+  }
+
+  if (market === "crypto" && !isSupportedUsdtSymbol(symbol)) {
     return NextResponse.json(
       { error: "Sadece Binance USDT pariteleri analiz ediliyor. Ornek: BTCUSDT" },
       { status: 400 },
@@ -20,14 +36,19 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const validation = await validateSpotUsdtSymbol(symbol);
+    const validation =
+      market === "stocks" ? await validateStockSymbol(symbol) : await validateSpotUsdtSymbol(symbol);
+
     if (!validation.valid) {
       return NextResponse.json({ error: validation.reason }, { status: 404 });
     }
 
-    const candles = await fetchCandles(symbol, interval);
+    const candles =
+      market === "stocks" ? await fetchYahooCandles(symbol, interval) : await fetchCandles(symbol, interval);
+
     return NextResponse.json({
-      source: "binance",
+      market,
+      source: market === "stocks" ? "yahoo" : "binance",
       interval,
       updatedAt: new Date().toISOString(),
       analysis: analyzeCandles(symbol, candles),

@@ -435,3 +435,31 @@ Kontrol:
 npm run lint
 npm run build
 ```
+
+## Mevcut Durum - ABD Hisseleri
+
+Eklenenler:
+
+- Dashboard'a piyasa secimi eklendi: Kripto ve ABD Hisse.
+- Kripto izleme listesi ile ABD hisse izleme listesi ayri `localStorage` alanlarinda saklanir.
+- ABD hisseleri icin varsayilan izleme listesi: AAPL, MSFT, NVDA, TSLA, SPY.
+- `/api/market` endpoint'i `market=stocks` parametresi ile ABD hisseleri icin fiyat verisi dondurur.
+- `/api/analyze` endpoint'i `market=stocks` parametresi ile hisse mum verisini analiz eder.
+- `/api/symbol` endpoint'i `market=stocks` parametresi ile ABD hisse sembolu dogrular.
+- Yahoo Finance chart verisi kullanilarak fiyat, gunluk degisim ve mum verisi alinir.
+- Kripto akisi korunur; Binance tarafinda mevcut davranis devam eder.
+
+Ornekler:
+
+```text
+/api/market?market=stocks&symbols=AAPL,MSFT,NVDA
+/api/symbol?market=stocks&symbol=AAPL
+/api/analyze?market=stocks&symbol=AAPL&interval=1d
+```
+
+Kontrol:
+
+```text
+npm run lint
+npm run build
+```

@@ -24,6 +24,7 @@ import {
   YAxis,
 } from "recharts";
 import { formatPrice, type AnalysisResult, type Candle } from "@/lib/analysis";
+import type { MarketKind } from "@/lib/markets";
 import { PortfolioPanel } from "@/components/portfolio-panel";
 import { TradeJournal } from "@/components/trade-journal";
 
@@ -37,12 +38,14 @@ type Ticker = {
 };
 
 type MarketResponse = {
+  market: MarketKind;
   source: string;
   updatedAt: string;
   tickers: Ticker[];
 };
 
 type AnalyzeResponse = {
+  market: MarketKind;
   source: string;
   interval: Timeframe;
   updatedAt: string;
@@ -52,7 +55,12 @@ type AnalyzeResponse = {
 
 type Timeframe = "15m" | "1h" | "4h" | "1d";
 
-const symbols = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "XRPUSDT"];
+const cryptoSymbols = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "XRPUSDT"];
+const stockSymbols = ["AAPL", "MSFT", "NVDA", "TSLA", "SPY"];
+const markets: Array<{ label: string; value: MarketKind }> = [
+  { label: "Kripto", value: "crypto" },
+  { label: "ABD Hisse", value: "stocks" },
+];
 const timeframes: Array<{ label: string; value: Timeframe }> = [
   { label: "15m", value: "15m" },
   { label: "1s", value: "1h" },
@@ -60,11 +68,17 @@ const timeframes: Array<{ label: string; value: Timeframe }> = [
   { label: "1g", value: "1d" },
 ];
 const watchlistStorageKey = "finansman-watchlist";
+const stockWatchlistStorageKey = "finansman-stock-watchlist";
 const timeframeStorageKey = "finansman-timeframe";
+const marketStorageKey = "finansman-market";
 
 export function MarketDashboard() {
-  const [watchlist, setWatchlist] = useState(symbols);
-  const [selectedSymbol, setSelectedSymbol] = useState(symbols[0]);
+  const [selectedMarket, setSelectedMarket] = useState<MarketKind>("crypto");
+  const [watchlists, setWatchlists] = useState<Record<MarketKind, string[]>>({
+    crypto: cryptoSymbols,
+    stocks: stockSymbols,
+  });
+  const [selectedSymbol, setSelectedSymbol] = useState(cryptoSymbols[0]);
   const [selectedTimeframe, setSelectedTimeframe] = useState<Timeframe>("1h");
   const [newSymbol, setNewSymbol] = useState("");
   const [formMessage, setFormMessage] = useState<string | null>(null);
@@ -72,19 +86,20 @@ export function MarketDashboard() {
   const [analysisData, setAnalysisData] = useState<AnalyzeResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const watchlist = watchlists[selectedMarket];
 
   const loadMarket = useCallback(async () => {
-    const response = await fetch(`/api/market?symbols=${watchlist.join(",")}`, {
+    const response = await fetch(`/api/market?market=${selectedMarket}&symbols=${watchlist.join(",")}`, {
       cache: "no-store",
     });
     if (!response.ok) {
       throw new Error("Piyasa verisi alinamadi.");
     }
     setMarket(await response.json());
-  }, [watchlist]);
+  }, [selectedMarket, watchlist]);
 
-  const loadAnalysis = useCallback(async (symbol: string, interval: Timeframe) => {
-    const response = await fetch(`/api/analyze?symbol=${symbol}&interval=${interval}`, {
+  const loadAnalysis = useCallback(async (market: MarketKind, symbol: string, interval: Timeframe) => {
+    const response = await fetch(`/api/analyze?market=${market}&symbol=${symbol}&interval=${interval}`, {
       cache: "no-store",
     });
     if (!response.ok) {
@@ -94,12 +109,12 @@ export function MarketDashboard() {
     setAnalysisData(await response.json());
   }, []);
 
-  const refresh = useCallback(async (symbol: string, interval: Timeframe) => {
+  const refresh = useCallback(async (market: MarketKind, symbol: string, interval: Timeframe) => {
     setError(null);
     setLoading(true);
 
     try {
-      await Promise.all([loadMarket(), loadAnalysis(symbol, interval)]);
+      await Promise.all([loadMarket(), loadAnalysis(market, symbol, interval)]);
     } catch (currentError) {
       setError(currentError instanceof Error ? currentError.message : "Bilinmeyen hata.");
     } finally {
@@ -110,64 +125,102 @@ export function MarketDashboard() {
   useEffect(() => {
     const timer = window.setTimeout(() => {
       const saved = window.localStorage.getItem(watchlistStorageKey);
+      const savedStocks = window.localStorage.getItem(stockWatchlistStorageKey);
       const savedTimeframe = window.localStorage.getItem(timeframeStorageKey);
+      const savedMarket = window.localStorage.getItem(marketStorageKey);
       if (isValidTimeframe(savedTimeframe)) {
         setSelectedTimeframe(savedTimeframe);
       }
 
-      if (!saved) {
-        return;
-      }
+      const nextMarket = isValidMarket(savedMarket) ? savedMarket : "crypto";
+      const nextWatchlists: Record<MarketKind, string[]> = {
+        crypto: cryptoSymbols,
+        stocks: stockSymbols,
+      };
 
-      try {
-        const parsed = JSON.parse(saved) as unknown;
-        if (Array.isArray(parsed)) {
-          const normalized = parsed
-            .filter((item): item is string => typeof item === "string")
-            .map(normalizeSymbol)
-            .filter(isValidUsdtSymbol);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved) as unknown;
+          if (Array.isArray(parsed)) {
+            const normalized = parsed
+              .filter((item): item is string => typeof item === "string")
+              .map(normalizeCryptoSymbol)
+              .filter(isValidUsdtSymbol);
 
-          if (normalized.length > 0) {
-            setWatchlist(Array.from(new Set(normalized)).slice(0, 20));
-            setSelectedSymbol(normalized[0]);
+            if (normalized.length > 0) {
+              nextWatchlists.crypto = Array.from(new Set(normalized)).slice(0, 20);
+            }
           }
+        } catch {
+          window.localStorage.removeItem(watchlistStorageKey);
         }
-      } catch {
-        window.localStorage.removeItem(watchlistStorageKey);
       }
+
+      if (savedStocks) {
+        try {
+          const parsed = JSON.parse(savedStocks) as unknown;
+          if (Array.isArray(parsed)) {
+            const normalized = parsed
+              .filter((item): item is string => typeof item === "string")
+              .map(normalizeStockSymbol)
+              .filter(isValidStockSymbol);
+
+            if (normalized.length > 0) {
+              nextWatchlists.stocks = Array.from(new Set(normalized)).slice(0, 20);
+            }
+          }
+        } catch {
+          window.localStorage.removeItem(stockWatchlistStorageKey);
+        }
+      }
+
+      setWatchlists(nextWatchlists);
+      setSelectedMarket(nextMarket);
+      setSelectedSymbol(nextWatchlists[nextMarket][0]);
     }, 0);
 
     return () => window.clearTimeout(timer);
   }, []);
 
   useEffect(() => {
-    window.localStorage.setItem(watchlistStorageKey, JSON.stringify(watchlist));
-  }, [watchlist]);
+    window.localStorage.setItem(watchlistStorageKey, JSON.stringify(watchlists.crypto));
+    window.localStorage.setItem(stockWatchlistStorageKey, JSON.stringify(watchlists.stocks));
+  }, [watchlists]);
 
   useEffect(() => {
     window.localStorage.setItem(timeframeStorageKey, selectedTimeframe);
   }, [selectedTimeframe]);
 
   useEffect(() => {
+    window.localStorage.setItem(marketStorageKey, selectedMarket);
+  }, [selectedMarket]);
+
+  useEffect(() => {
     const initialTimer = window.setTimeout(() => {
-      refresh(selectedSymbol, selectedTimeframe);
+      refresh(selectedMarket, selectedSymbol, selectedTimeframe);
     }, 0);
     const timer = window.setInterval(() => {
-      refresh(selectedSymbol, selectedTimeframe);
+      refresh(selectedMarket, selectedSymbol, selectedTimeframe);
     }, 30000);
 
     return () => {
       window.clearTimeout(initialTimer);
       window.clearInterval(timer);
     };
-  }, [refresh, selectedSymbol, selectedTimeframe]);
+  }, [refresh, selectedMarket, selectedSymbol, selectedTimeframe]);
 
   async function addSymbol(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const symbol = normalizeSymbol(newSymbol);
+    const symbol =
+      selectedMarket === "stocks" ? normalizeStockSymbol(newSymbol) : normalizeCryptoSymbol(newSymbol);
 
-    if (!isValidUsdtSymbol(symbol)) {
+    if (selectedMarket === "crypto" && !isValidUsdtSymbol(symbol)) {
       setFormMessage("USDT paritesi girin. Ornek: AVAXUSDT");
+      return;
+    }
+
+    if (selectedMarket === "stocks" && !isValidStockSymbol(symbol)) {
+      setFormMessage("ABD hisse sembolu girin. Ornek: AAPL");
       return;
     }
 
@@ -184,7 +237,9 @@ export function MarketDashboard() {
     setFormMessage(`${symbol} kontrol ediliyor...`);
 
     try {
-      const response = await fetch(`/api/symbol?symbol=${symbol}`, { cache: "no-store" });
+      const response = await fetch(`/api/symbol?market=${selectedMarket}&symbol=${symbol}`, {
+        cache: "no-store",
+      });
       const payload = (await response.json().catch(() => null)) as {
         valid?: boolean;
         reason?: string;
@@ -195,7 +250,10 @@ export function MarketDashboard() {
         return;
       }
 
-      setWatchlist((current) => [...current, symbol]);
+      setWatchlists((current) => ({
+        ...current,
+        [selectedMarket]: [...current[selectedMarket], symbol],
+      }));
       setSelectedSymbol(symbol);
       setNewSymbol("");
       setFormMessage(`${symbol} eklendi.`);
@@ -210,14 +268,25 @@ export function MarketDashboard() {
       return;
     }
 
-    setWatchlist((current) => {
-      const next = current.filter((item) => item !== symbol);
+    setWatchlists((current) => {
+      const next = current[selectedMarket].filter((item) => item !== symbol);
       if (symbol === selectedSymbol) {
         setSelectedSymbol(next[0]);
       }
-      return next;
+      return {
+        ...current,
+        [selectedMarket]: next,
+      };
     });
     setFormMessage(`${symbol} kaldirildi.`);
+  }
+
+  function switchMarket(market: MarketKind) {
+    setSelectedMarket(market);
+    setSelectedSymbol(watchlists[market][0]);
+    setFormMessage(null);
+    setMarket(null);
+    setAnalysisData(null);
   }
 
   const selectedTicker = useMemo(
@@ -250,14 +319,14 @@ export function MarketDashboard() {
             Finansman Asistani
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted)]">
-            Kripto piyasasi icin canli fiyat, teknik skor, alim bolgesi, stop ve hedef
-            seviyelerini tek ekranda izler.
+            Kripto ve ABD hisseleri icin canli fiyat, teknik skor, alim bolgesi,
+            stop ve hedef seviyelerini tek ekranda izler.
           </p>
         </div>
 
         <button
           className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-[var(--border)] bg-[var(--panel)] px-4 text-sm font-medium text-white transition hover:border-emerald-300 hover:bg-[var(--panel-strong)]"
-          onClick={() => refresh(selectedSymbol, selectedTimeframe)}
+          onClick={() => refresh(selectedMarket, selectedSymbol, selectedTimeframe)}
           type="button"
         >
           <RefreshCcw size={16} />
@@ -272,9 +341,32 @@ export function MarketDashboard() {
               <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-emerald-200">
                 Izleme listesi
               </h2>
-              <p className="mt-1 text-xs text-[var(--muted)]">Binance USDT pariteleri</p>
+              <p className="mt-1 text-xs text-[var(--muted)]">
+                {selectedMarket === "stocks" ? "Yahoo Finance ABD hisseleri" : "Binance USDT pariteleri"}
+              </p>
             </div>
             <BarChart3 className="text-emerald-200" size={20} />
+          </div>
+
+          <div className="mb-4 grid grid-cols-2 gap-2">
+            {markets.map((market) => {
+              const active = market.value === selectedMarket;
+
+              return (
+                <button
+                  className={`h-10 rounded-md border px-3 text-sm font-medium transition ${
+                    active
+                      ? "border-emerald-300 bg-emerald-300/10 text-emerald-100"
+                      : "border-[var(--border)] bg-white/[0.03] text-[var(--muted)] hover:border-emerald-300 hover:text-white"
+                  }`}
+                  key={market.value}
+                  onClick={() => switchMarket(market.value)}
+                  type="button"
+                >
+                  {market.label}
+                </button>
+              );
+            })}
           </div>
 
           <form className="mb-4 flex gap-2" onSubmit={addSymbol}>
@@ -285,7 +377,7 @@ export function MarketDashboard() {
                 setNewSymbol(event.target.value);
                 setFormMessage(null);
               }}
-              placeholder="AVAXUSDT"
+              placeholder={selectedMarket === "stocks" ? "AAPL" : "AVAXUSDT"}
               value={newSymbol}
             />
             <button
@@ -630,14 +722,26 @@ function formatCandleTime(openTime: number, timeframe: Timeframe) {
   });
 }
 
-function normalizeSymbol(symbol: string) {
+function normalizeCryptoSymbol(symbol: string) {
   return symbol.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+}
+
+function normalizeStockSymbol(symbol: string) {
+  return symbol.trim().toUpperCase().replace(/[^A-Z0-9.-]/g, "");
 }
 
 function isValidUsdtSymbol(symbol: string) {
   return /^[A-Z0-9]{3,20}USDT$/.test(symbol);
 }
 
+function isValidStockSymbol(symbol: string) {
+  return /^[A-Z][A-Z0-9.-]{0,9}$/.test(symbol);
+}
+
 function isValidTimeframe(value: string | null): value is Timeframe {
   return value === "15m" || value === "1h" || value === "4h" || value === "1d";
+}
+
+function isValidMarket(value: string | null): value is MarketKind {
+  return value === "crypto" || value === "stocks";
 }
