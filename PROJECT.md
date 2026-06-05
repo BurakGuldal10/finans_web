@@ -617,3 +617,33 @@ Kontrol:
 npm run lint
 npm run build
 ```
+
+## Mevcut Durum - Risk Hesaplayici
+
+Eklenenler:
+
+- Dashboard'a risk hesaplayici paneli eklendi.
+- Secili varligin analizinden giris, stop ve hedef seviyeleri forma aktarilabilir.
+- Hesap buyuklugu ve risk yuzdesine gore pozisyon boyutu hesaplanir.
+- Panel su metrikleri gosterir:
+  - Risk tutari
+  - Alinabilecek adet
+  - Pozisyon degeri
+  - Portfoy agirligi
+  - Birim risk
+  - Potansiyel kar
+  - Risk / odul orani
+- Hesap buyuklugu ve risk yuzdesi tarayicida saklanir; sembol degistiginde fiyat seviyeleri yeniden analizden doldurulabilir.
+- Kripto icin USDT, ABD hisseleri icin USD, BIST icin TRY para birimi etiketi kullanilir.
+
+Notlar:
+
+- Bu panel emir gondermez; sadece pozisyon boyutu ve risk varsayimi hesaplar.
+- Vergi, komisyon, kaldirac, slipaj ve kur farki henuz hesaba katilmaz.
+
+Kontrol:
+
+```text
+npm run lint
+npm run build
+```

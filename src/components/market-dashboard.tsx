@@ -31,6 +31,7 @@ import { combineStockAnalysis } from "@/lib/combined-analysis";
 import type { FundamentalAnalysis } from "@/lib/fundamentals";
 import type { MarketKind } from "@/lib/markets";
 import { PortfolioPanel } from "@/components/portfolio-panel";
+import { RiskCalculatorPanel } from "@/components/risk-calculator-panel";
 import { TradeJournal } from "@/components/trade-journal";
 
 type Ticker = {
@@ -724,6 +725,13 @@ export function MarketDashboard() {
               )}
             </div>
           </section>
+
+          <RiskCalculatorPanel
+            analysis={analysis}
+            market={selectedMarket}
+            selectedPrice={selectedTicker?.price}
+            symbol={selectedSymbol}
+          />
 
           <PortfolioPanel
             currentPrice={selectedTicker?.price}
