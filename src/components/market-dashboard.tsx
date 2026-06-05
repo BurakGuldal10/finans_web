@@ -25,6 +25,7 @@ import {
 } from "recharts";
 import { AlertsPanel } from "@/components/alerts-panel";
 import { FundamentalsPanel } from "@/components/fundamentals-panel";
+import { PerformancePanel } from "@/components/performance-panel";
 import { formatPrice, type AnalysisResult, type Candle } from "@/lib/analysis";
 import { combineStockAnalysis } from "@/lib/combined-analysis";
 import type { FundamentalAnalysis } from "@/lib/fundamentals";
@@ -717,6 +718,8 @@ export function MarketDashboard() {
             selectedSymbol={selectedSymbol}
             timeframe={selectedTimeframe}
           />
+
+          <PerformancePanel />
         </div>
       </section>
     </main>

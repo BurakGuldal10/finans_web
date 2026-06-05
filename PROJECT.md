@@ -557,3 +557,25 @@ Kontrol:
 npm run lint
 npm run build
 ```
+
+## Mevcut Durum - Trade Performans Ozeti
+
+Eklenenler:
+
+- Trade gunlugu kayitlarindan performans ozeti cikaran modul eklendi.
+- Yeni endpoint eklendi: `/api/performance`.
+- Dashboard altina performans ozeti paneli eklendi.
+- Panel su metrikleri gosterir:
+  - Toplam trade kaydi
+  - Kapali islemlerde win rate
+  - Plan ve acik islemler icin toplam risk
+  - Win/loss durumlarina gore tahmini sonuc
+  - Strateji ve sembol bazli kirilim
+- Tahmini sonuc, trade gunlugundeki hedef/stop ve islem durumuna gore hesaplanir; gercek emir veya broker verisi degildir.
+
+Kontrol:
+
+```text
+npm run lint
+npm run build
+```
