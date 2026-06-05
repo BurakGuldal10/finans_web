@@ -23,6 +23,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { AlertsPanel } from "@/components/alerts-panel";
 import { FundamentalsPanel } from "@/components/fundamentals-panel";
 import { formatPrice, type AnalysisResult, type Candle } from "@/lib/analysis";
 import { combineStockAnalysis } from "@/lib/combined-analysis";
@@ -692,6 +693,13 @@ export function MarketDashboard() {
             currentPrice={selectedTicker?.price}
             selectedSymbol={selectedSymbol}
             tickers={displayedTickers}
+          />
+
+          <AlertsPanel
+            analysis={analysis}
+            market={selectedMarket}
+            price={selectedTicker?.price}
+            symbol={selectedSymbol}
           />
 
           {selectedMarket === "stocks" ? (

@@ -516,3 +516,23 @@ Kontrol:
 npm run lint
 npm run build
 ```
+
+## Mevcut Durum - Uyari Sistemi
+
+Eklenenler:
+
+- Dashboard'a uyari listesi bolumu eklendi.
+- Uyarilar tarayicida `localStorage` ile saklanir.
+- Secili sembol icin fiyat, teknik skor veya RSI esigi tanimlanabilir.
+- Kosullar: uzerine cikarsa veya altina inerse.
+- "Guncel deger" butonu secili metrik icin mevcut degeri forma aktarir.
+- Canli veri yenilendikce secili sembolun uyarilari kontrol edilir.
+- Tetiklenen uyarilar panelde vurgulanir.
+- Tetiklenen uyari sifirlanabilir veya silinebilir.
+
+Kontrol:
+
+```text
+npm run lint
+npm run build
+```
