@@ -29,7 +29,7 @@ export type TradeEntryRecord = {
 
 export type AlertRuleRecord = {
   id: string;
-  market: "crypto" | "stocks";
+  market: "crypto" | "stocks" | "bist";
   symbol: string;
   metric: "price" | "score" | "rsi";
   direction: "above" | "below";

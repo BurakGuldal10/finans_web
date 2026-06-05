@@ -579,3 +579,41 @@ Kontrol:
 npm run lint
 npm run build
 ```
+
+## Mevcut Durum - BIST Piyasasi
+
+Eklenenler:
+
+- Dashboard piyasa secimine BIST eklendi.
+- BIST izleme listesi ABD hisseleri ve kriptodan ayri saklanir.
+- Varsayilan BIST sembolleri:
+  - THYAO.IS
+  - GARAN.IS
+  - ASELS.IS
+  - BIMAS.IS
+  - KCHOL.IS
+- Kullanici `THYAO` gibi sembol girdiginde sistem bunu Yahoo Finance formatina (`THYAO.IS`) cevirir.
+- `/api/market`, `/api/analyze` ve `/api/symbol` endpoint'leri `market=bist` parametresini destekler.
+- BIST fiyat ve mum verisi su an Yahoo Finance uzerinden gelir.
+- BIST tarafinda fiyat birimi arayuzde TRY olarak gosterilir.
+- Uyari sistemi BIST sembolleri icin de fiyat, teknik skor ve RSI esiklerini takip edebilir.
+
+Ornekler:
+
+```text
+/api/market?market=bist&symbols=THYAO.IS,GARAN.IS
+/api/symbol?market=bist&symbol=THYAO
+/api/analyze?market=bist&symbol=THYAO.IS&interval=1d
+```
+
+Notlar:
+
+- BIST icin temel analiz/bilanco henuz eklenmedi.
+- Yahoo Finance ucretsiz kaynak oldugu icin veri gecikmesi, eksik veri veya limit sorunlari olabilir.
+
+Kontrol:
+
+```text
+npm run lint
+npm run build
+```

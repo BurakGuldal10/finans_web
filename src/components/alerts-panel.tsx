@@ -423,7 +423,7 @@ function isAlertRule(value: unknown): value is AlertRule {
   const alert = value as Partial<AlertRule>;
   return (
     typeof alert.id === "string" &&
-    (alert.market === "crypto" || alert.market === "stocks") &&
+    (alert.market === "crypto" || alert.market === "stocks" || alert.market === "bist") &&
     typeof alert.symbol === "string" &&
     (alert.metric === "price" || alert.metric === "score" || alert.metric === "rsi") &&
     (alert.direction === "above" || alert.direction === "below") &&

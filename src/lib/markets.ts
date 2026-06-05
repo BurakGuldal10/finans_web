@@ -1,5 +1,9 @@
-export type MarketKind = "crypto" | "stocks";
+export type MarketKind = "crypto" | "stocks" | "bist";
 
 export function normalizeMarket(value: string | null): MarketKind {
-  return value === "stocks" ? "stocks" : "crypto";
+  if (value === "stocks" || value === "bist") {
+    return value;
+  }
+
+  return "crypto";
 }

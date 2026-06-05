@@ -25,18 +25,33 @@ type YahooChartResponse = {
 };
 
 const DEFAULT_STOCK_SYMBOLS = ["AAPL", "MSFT", "NVDA", "TSLA", "SPY"];
+const DEFAULT_BIST_SYMBOLS = ["THYAO.IS", "GARAN.IS", "ASELS.IS", "BIMAS.IS", "KCHOL.IS"];
 const STOCK_SYMBOL_PATTERN = /^[A-Z][A-Z0-9.-]{0,9}$/;
+const BIST_SYMBOL_PATTERN = /^[A-Z][A-Z0-9]{1,9}\.IS$/;
 
 export function getDefaultStockSymbols() {
   return DEFAULT_STOCK_SYMBOLS;
+}
+
+export function getDefaultBistSymbols() {
+  return DEFAULT_BIST_SYMBOLS;
 }
 
 export function normalizeStockSymbol(symbol: string) {
   return symbol.trim().toUpperCase().replace(/[^A-Z0-9.-]/g, "");
 }
 
+export function normalizeBistSymbol(symbol: string) {
+  const normalized = symbol.trim().toUpperCase().replace(/[^A-Z0-9.]/g, "");
+  return normalized.endsWith(".IS") ? normalized : `${normalized.replace(/\.$/, "")}.IS`;
+}
+
 export function isSupportedStockSymbol(symbol: string) {
   return STOCK_SYMBOL_PATTERN.test(normalizeStockSymbol(symbol));
+}
+
+export function isSupportedBistSymbol(symbol: string) {
+  return BIST_SYMBOL_PATTERN.test(normalizeBistSymbol(symbol));
 }
 
 export function parseStockSymbolList(value: string | null) {
@@ -48,6 +63,19 @@ export function parseStockSymbolList(value: string | null) {
     .split(",")
     .map(normalizeStockSymbol)
     .filter(isSupportedStockSymbol);
+
+  return Array.from(new Set(symbols)).slice(0, 20);
+}
+
+export function parseBistSymbolList(value: string | null) {
+  if (!value) {
+    return DEFAULT_BIST_SYMBOLS;
+  }
+
+  const symbols = value
+    .split(",")
+    .map(normalizeBistSymbol)
+    .filter(isSupportedBistSymbol);
 
   return Array.from(new Set(symbols)).slice(0, 20);
 }
@@ -115,6 +143,27 @@ export async function validateStockSymbol(symbol: string) {
       symbol: normalizedSymbol,
       valid: false,
       reason: "ABD hisse sembolu girin. Ornek: AAPL",
+    };
+  }
+
+  const quotes = await fetchYahooTickers([normalizedSymbol]);
+  const valid = quotes.some((quote) => quote.symbol === normalizedSymbol && quote.price > 0);
+
+  return {
+    symbol: normalizedSymbol,
+    valid,
+    reason: valid ? null : `${normalizedSymbol} Yahoo Finance uzerinde bulunamadi.`,
+  };
+}
+
+export async function validateBistSymbol(symbol: string) {
+  const normalizedSymbol = normalizeBistSymbol(symbol);
+
+  if (!isSupportedBistSymbol(normalizedSymbol)) {
+    return {
+      symbol: normalizedSymbol,
+      valid: false,
+      reason: "BIST sembolu girin. Ornek: THYAO veya THYAO.IS",
     };
   }
 
