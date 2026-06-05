@@ -25,6 +25,7 @@ import {
 } from "recharts";
 import { FundamentalsPanel } from "@/components/fundamentals-panel";
 import { formatPrice, type AnalysisResult, type Candle } from "@/lib/analysis";
+import { combineStockAnalysis } from "@/lib/combined-analysis";
 import type { FundamentalAnalysis } from "@/lib/fundamentals";
 import type { MarketKind } from "@/lib/markets";
 import { PortfolioPanel } from "@/components/portfolio-panel";
@@ -358,6 +359,10 @@ export function MarketDashboard() {
     [market, watchlist],
   );
   const analysis = analysisData?.analysis;
+  const combinedAnalysis =
+    selectedMarket === "stocks" && analysis && fundamentalsData?.fundamentals
+      ? combineStockAnalysis(analysis, fundamentalsData.fundamentals)
+      : null;
   const chartData =
     analysisData?.candles.map((candle) => ({
       time: formatCandleTime(candle.openTime, selectedTimeframe),
@@ -691,6 +696,7 @@ export function MarketDashboard() {
 
           {selectedMarket === "stocks" ? (
             <FundamentalsPanel
+              combined={combinedAnalysis}
               data={fundamentalsData}
               error={fundamentalsError}
               loading={fundamentalsLoading}

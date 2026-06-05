@@ -1,6 +1,7 @@
 "use client";
 
 import { Building2, KeyRound } from "lucide-react";
+import type { CombinedAnalysis } from "@/lib/combined-analysis";
 import type { FundamentalAnalysis } from "@/lib/fundamentals";
 
 type FundamentalsResponse = {
@@ -8,12 +9,13 @@ type FundamentalsResponse = {
 };
 
 type FundamentalsPanelProps = {
+  combined: CombinedAnalysis | null;
   data: FundamentalsResponse | null;
   error: string | null;
   loading: boolean;
 };
 
-export function FundamentalsPanel({ data, error, loading }: FundamentalsPanelProps) {
+export function FundamentalsPanel({ combined, data, error, loading }: FundamentalsPanelProps) {
   const fundamentals = data?.fundamentals;
 
   return (
@@ -48,7 +50,7 @@ export function FundamentalsPanel({ data, error, loading }: FundamentalsPanelPro
               <div>
                 <p className="text-lg font-semibold text-white">{fundamentals.companyName}</p>
                 <p className="mt-1 text-sm text-[var(--muted)]">
-                  {fundamentals.symbol} · {fundamentals.sector}
+                  {fundamentals.symbol} - {fundamentals.sector}
                 </p>
               </div>
               <span className="rounded-md border border-emerald-300/30 px-3 py-1 font-mono text-sm text-emerald-100">
@@ -57,6 +59,26 @@ export function FundamentalsPanel({ data, error, loading }: FundamentalsPanelPro
             </div>
             <p className="mt-3 text-sm leading-6 text-emerald-50">{fundamentals.summary}</p>
           </div>
+
+          {combined ? (
+            <div className="rounded-md border border-white/10 bg-white/[0.04] p-4">
+              <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">
+                    Genel hisse skoru
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-white">{combined.summary}</p>
+                </div>
+                <span className="rounded-md border border-white/10 px-3 py-1 font-mono text-sm text-white">
+                  {combined.score}/100
+                </span>
+              </div>
+              <p className="mt-3 text-xs text-[var(--muted)]">
+                Teknik agirlik {(combined.technicalWeight * 100).toFixed(0)}%, temel agirlik{" "}
+                {(combined.fundamentalWeight * 100).toFixed(0)}%.
+              </p>
+            </div>
+          ) : null}
 
           <div className="grid gap-3 md:grid-cols-4">
             {fundamentals.metrics.map((metric) => (

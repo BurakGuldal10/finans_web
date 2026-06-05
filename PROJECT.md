@@ -497,3 +497,22 @@ Kontrol:
 npm run lint
 npm run build
 ```
+
+## Mevcut Durum - Teknik + Temel Birlesik Skor
+
+Eklenenler:
+
+- ABD hisseleri icin teknik skor ile temel analiz skorunu birlestiren yardimci modul eklendi.
+- Birlesik skor hesaplama agirliklari:
+  - Teknik skor: %55
+  - Temel skor: %45
+- Birlesik skor sonucu olumlu, notr veya riskli olarak yorumlanir.
+- Temel analiz kartinda "Genel hisse skoru" bandi eklendi.
+- FMP API key yoksa mevcut uyari davranisi korunur; key eklendiginde birlesik skor otomatik gorunur.
+
+Kontrol:
+
+```text
+npm run lint
+npm run build
+```
