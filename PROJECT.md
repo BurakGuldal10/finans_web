@@ -536,3 +536,24 @@ Kontrol:
 npm run lint
 npm run build
 ```
+
+## Mevcut Durum - Yerel SQLite Kalicilik
+
+Eklenenler:
+
+- Portfoy, trade gunlugu ve uyari listesi kayitlari artik tarayici `localStorage` yerine yerel SQLite veritabaninda saklanir.
+- SQLite dosyasi varsayilan olarak `data/finansman.db` yolunda olusturulur.
+- `data/` klasoru `.gitignore` icine alindi; kisisel finansal kayitlar repoya push edilmez.
+- Eski `localStorage` kayitlari ilk acilista SQLite veritabanina tasinmaya calisilir.
+- Yeni API endpoint'leri eklendi:
+  - `/api/portfolio`
+  - `/api/trades`
+  - `/api/alerts`
+- Bu endpoint'ler listeleme, ekleme, silme ve gerekli guncelleme islemlerini destekler.
+
+Kontrol:
+
+```text
+npm run lint
+npm run build
+```

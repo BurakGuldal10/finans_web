@@ -46,29 +46,31 @@ export function PortfolioPanel({ currentPrice, selectedSymbol, tickers }: Portfo
   const [draft, setDraft] = useState<DraftPosition>(defaultDraft);
   const [message, setMessage] = useState<string | null>(null);
 
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      const saved = window.localStorage.getItem(storageKey);
-      if (!saved) {
-        return;
+  async function loadPositions() {
+    try {
+      const response = await fetch("/api/portfolio");
+      if (!response.ok) {
+        throw new Error("Portfolio load failed");
       }
 
-      try {
-        const parsed = JSON.parse(saved) as unknown;
-        if (Array.isArray(parsed)) {
-          setPositions(parsed.filter(isPortfolioPosition));
-        }
-      } catch {
-        window.localStorage.removeItem(storageKey);
-      }
+      const data = (await response.json()) as { positions?: unknown };
+      const savedPositions = Array.isArray(data.positions)
+        ? data.positions.filter(isPortfolioPosition)
+        : [];
+      const migrated = await migrateLegacyPositions(savedPositions);
+      setPositions([...migrated, ...savedPositions]);
+    } catch {
+      setMessage("Portfoy kayitlari okunamadi. API veya veritabani kontrol edilmeli.");
+    }
+  }
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void loadPositions();
     }, 0);
 
     return () => window.clearTimeout(timer);
   }, []);
-
-  useEffect(() => {
-    window.localStorage.setItem(storageKey, JSON.stringify(positions));
-  }, [positions]);
 
   const priceMap = useMemo(() => {
     return new Map(tickers.map((ticker) => [ticker.symbol, ticker.price]));
@@ -126,7 +128,7 @@ export function PortfolioPanel({ currentPrice, selectedSymbol, tickers }: Portfo
     setMessage(`${selectedSymbol} fiyati ortalama maliyete aktarildi.`);
   }
 
-  function addPosition(event: React.FormEvent<HTMLFormElement>) {
+  async function addPosition(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const quantity = Number(draft.quantity);
     const averageCost = Number(draft.averageCost);
@@ -152,13 +154,28 @@ export function PortfolioPanel({ currentPrice, selectedSymbol, tickers }: Portfo
       createdAt: new Date().toISOString(),
     };
 
-    setPositions((current) => [position, ...current]);
-    setDraft(defaultDraft);
-    setMessage(`${selectedSymbol} pozisyonu eklendi.`);
+    try {
+      const saved = await savePosition(position);
+      setPositions((current) => [saved, ...current]);
+      setDraft(defaultDraft);
+      setMessage(`${selectedSymbol} pozisyonu eklendi.`);
+    } catch {
+      setMessage("Pozisyon kaydedilemedi. API veya veritabani kontrol edilmeli.");
+    }
   }
 
-  function deletePosition(id: string) {
-    setPositions((current) => current.filter((position) => position.id !== id));
+  async function deletePosition(id: string) {
+    try {
+      const response = await fetch(`/api/portfolio?id=${encodeURIComponent(id)}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) {
+        throw new Error("Delete failed");
+      }
+      setPositions((current) => current.filter((position) => position.id !== id));
+    } catch {
+      setMessage("Pozisyon silinemedi. API veya veritabani kontrol edilmeli.");
+    }
   }
 
   return (
@@ -304,6 +321,50 @@ export function PortfolioPanel({ currentPrice, selectedSymbol, tickers }: Portfo
       </div>
     </section>
   );
+}
+
+async function migrateLegacyPositions(existing: PortfolioPosition[]) {
+  const saved = window.localStorage.getItem(storageKey);
+  if (!saved) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(saved) as unknown;
+    const existingIds = new Set(existing.map((position) => position.id));
+    const legacy = Array.isArray(parsed)
+      ? parsed.filter(isPortfolioPosition).filter((position) => !existingIds.has(position.id))
+      : [];
+    const migrated: PortfolioPosition[] = [];
+
+    for (const position of legacy) {
+      migrated.push(await savePosition(position));
+    }
+
+    window.localStorage.removeItem(storageKey);
+    return migrated;
+  } catch {
+    window.localStorage.removeItem(storageKey);
+    return [];
+  }
+}
+
+async function savePosition(position: PortfolioPosition) {
+  const response = await fetch("/api/portfolio", {
+    body: JSON.stringify(position),
+    headers: { "Content-Type": "application/json" },
+    method: "POST",
+  });
+  if (!response.ok) {
+    throw new Error("Portfolio save failed");
+  }
+
+  const data = (await response.json()) as { position?: unknown };
+  if (!isPortfolioPosition(data.position)) {
+    throw new Error("Invalid portfolio response");
+  }
+
+  return data.position;
 }
 
 function PortfolioInput({

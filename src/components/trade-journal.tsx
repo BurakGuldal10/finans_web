@@ -71,29 +71,29 @@ export function TradeJournal({
   const [draft, setDraft] = useState<DraftTrade>(defaultDraft);
   const [message, setMessage] = useState<string | null>(null);
 
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      const saved = window.localStorage.getItem(storageKey);
-      if (!saved) {
-        return;
+  async function loadEntries() {
+    try {
+      const response = await fetch("/api/trades");
+      if (!response.ok) {
+        throw new Error("Trade journal load failed");
       }
 
-      try {
-        const parsed = JSON.parse(saved) as unknown;
-        if (Array.isArray(parsed)) {
-          setEntries(parsed.filter(isTradeEntry));
-        }
-      } catch {
-        window.localStorage.removeItem(storageKey);
-      }
+      const data = (await response.json()) as { entries?: unknown };
+      const savedEntries = Array.isArray(data.entries) ? data.entries.filter(isTradeEntry) : [];
+      const migrated = await migrateLegacyEntries(savedEntries);
+      setEntries([...migrated, ...savedEntries]);
+    } catch {
+      setMessage("Trade kayitlari okunamadi. API veya veritabani kontrol edilmeli.");
+    }
+  }
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void loadEntries();
     }, 0);
 
     return () => window.clearTimeout(timer);
   }, []);
-
-  useEffect(() => {
-    window.localStorage.setItem(storageKey, JSON.stringify(entries));
-  }, [entries]);
 
   const summary = useMemo(() => {
     const closed = entries.filter((entry) =>
@@ -133,7 +133,7 @@ export function TradeJournal({
     setMessage("Analiz seviyeleri forma aktarildi.");
   }
 
-  function addEntry(event: React.FormEvent<HTMLFormElement>) {
+  async function addEntry(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const entryPrice = Number(draft.entryPrice);
     const stopLoss = Number(draft.stopLoss);
@@ -165,19 +165,46 @@ export function TradeJournal({
       createdAt: new Date().toISOString(),
     };
 
-    setEntries((current) => [entry, ...current]);
-    setDraft(defaultDraft);
-    setMessage(`${selectedSymbol} kaydi eklendi.`);
+    try {
+      const saved = await saveEntry(entry);
+      setEntries((current) => [saved, ...current]);
+      setDraft(defaultDraft);
+      setMessage(`${selectedSymbol} kaydi eklendi.`);
+    } catch {
+      setMessage("Trade kaydi kaydedilemedi. API veya veritabani kontrol edilmeli.");
+    }
   }
 
-  function updateStatus(id: string, status: TradeStatus) {
-    setEntries((current) =>
-      current.map((entry) => (entry.id === id ? { ...entry, status } : entry)),
-    );
+  async function updateStatus(id: string, status: TradeStatus) {
+    try {
+      const response = await fetch("/api/trades", {
+        body: JSON.stringify({ id, status }),
+        headers: { "Content-Type": "application/json" },
+        method: "PATCH",
+      });
+      if (!response.ok) {
+        throw new Error("Trade status update failed");
+      }
+      setEntries((current) =>
+        current.map((entry) => (entry.id === id ? { ...entry, status } : entry)),
+      );
+    } catch {
+      setMessage("Trade durumu guncellenemedi. API veya veritabani kontrol edilmeli.");
+    }
   }
 
-  function deleteEntry(id: string) {
-    setEntries((current) => current.filter((entry) => entry.id !== id));
+  async function deleteEntry(id: string) {
+    try {
+      const response = await fetch(`/api/trades?id=${encodeURIComponent(id)}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) {
+        throw new Error("Trade delete failed");
+      }
+      setEntries((current) => current.filter((entry) => entry.id !== id));
+    } catch {
+      setMessage("Trade kaydi silinemedi. API veya veritabani kontrol edilmeli.");
+    }
   }
 
   return (
@@ -464,4 +491,48 @@ function isTradeEntry(value: unknown): value is TradeEntry {
     typeof entry.targetPrice === "number" &&
     typeof entry.quantity === "number"
   );
+}
+
+async function migrateLegacyEntries(existing: TradeEntry[]) {
+  const saved = window.localStorage.getItem(storageKey);
+  if (!saved) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(saved) as unknown;
+    const existingIds = new Set(existing.map((entry) => entry.id));
+    const legacy = Array.isArray(parsed)
+      ? parsed.filter(isTradeEntry).filter((entry) => !existingIds.has(entry.id))
+      : [];
+    const migrated: TradeEntry[] = [];
+
+    for (const entry of legacy) {
+      migrated.push(await saveEntry(entry));
+    }
+
+    window.localStorage.removeItem(storageKey);
+    return migrated;
+  } catch {
+    window.localStorage.removeItem(storageKey);
+    return [];
+  }
+}
+
+async function saveEntry(entry: TradeEntry) {
+  const response = await fetch("/api/trades", {
+    body: JSON.stringify(entry),
+    headers: { "Content-Type": "application/json" },
+    method: "POST",
+  });
+  if (!response.ok) {
+    throw new Error("Trade save failed");
+  }
+
+  const data = (await response.json()) as { entry?: unknown };
+  if (!isTradeEntry(data.entry)) {
+    throw new Error("Invalid trade response");
+  }
+
+  return data.entry;
 }

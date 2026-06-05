@@ -59,66 +59,71 @@ export function AlertsPanel({ analysis, market, price, symbol }: AlertsPanelProp
   const [draft, setDraft] = useState<DraftAlert>(defaultDraft);
   const [message, setMessage] = useState<string | null>(null);
 
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      const saved = window.localStorage.getItem(storageKey);
-      if (!saved) {
-        return;
+  async function loadAlerts() {
+    try {
+      const response = await fetch("/api/alerts");
+      if (!response.ok) {
+        throw new Error("Alerts load failed");
       }
 
-      try {
-        const parsed = JSON.parse(saved) as unknown;
-        if (Array.isArray(parsed)) {
-          setAlerts(parsed.filter(isAlertRule));
-        }
-      } catch {
-        window.localStorage.removeItem(storageKey);
-      }
+      const data = (await response.json()) as { alerts?: unknown };
+      const savedAlerts = Array.isArray(data.alerts) ? data.alerts.filter(isAlertRule) : [];
+      const migrated = await migrateLegacyAlerts(savedAlerts);
+      setAlerts([...migrated, ...savedAlerts]);
+    } catch {
+      setMessage("Uyarilar okunamadi. API veya veritabani kontrol edilmeli.");
+    }
+  }
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void loadAlerts();
     }, 0);
 
     return () => window.clearTimeout(timer);
   }, []);
 
   useEffect(() => {
-    window.localStorage.setItem(storageKey, JSON.stringify(alerts));
-  }, [alerts]);
-
-  useEffect(() => {
     const timer = window.setTimeout(() => {
-      setAlerts((current) => {
-        let changed = false;
-        const next = current.map((alert) => {
-          if (alert.triggeredAt || alert.market !== market || alert.symbol !== symbol) {
-            return alert;
-          }
+      const triggeredUpdates = alerts.flatMap((alert) => {
+        if (alert.triggeredAt || alert.market !== market || alert.symbol !== symbol) {
+          return [];
+        }
 
-          const currentValue = readMetric(alert.metric, price, analysis);
-          if (currentValue === null) {
-            return alert;
-          }
+        const currentValue = readMetric(alert.metric, price, analysis);
+        if (currentValue === null) {
+          return [];
+        }
 
-          const triggered =
-            alert.direction === "above"
-              ? currentValue >= alert.threshold
-              : currentValue <= alert.threshold;
+        const triggered =
+          alert.direction === "above"
+            ? currentValue >= alert.threshold
+            : currentValue <= alert.threshold;
 
-          if (!triggered) {
-            return alert;
-          }
-
-          changed = true;
-          return {
-            ...alert,
-            triggeredAt: new Date().toISOString(),
-          };
-        });
-
-        return changed ? next : current;
+        return triggered ? [{ id: alert.id, triggeredAt: new Date().toISOString() }] : [];
       });
+
+      if (triggeredUpdates.length === 0) {
+        return;
+      }
+
+      const triggeredAtById = new Map(
+        triggeredUpdates.map((update) => [update.id, update.triggeredAt]),
+      );
+      setAlerts((current) =>
+        current.map((alert) => {
+          const triggeredAt = triggeredAtById.get(alert.id);
+          return triggeredAt ? { ...alert, triggeredAt } : alert;
+        }),
+      );
+
+      for (const update of triggeredUpdates) {
+        void updateAlertTriggeredAt(update.id, update.triggeredAt);
+      }
     }, 0);
 
     return () => window.clearTimeout(timer);
-  }, [analysis, market, price, symbol]);
+  }, [alerts, analysis, market, price, symbol]);
 
   const relevantAlerts = useMemo(
     () => alerts.filter((alert) => alert.market === market && alert.symbol === symbol),
@@ -140,7 +145,7 @@ export function AlertsPanel({ analysis, market, price, symbol }: AlertsPanelProp
     setMessage(`${metricLabels[draft.metric]} esigi guncel degerle dolduruldu.`);
   }
 
-  function addAlert(event: React.FormEvent<HTMLFormElement>) {
+  async function addAlert(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const threshold = Number(draft.threshold);
 
@@ -160,21 +165,41 @@ export function AlertsPanel({ analysis, market, price, symbol }: AlertsPanelProp
       createdAt: new Date().toISOString(),
     };
 
-    setAlerts((current) => [alert, ...current]);
-    setDraft(defaultDraft);
-    setMessage(`${symbol} uyarisi eklendi.`);
+    try {
+      const saved = await saveAlert(alert);
+      setAlerts((current) => [saved, ...current]);
+      setDraft(defaultDraft);
+      setMessage(`${symbol} uyarisi eklendi.`);
+    } catch {
+      setMessage("Uyari kaydedilemedi. API veya veritabani kontrol edilmeli.");
+    }
   }
 
-  function deleteAlert(id: string) {
-    setAlerts((current) => current.filter((alert) => alert.id !== id));
+  async function deleteAlert(id: string) {
+    try {
+      const response = await fetch(`/api/alerts?id=${encodeURIComponent(id)}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) {
+        throw new Error("Alert delete failed");
+      }
+      setAlerts((current) => current.filter((alert) => alert.id !== id));
+    } catch {
+      setMessage("Uyari silinemedi. API veya veritabani kontrol edilmeli.");
+    }
   }
 
-  function resetAlert(id: string) {
-    setAlerts((current) =>
-      current.map((alert) =>
-        alert.id === id ? { ...alert, triggeredAt: undefined } : alert,
-      ),
-    );
+  async function resetAlert(id: string) {
+    try {
+      await updateAlertTriggeredAt(id, null);
+      setAlerts((current) =>
+        current.map((alert) =>
+          alert.id === id ? { ...alert, triggeredAt: undefined } : alert,
+        ),
+      );
+    } catch {
+      setMessage("Uyari sifirlanamadi. API veya veritabani kontrol edilmeli.");
+    }
   }
 
   return (
@@ -404,4 +429,59 @@ function isAlertRule(value: unknown): value is AlertRule {
     (alert.direction === "above" || alert.direction === "below") &&
     typeof alert.threshold === "number"
   );
+}
+
+async function migrateLegacyAlerts(existing: AlertRule[]) {
+  const saved = window.localStorage.getItem(storageKey);
+  if (!saved) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(saved) as unknown;
+    const existingIds = new Set(existing.map((alert) => alert.id));
+    const legacy = Array.isArray(parsed)
+      ? parsed.filter(isAlertRule).filter((alert) => !existingIds.has(alert.id))
+      : [];
+    const migrated: AlertRule[] = [];
+
+    for (const alert of legacy) {
+      migrated.push(await saveAlert(alert));
+    }
+
+    window.localStorage.removeItem(storageKey);
+    return migrated;
+  } catch {
+    window.localStorage.removeItem(storageKey);
+    return [];
+  }
+}
+
+async function saveAlert(alert: AlertRule) {
+  const response = await fetch("/api/alerts", {
+    body: JSON.stringify(alert),
+    headers: { "Content-Type": "application/json" },
+    method: "POST",
+  });
+  if (!response.ok) {
+    throw new Error("Alert save failed");
+  }
+
+  const data = (await response.json()) as { alert?: unknown };
+  if (!isAlertRule(data.alert)) {
+    throw new Error("Invalid alert response");
+  }
+
+  return data.alert;
+}
+
+async function updateAlertTriggeredAt(id: string, triggeredAt: string | null) {
+  const response = await fetch("/api/alerts", {
+    body: JSON.stringify({ id, triggeredAt }),
+    headers: { "Content-Type": "application/json" },
+    method: "PATCH",
+  });
+  if (!response.ok) {
+    throw new Error("Alert update failed");
+  }
 }
