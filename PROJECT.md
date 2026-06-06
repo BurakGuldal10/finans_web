@@ -647,3 +647,26 @@ Kontrol:
 npm run lint
 npm run build
 ```
+
+## Mevcut Durum - Piyasa Ozeti
+
+Eklenenler:
+
+- Dashboard'a izleme listesi bazli piyasa ozeti paneli eklendi.
+- Panel mevcut piyasa verisini tekrar API cagirmadan kullanir.
+- Gosterilen ozetler:
+  - Ortalama degisim
+  - Yukselen / dusen sembol sayisi
+  - En guclu sembol
+  - En zayif sembol
+  - Hacim lideri
+  - Sembol bazli gun ici dusuk/yuksek araligi
+- Ozet panelindeki sembollere tiklaninca secili sembol degisir ve mevcut analiz akisi o sembole gecer.
+- Kripto, ABD hisse ve BIST piyasalarinin hepsinde calisir.
+
+Kontrol:
+
+```text
+npm run lint
+npm run build
+```

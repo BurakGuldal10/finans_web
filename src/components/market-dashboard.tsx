@@ -25,6 +25,7 @@ import {
 } from "recharts";
 import { AlertsPanel } from "@/components/alerts-panel";
 import { FundamentalsPanel } from "@/components/fundamentals-panel";
+import { MarketSummaryPanel } from "@/components/market-summary-panel";
 import { PerformancePanel } from "@/components/performance-panel";
 import { formatPrice, type AnalysisResult, type Candle } from "@/lib/analysis";
 import { combineStockAnalysis } from "@/lib/combined-analysis";
@@ -650,6 +651,13 @@ export function MarketDashboard() {
               )}
             </div>
           </section>
+
+          <MarketSummaryPanel
+            onSelectSymbol={setSelectedSymbol}
+            selectedSymbol={selectedSymbol}
+            tickers={displayedTickers}
+            unit={priceUnit}
+          />
 
           <section className="grid gap-5 xl:grid-cols-[1fr_340px]">
             <div className="rounded-lg border border-[var(--border)] bg-[rgba(13,26,23,0.82)] p-4 md:p-5">
