@@ -26,7 +26,7 @@ export function FundamentalsPanel({ combined, data, error, loading }: Fundamenta
           Temel analiz
         </h3>
         <p className="mt-1 text-sm text-[var(--muted)]">
-          ABD hisseleri icin sirket sagligi, degerleme ve bilanco metriklerini ozetler.
+          ABD ve BIST hisseleri icin sirket sagligi, degerleme ve bilanco metriklerini ozetler.
         </p>
       </div>
 

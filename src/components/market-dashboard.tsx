@@ -141,7 +141,7 @@ export function MarketDashboard() {
   }, []);
 
   const loadFundamentals = useCallback(async (market: MarketKind, symbol: string) => {
-    if (market !== "stocks") {
+    if (market === "crypto") {
       setFundamentalsData(null);
       setFundamentalsError(null);
       setFundamentalsLoading(false);
@@ -426,7 +426,7 @@ export function MarketDashboard() {
   );
   const analysis = analysisData?.analysis;
   const combinedAnalysis =
-    selectedMarket === "stocks" && analysis && fundamentalsData?.fundamentals
+    selectedMarket !== "crypto" && analysis && fundamentalsData?.fundamentals
       ? combineStockAnalysis(analysis, fundamentalsData.fundamentals)
       : null;
   const chartData =

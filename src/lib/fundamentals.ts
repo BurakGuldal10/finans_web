@@ -1,3 +1,5 @@
+import { fetchYahooCandles } from "@/lib/yahoo";
+
 export type FundamentalMetric = {
   label: string;
   tone: "default" | "positive" | "danger";
@@ -55,6 +57,55 @@ type FmpRatio = {
   priceEarningsRatio?: number;
 };
 
+type YahooRawValue = {
+  raw?: number;
+  fmt?: string;
+  longFmt?: string;
+};
+
+type YahooQuoteSummaryResponse = {
+  quoteSummary: {
+    result?: Array<{
+      assetProfile?: {
+        sector?: string;
+      };
+      defaultKeyStatistics?: {
+        trailingEps?: YahooRawValue;
+      };
+      financialData?: {
+        currentRatio?: YahooRawValue;
+        debtToEquity?: YahooRawValue;
+        freeCashflow?: YahooRawValue;
+        profitMargins?: YahooRawValue;
+        returnOnEquity?: YahooRawValue;
+        revenueGrowth?: YahooRawValue;
+      };
+      price?: {
+        longName?: string;
+        marketCap?: YahooRawValue;
+        shortName?: string;
+      };
+      summaryDetail?: {
+        trailingPE?: YahooRawValue;
+      };
+    }>;
+  };
+};
+
+type YahooQuoteResponse = {
+  quoteResponse: {
+    result?: Array<{
+      epsTrailingTwelveMonths?: number;
+      longName?: string;
+      marketCap?: number;
+      regularMarketPrice?: number;
+      sector?: string;
+      shortName?: string;
+      trailingPE?: number;
+    }>;
+  };
+};
+
 export async function fetchFundamentals(symbol: string): Promise<FundamentalAnalysis> {
   const apiKey = process.env.FMP_API_KEY;
 
@@ -86,6 +137,133 @@ export async function fetchFundamentals(symbol: string): Promise<FundamentalAnal
   });
 }
 
+export async function fetchYahooFundamentals(symbol: string): Promise<FundamentalAnalysis> {
+  const normalizedSymbol = symbol.trim().toUpperCase();
+
+  try {
+    return await fetchYahooQuoteSummaryFundamentals(normalizedSymbol);
+  } catch {
+    try {
+      return await fetchYahooQuoteFundamentalSnapshot(normalizedSymbol);
+    } catch {
+      return fetchYahooMarketSnapshotFundamentals(normalizedSymbol);
+    }
+  }
+}
+
+async function fetchYahooQuoteSummaryFundamentals(
+  normalizedSymbol: string,
+): Promise<FundamentalAnalysis> {
+  const modules = [
+    "assetProfile",
+    "defaultKeyStatistics",
+    "financialData",
+    "price",
+    "summaryDetail",
+  ].join(",");
+  const response = await fetch(
+    `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${normalizedSymbol}?modules=${modules}`,
+    { next: { revalidate: 3600 } },
+  );
+
+  if (!response.ok) {
+    throw new Error(`Yahoo temel veri istegi basarisiz: ${response.status}`);
+  }
+
+  const data = (await response.json()) as YahooQuoteSummaryResponse;
+  const result = data.quoteSummary.result?.[0];
+
+  if (!result) {
+    throw new Error(`${normalizedSymbol} icin temel veri bulunamadi.`);
+  }
+
+  return analyzeYahooFundamentals(normalizedSymbol, result);
+}
+
+async function fetchYahooQuoteFundamentalSnapshot(
+  normalizedSymbol: string,
+): Promise<FundamentalAnalysis> {
+  const params = new URLSearchParams({ symbols: normalizedSymbol });
+  const response = await fetch(`https://query1.finance.yahoo.com/v7/finance/quote?${params}`, {
+    next: { revalidate: 1800 },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Yahoo temel veri istegi basarisiz: ${response.status}`);
+  }
+
+  const data = (await response.json()) as YahooQuoteResponse;
+  const quote = data.quoteResponse.result?.[0];
+
+  if (!quote) {
+    throw new Error(`${normalizedSymbol} icin temel veri bulunamadi.`);
+  }
+
+  const price = safeNumber(quote.regularMarketPrice);
+  const eps = safeNumber(quote.epsTrailingTwelveMonths);
+  const peRatio = safeNumber(quote.trailingPE) ?? (price !== null && eps !== null && eps > 0 ? price / eps : null);
+
+  return buildFundamentalAnalysis({
+    symbol: normalizedSymbol,
+    companyName: quote.longName ?? quote.shortName ?? normalizedSymbol,
+    sector: quote.sector ?? "BIST",
+    marketCap: safeNumber(quote.marketCap) ?? 0,
+    peRatio,
+    revenueGrowth: null,
+    netMargin: null,
+    debtToEquity: null,
+    currentRatio: null,
+    freeCashFlow: null,
+    returnOnEquity: null,
+  });
+}
+
+async function fetchYahooMarketSnapshotFundamentals(
+  normalizedSymbol: string,
+): Promise<FundamentalAnalysis> {
+  const candles = await fetchYahooCandles(normalizedSymbol, "1d");
+  const latest = candles.at(-1);
+  const previous = candles.at(-2);
+
+  if (!latest) {
+    throw new Error(`${normalizedSymbol} icin temel veri bulunamadi.`);
+  }
+
+  const previousClose = previous?.close ?? latest.open;
+  const changePercent =
+    previousClose > 0 ? ((latest.close - previousClose) / previousClose) * 100 : null;
+
+  return {
+    symbol: normalizedSymbol,
+    companyName: normalizedSymbol,
+    sector: "BIST",
+    score: 50,
+    health: "mixed",
+    summary:
+      "BIST bilanco oranlari bu kaynakta sinirli geldi; fiyat ve hacim verisi canli, detayli bilanco icin profesyonel veri kaynagi gerekir.",
+    metrics: [
+      metric("Son fiyat", latest.close.toFixed(2), "default"),
+      metric("Gunluk degisim", formatPercent(changePercent), growthTone(changePercent)),
+      metric("Hacim", formatLargeNumber(latest.volume), "default"),
+      metric("F/K", "N/A", "default"),
+      metric("Gelir buyumesi", "N/A", "default"),
+      metric("Net marj", "N/A", "default"),
+      metric("Borc/Ozsermaye", "N/A", "default"),
+      metric("ROE", "N/A", "default"),
+    ],
+    raw: {
+      marketCap: 0,
+      peRatio: null,
+      revenueGrowth: null,
+      netMargin: null,
+      debtToEquity: null,
+      currentRatio: null,
+      freeCashFlow: null,
+      returnOnEquity: null,
+    },
+  };
+}
+
 export class MissingFmpApiKeyError extends Error {
   constructor() {
     super("FMP_API_KEY tanimli degil.");
@@ -104,6 +282,34 @@ async function fetchFmpArray<T>(path: string, apiKey: string) {
   }
 
   return (await response.json()) as T[];
+}
+
+function analyzeYahooFundamentals(
+  symbol: string,
+  result: NonNullable<YahooQuoteSummaryResponse["quoteSummary"]["result"]>[number],
+): FundamentalAnalysis {
+  const revenueGrowth = safePercent(readYahooRaw(result.financialData?.revenueGrowth));
+  const netMargin = safePercent(readYahooRaw(result.financialData?.profitMargins));
+  const debtToEquity = normalizeYahooDebtToEquity(readYahooRaw(result.financialData?.debtToEquity));
+  const currentRatio = safeNumber(readYahooRaw(result.financialData?.currentRatio));
+  const freeCashFlow = safeNumber(readYahooRaw(result.financialData?.freeCashflow));
+  const returnOnEquity = safePercent(readYahooRaw(result.financialData?.returnOnEquity));
+  const peRatio = safeNumber(readYahooRaw(result.summaryDetail?.trailingPE));
+  const marketCap = safeNumber(readYahooRaw(result.price?.marketCap)) ?? 0;
+
+  return buildFundamentalAnalysis({
+    symbol,
+    companyName: result.price?.longName ?? result.price?.shortName ?? symbol,
+    sector: result.assetProfile?.sector ?? "BIST",
+    marketCap,
+    peRatio,
+    revenueGrowth,
+    netMargin,
+    debtToEquity,
+    currentRatio,
+    freeCashFlow,
+    returnOnEquity,
+  });
 }
 
 function analyzeFundamentals(input: {
@@ -135,44 +341,84 @@ function analyzeFundamentals(input: {
   const returnOnEquity =
     equity > 0 ? (netIncome / equity) * 100 : safePercent(input.ratios?.returnOnEquity);
 
+  return buildFundamentalAnalysis({
+    symbol: input.symbol,
+    companyName: input.profile.companyName ?? input.symbol,
+    sector: input.profile.sector ?? "Unknown",
+    marketCap,
+    peRatio,
+    revenueGrowth,
+    netMargin,
+    debtToEquity,
+    currentRatio,
+    freeCashFlow,
+    returnOnEquity,
+  });
+}
+
+function buildFundamentalAnalysis(input: {
+  symbol: string;
+  companyName: string;
+  sector: string;
+  marketCap: number;
+  peRatio: number | null;
+  revenueGrowth: number | null;
+  netMargin: number | null;
+  debtToEquity: number | null;
+  currentRatio: number | null;
+  freeCashFlow: number | null;
+  returnOnEquity: number | null;
+}): FundamentalAnalysis {
   let score = 50;
-  score += scoreRevenueGrowth(revenueGrowth);
-  score += scoreNetMargin(netMargin);
-  score += scoreDebtToEquity(debtToEquity);
-  score += scoreCurrentRatio(currentRatio);
-  score += scoreFreeCashFlow(freeCashFlow);
-  score += scorePeRatio(peRatio);
-  score += scoreReturnOnEquity(returnOnEquity);
+  score += scoreRevenueGrowth(input.revenueGrowth);
+  score += scoreNetMargin(input.netMargin);
+  score += scoreDebtToEquity(input.debtToEquity);
+  score += scoreCurrentRatio(input.currentRatio);
+  score += scoreFreeCashFlow(input.freeCashFlow);
+  score += scorePeRatio(input.peRatio);
+  score += scoreReturnOnEquity(input.returnOnEquity);
 
   const boundedScore = Math.max(0, Math.min(100, Math.round(score)));
   const health = boundedScore >= 70 ? "strong" : boundedScore <= 42 ? "weak" : "mixed";
 
   return {
     symbol: input.symbol,
-    companyName: input.profile.companyName ?? input.symbol,
-    sector: input.profile.sector ?? "Unknown",
+    companyName: input.companyName,
+    sector: input.sector,
     score: boundedScore,
     health,
     summary: buildSummary(health),
     metrics: [
-      metric("Piyasa degeri", formatLargeNumber(marketCap), "default"),
-      metric("F/K", peRatio === null ? "N/A" : peRatio.toFixed(2), peTone(peRatio)),
-      metric("Gelir buyumesi", formatPercent(revenueGrowth), growthTone(revenueGrowth)),
-      metric("Net marj", formatPercent(netMargin), marginTone(netMargin)),
-      metric("Borc/Ozsermaye", debtToEquity === null ? "N/A" : debtToEquity.toFixed(2), debtTone(debtToEquity)),
-      metric("Cari oran", currentRatio === null ? "N/A" : currentRatio.toFixed(2), currentRatioTone(currentRatio)),
-      metric("Serbest nakit", formatLargeNumber(freeCashFlow), freeCashFlow >= 0 ? "positive" : "danger"),
-      metric("ROE", formatPercent(returnOnEquity), roeTone(returnOnEquity)),
+      metric("Piyasa degeri", formatLargeNumber(input.marketCap), "default"),
+      metric("F/K", input.peRatio === null ? "N/A" : input.peRatio.toFixed(2), peTone(input.peRatio)),
+      metric("Gelir buyumesi", formatPercent(input.revenueGrowth), growthTone(input.revenueGrowth)),
+      metric("Net marj", formatPercent(input.netMargin), marginTone(input.netMargin)),
+      metric(
+        "Borc/Ozsermaye",
+        input.debtToEquity === null ? "N/A" : input.debtToEquity.toFixed(2),
+        debtTone(input.debtToEquity),
+      ),
+      metric(
+        "Cari oran",
+        input.currentRatio === null ? "N/A" : input.currentRatio.toFixed(2),
+        currentRatioTone(input.currentRatio),
+      ),
+      metric(
+        "Serbest nakit",
+        formatLargeNumber(input.freeCashFlow),
+        input.freeCashFlow === null ? "default" : input.freeCashFlow >= 0 ? "positive" : "danger",
+      ),
+      metric("ROE", formatPercent(input.returnOnEquity), roeTone(input.returnOnEquity)),
     ],
     raw: {
-      marketCap,
-      peRatio,
-      revenueGrowth,
-      netMargin,
-      debtToEquity,
-      currentRatio,
-      freeCashFlow,
-      returnOnEquity,
+      marketCap: input.marketCap,
+      peRatio: input.peRatio,
+      revenueGrowth: input.revenueGrowth,
+      netMargin: input.netMargin,
+      debtToEquity: input.debtToEquity,
+      currentRatio: input.currentRatio,
+      freeCashFlow: input.freeCashFlow,
+      returnOnEquity: input.returnOnEquity,
     },
   };
 }
@@ -196,6 +442,18 @@ function safePercent(value: unknown) {
   }
 
   return Math.abs(number) <= 1 ? number * 100 : number;
+}
+
+function readYahooRaw(value: YahooRawValue | undefined) {
+  return typeof value?.raw === "number" && Number.isFinite(value.raw) ? value.raw : null;
+}
+
+function normalizeYahooDebtToEquity(value: number | null) {
+  if (value === null) {
+    return null;
+  }
+
+  return value > 20 ? value / 100 : value;
 }
 
 function scoreRevenueGrowth(value: number | null) {

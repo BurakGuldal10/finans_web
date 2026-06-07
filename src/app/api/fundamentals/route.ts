@@ -1,21 +1,38 @@
 import { NextRequest, NextResponse } from "next/server";
-import { MissingFmpApiKeyError, fetchFundamentals } from "@/lib/fundamentals";
+import {
+  MissingFmpApiKeyError,
+  fetchFundamentals,
+  fetchYahooFundamentals,
+} from "@/lib/fundamentals";
 import { normalizeMarket } from "@/lib/markets";
-import { normalizeStockSymbol } from "@/lib/yahoo";
+import { normalizeBistSymbol, normalizeStockSymbol } from "@/lib/yahoo";
 
 export async function GET(request: NextRequest) {
   const market = normalizeMarket(request.nextUrl.searchParams.get("market"));
 
-  if (market !== "stocks") {
+  if (market === "crypto") {
     return NextResponse.json(
-      { error: "Temel analiz su an sadece ABD hisseleri icin destekleniyor." },
+      { error: "Temel analiz su an sadece hisse senetleri icin destekleniyor." },
       { status: 400 },
     );
   }
 
-  const symbol = normalizeStockSymbol(request.nextUrl.searchParams.get("symbol") ?? "AAPL");
+  const requestedSymbol = request.nextUrl.searchParams.get("symbol");
+  const symbol =
+    market === "bist"
+      ? normalizeBistSymbol(requestedSymbol ?? "THYAO.IS")
+      : normalizeStockSymbol(requestedSymbol ?? "AAPL");
 
   try {
+    if (market === "bist") {
+      return NextResponse.json({
+        market,
+        source: "yahoo",
+        updatedAt: new Date().toISOString(),
+        fundamentals: await fetchYahooFundamentals(symbol),
+      });
+    }
+
     return NextResponse.json({
       market,
       source: "financialmodelingprep",

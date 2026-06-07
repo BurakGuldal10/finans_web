@@ -818,3 +818,42 @@ Kontrol:
 npm run lint
 npm run build
 ```
+
+## Mevcut Durum - BIST Temel Analiz
+
+Eklenenler:
+
+- BIST hisseleri icin temel analiz endpoint destegi eklendi: `/api/fundamentals?market=bist&symbol=THYAO.IS`.
+- BIST temel verileri Yahoo Finance `quoteSummary` kaynagindan cekilir.
+- Yahoo temel oran endpoint'i erisilemezse sistem Yahoo chart verisinden sinirli bir BIST snapshot uretir.
+- Dashboard'da BIST seciliyken temel analiz paneli artik sirket sagligi, degerleme ve bilanco metriklerini gosterir.
+- BIST icin teknik skor ile temel skor birlestirilerek genel hisse skoru uretilir.
+- Kullanilan metrikler:
+  - Piyasa degeri
+  - F/K
+  - Gelir buyumesi
+  - Net marj
+  - Borc / ozsermaye
+  - Cari oran
+  - Serbest nakit akisi
+  - ROE
+
+Ornek:
+
+```text
+/api/fundamentals?market=bist&symbol=THYAO.IS
+```
+
+Notlar:
+
+- Yahoo Finance ucretsiz kaynak oldugu icin BIST temel verilerinde eksik alan veya gecikme olabilir.
+- Eksik metrikler `N/A` olarak gosterilir ve skor hesabi mevcut metriklerle yapilir.
+- Yahoo temel oran endpoint'i 401 dondurdugunde panel canli fiyat/hacim snapshot'i ile calismaya devam eder; bu durumda bilanco metrikleri `N/A` kalir.
+- BIST icin profesyonel bilanco kaynagi entegrasyonu ileride ayri bir adim olarak ele alinabilir.
+
+Kontrol:
+
+```text
+npm run lint
+npm run build
+```
