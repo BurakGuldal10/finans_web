@@ -1,12 +1,15 @@
 "use client";
 
-import { Download, FileJson, Sheet } from "lucide-react";
+import { useRef, useState } from "react";
+import { Download, FileJson, Sheet, Upload } from "lucide-react";
 
 type ExportItem = {
   description: string;
   label: string;
   type: "alerts" | "portfolio" | "trades";
 };
+
+type ImportState = Partial<Record<ExportItem["type"], string>>;
 
 const exportItems: ExportItem[] = [
   {
@@ -27,6 +30,44 @@ const exportItems: ExportItem[] = [
 ];
 
 export function ExportPanel() {
+  const [importState, setImportState] = useState<ImportState>({});
+  const [importingType, setImportingType] = useState<ExportItem["type"] | null>(null);
+
+  async function importJson(type: ExportItem["type"], file: File | null) {
+    if (!file) {
+      return;
+    }
+
+    setImportingType(type);
+    setImportState((current) => ({ ...current, [type]: "Ice aktariliyor..." }));
+
+    try {
+      const body = await file.text();
+      const response = await fetch(`/api/import?type=${type}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body,
+      });
+      const result = (await response.json()) as { imported?: number; error?: string };
+
+      if (!response.ok) {
+        throw new Error(result.error ?? "JSON dosyasi ice aktarilamadi.");
+      }
+
+      setImportState((current) => ({
+        ...current,
+        [type]: `${result.imported ?? 0} kayit ice aktarildi.`,
+      }));
+    } catch (error) {
+      setImportState((current) => ({
+        ...current,
+        [type]: error instanceof Error ? error.message : "JSON dosyasi ice aktarilamadi.",
+      }));
+    } finally {
+      setImportingType(null);
+    }
+  }
+
   return (
     <section className="rounded-lg border border-[var(--border)] bg-[rgba(13,26,23,0.82)] p-4 shadow-2xl shadow-black/20 md:p-5">
       <div>
@@ -35,7 +76,7 @@ export function ExportPanel() {
           Yedek / disa aktar
         </h3>
         <p className="mt-1 text-sm text-[var(--muted)]">
-          Yerel SQLite kayitlarini CSV veya JSON olarak indirir.
+          Yerel SQLite kayitlarini CSV veya JSON olarak indirir; JSON yedekleri geri yukler.
         </p>
       </div>
 
@@ -53,6 +94,12 @@ export function ExportPanel() {
               <ExportLink format="csv" type={item.type} />
               <ExportLink format="json" type={item.type} />
             </div>
+
+            <ImportControl
+              disabled={importingType === item.type}
+              message={importState[item.type]}
+              onImport={(file) => importJson(item.type, file)}
+            />
           </article>
         ))}
       </div>
@@ -77,5 +124,42 @@ function ExportLink({
       <Icon size={16} />
       {format.toUpperCase()}
     </a>
+  );
+}
+
+function ImportControl({
+  disabled,
+  message,
+  onImport,
+}: {
+  disabled: boolean;
+  message?: string;
+  onImport: (file: File | null) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  return (
+    <div className="mt-3">
+      <button
+        className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-md border border-[var(--border)] bg-emerald-300/10 px-3 text-sm font-medium text-emerald-100 transition hover:border-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
+        disabled={disabled}
+        onClick={() => inputRef.current?.click()}
+        type="button"
+      >
+        <Upload size={16} />
+        {disabled ? "Yukleniyor" : "JSON yukle"}
+      </button>
+      <input
+        accept=".json,application/json"
+        className="hidden"
+        onChange={(event) => {
+          onImport(event.target.files?.[0] ?? null);
+          event.target.value = "";
+        }}
+        ref={inputRef}
+        type="file"
+      />
+      {message ? <p className="mt-2 text-xs leading-5 text-[var(--muted)]">{message}</p> : null}
+    </div>
   );
 }

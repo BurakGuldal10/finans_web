@@ -114,6 +114,25 @@ export function createPortfolioPosition(position: PortfolioPositionRecord) {
   return position;
 }
 
+export function upsertPortfolioPosition(position: PortfolioPositionRecord) {
+  getDb()
+    .prepare(
+      `INSERT OR REPLACE INTO portfolio_positions
+        (id, symbol, quantity, averageCost, stopLoss, note, createdAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    )
+    .run(
+      position.id,
+      position.symbol,
+      position.quantity,
+      position.averageCost,
+      position.stopLoss,
+      position.note,
+      position.createdAt,
+    );
+  return position;
+}
+
 export function deletePortfolioPosition(id: string) {
   getDb().prepare("DELETE FROM portfolio_positions WHERE id = ?").run(id);
 }
@@ -128,6 +147,30 @@ export function createTradeEntry(entry: TradeEntryRecord) {
   getDb()
     .prepare(
       `INSERT INTO trade_entries
+        (id, symbol, timeframe, side, entryPrice, stopLoss, targetPrice, quantity, strategy, status, note, createdAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    )
+    .run(
+      entry.id,
+      entry.symbol,
+      entry.timeframe,
+      entry.side,
+      entry.entryPrice,
+      entry.stopLoss,
+      entry.targetPrice,
+      entry.quantity,
+      entry.strategy,
+      entry.status,
+      entry.note,
+      entry.createdAt,
+    );
+  return entry;
+}
+
+export function upsertTradeEntry(entry: TradeEntryRecord) {
+  getDb()
+    .prepare(
+      `INSERT OR REPLACE INTO trade_entries
         (id, symbol, timeframe, side, entryPrice, stopLoss, targetPrice, quantity, strategy, status, note, createdAt)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
@@ -166,6 +209,27 @@ export function createAlertRule(alert: AlertRuleRecord) {
   getDb()
     .prepare(
       `INSERT INTO alert_rules
+        (id, market, symbol, metric, direction, threshold, note, createdAt, triggeredAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    )
+    .run(
+      alert.id,
+      alert.market,
+      alert.symbol,
+      alert.metric,
+      alert.direction,
+      alert.threshold,
+      alert.note,
+      alert.createdAt,
+      alert.triggeredAt ?? null,
+    );
+  return alert;
+}
+
+export function upsertAlertRule(alert: AlertRuleRecord) {
+  getDb()
+    .prepare(
+      `INSERT OR REPLACE INTO alert_rules
         (id, market, symbol, metric, direction, threshold, note, createdAt, triggeredAt)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )

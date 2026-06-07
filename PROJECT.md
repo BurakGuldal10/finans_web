@@ -777,8 +777,40 @@ Eklenenler:
 Notlar:
 
 - CSV formati Excel veya benzeri tablolu analiz araclari icin uygundur.
-- JSON formati tam yedek ve ileride geri yukleme akisi icin daha uygundur.
-- Geri yukleme/import henuz eklenmedi.
+- JSON formati tam yedek ve geri yukleme akisi icin daha uygundur.
+
+Kontrol:
+
+```text
+npm run lint
+npm run build
+```
+
+## Mevcut Durum - JSON Geri Yukleme
+
+Eklenenler:
+
+- Yerel kayitlar icin JSON ice aktarma endpoint'i eklendi: `/api/import`.
+- Dashboard'daki "Yedek / disa aktar" panelinden JSON yedekleri geri yuklenebilir.
+- Geri yuklenebilen kayitlar:
+  - Trade gunlugu
+  - Portfoy
+  - Uyari kurallari
+- Import islemi kayitlari `id` alanina gore ekler veya mevcut kaydi gunceller; ayni yedek tekrar yuklenirse kayitlar cogalmaz.
+- JSON dosyalari icin temel alan dogrulamasi yapilir; bozuk veya beklenen alanlari tasimayan dosyalar reddedilir.
+
+Ornekler:
+
+```text
+POST /api/import?type=trades
+POST /api/import?type=portfolio
+POST /api/import?type=alerts
+```
+
+Notlar:
+
+- Su an yalnizca JSON geri yukleme desteklenir.
+- CSV import henuz eklenmedi; CSV daha cok harici tablo analizleri icin disa aktarma formatidir.
 
 Kontrol:
 

@@ -2,6 +2,9 @@ import {
   listAlertRules,
   listPortfolioPositions,
   listTradeEntries,
+  upsertAlertRule,
+  upsertPortfolioPosition,
+  upsertTradeEntry,
   type AlertRuleRecord,
   type PortfolioPositionRecord,
   type TradeEntryRecord,
@@ -14,6 +17,10 @@ type ExportPayload =
   | AlertRuleRecord[]
   | PortfolioPositionRecord[]
   | TradeEntryRecord[];
+
+type ImportPayload = {
+  records?: unknown;
+};
 
 const portfolioHeaders: Array<keyof PortfolioPositionRecord> = [
   "id",
@@ -116,6 +123,41 @@ export function createExportFilename(resource: ExportResource, format: ExportFor
   return `finansman-${resource}-${date}.${format}`;
 }
 
+export function parseImportPayload(resource: ExportResource, payload: unknown) {
+  const records = readImportRecords(payload);
+
+  if (resource === "portfolio") {
+    return records.map(normalizePortfolioImportRecord);
+  }
+
+  if (resource === "alerts") {
+    return records.map(normalizeAlertImportRecord);
+  }
+
+  return records.map(normalizeTradeImportRecord);
+}
+
+export function importRecords(
+  resource: ExportResource,
+  records: AlertRuleRecord[] | PortfolioPositionRecord[] | TradeEntryRecord[],
+) {
+  if (resource === "portfolio") {
+    for (const record of records as PortfolioPositionRecord[]) {
+      upsertPortfolioPosition(record);
+    }
+  } else if (resource === "alerts") {
+    for (const record of records as AlertRuleRecord[]) {
+      upsertAlertRule(record);
+    }
+  } else {
+    for (const record of records as TradeEntryRecord[]) {
+      upsertTradeEntry(record);
+    }
+  }
+
+  return { imported: records.length };
+}
+
 function toCsv(records: ExportPayload, headers: string[]) {
   const rows = records.map((record) =>
     headers.map((header) => escapeCsvCell(readRecordValue(record, header))).join(","),
@@ -136,4 +178,145 @@ function escapeCsvCell(value: unknown) {
   }
 
   return text;
+}
+
+function readImportRecords(payload: unknown) {
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+
+  if (isRecord(payload) && Array.isArray((payload as ImportPayload).records)) {
+    return (payload as { records: unknown[] }).records;
+  }
+
+  throw new Error("JSON dosyasi records dizisi icermeli.");
+}
+
+function normalizePortfolioImportRecord(record: unknown): PortfolioPositionRecord {
+  const raw = requireRecord(record);
+  return {
+    id: readRequiredString(raw, "id"),
+    symbol: readRequiredString(raw, "symbol").toUpperCase(),
+    quantity: readPositiveNumber(raw, "quantity"),
+    averageCost: readPositiveNumber(raw, "averageCost"),
+    stopLoss: readNonNegativeNumber(raw, "stopLoss"),
+    note: readOptionalString(raw, "note"),
+    createdAt: readDateString(raw, "createdAt"),
+  };
+}
+
+function normalizeTradeImportRecord(record: unknown): TradeEntryRecord {
+  const raw = requireRecord(record);
+  return {
+    id: readRequiredString(raw, "id"),
+    symbol: readRequiredString(raw, "symbol").toUpperCase(),
+    timeframe: readRequiredString(raw, "timeframe"),
+    side: readEnum(raw, "side", ["long", "short"]),
+    entryPrice: readPositiveNumber(raw, "entryPrice"),
+    stopLoss: readPositiveNumber(raw, "stopLoss"),
+    targetPrice: readPositiveNumber(raw, "targetPrice"),
+    quantity: readPositiveNumber(raw, "quantity"),
+    strategy: readOptionalString(raw, "strategy", "Teknik skor"),
+    status: readEnum(raw, "status", ["plan", "open", "win", "loss", "breakeven"]),
+    note: readOptionalString(raw, "note"),
+    createdAt: readDateString(raw, "createdAt"),
+  };
+}
+
+function normalizeAlertImportRecord(record: unknown): AlertRuleRecord {
+  const raw = requireRecord(record);
+  return {
+    id: readRequiredString(raw, "id"),
+    market: readEnum(raw, "market", ["crypto", "stocks", "bist"]),
+    symbol: readRequiredString(raw, "symbol").toUpperCase(),
+    metric: readEnum(raw, "metric", ["price", "score", "rsi"]),
+    direction: readEnum(raw, "direction", ["above", "below"]),
+    threshold: readFiniteNumber(raw, "threshold"),
+    note: readOptionalString(raw, "note"),
+    createdAt: readDateString(raw, "createdAt"),
+    triggeredAt: readOptionalDateString(raw, "triggeredAt"),
+  };
+}
+
+function requireRecord(value: unknown) {
+  if (!isRecord(value)) {
+    throw new Error("Kayit nesne formatinda olmali.");
+  }
+
+  return value;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function readRequiredString(record: Record<string, unknown>, key: string) {
+  const value = record[key];
+  if (typeof value !== "string" || value.trim().length === 0) {
+    throw new Error(`${key} alani zorunlu metin olmali.`);
+  }
+
+  return value.trim();
+}
+
+function readOptionalString(record: Record<string, unknown>, key: string, fallback = "") {
+  const value = record[key];
+  return typeof value === "string" ? value.trim() : fallback;
+}
+
+function readFiniteNumber(record: Record<string, unknown>, key: string) {
+  const value = Number(record[key]);
+  if (!Number.isFinite(value)) {
+    throw new Error(`${key} alani gecerli sayi olmali.`);
+  }
+
+  return value;
+}
+
+function readPositiveNumber(record: Record<string, unknown>, key: string) {
+  const value = readFiniteNumber(record, key);
+  if (value <= 0) {
+    throw new Error(`${key} alani sifirdan buyuk olmali.`);
+  }
+
+  return value;
+}
+
+function readNonNegativeNumber(record: Record<string, unknown>, key: string) {
+  const value = readFiniteNumber(record, key);
+  if (value < 0) {
+    throw new Error(`${key} alani negatif olamaz.`);
+  }
+
+  return value;
+}
+
+function readEnum<const T extends string>(
+  record: Record<string, unknown>,
+  key: string,
+  values: readonly T[],
+) {
+  const value = record[key];
+  if (typeof value === "string" && values.includes(value as T)) {
+    return value as T;
+  }
+
+  throw new Error(`${key} alani gecersiz.`);
+}
+
+function readDateString(record: Record<string, unknown>, key: string) {
+  return readOptionalDateString(record, key) ?? new Date().toISOString();
+}
+
+function readOptionalDateString(record: Record<string, unknown>, key: string) {
+  const value = record[key];
+  if (value === undefined || value === null || value === "") {
+    return undefined;
+  }
+
+  if (typeof value !== "string" || Number.isNaN(Date.parse(value))) {
+    throw new Error(`${key} alani gecerli tarih olmali.`);
+  }
+
+  return value;
 }
