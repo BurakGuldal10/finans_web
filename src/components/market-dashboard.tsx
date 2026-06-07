@@ -96,6 +96,7 @@ const marketStorageKey = "finansman-market";
 const settingsStorageKey = "finansman-settings";
 const defaultSettings: AppSettings = {
   autoRefresh: true,
+  browserNotifications: false,
   refreshIntervalSeconds: 30,
   riskPercent: "1",
 };
@@ -742,6 +743,7 @@ export function MarketDashboard() {
 
           <AlertsPanel
             analysis={analysis}
+            browserNotifications={settings.browserNotifications}
             market={selectedMarket}
             price={selectedTicker?.price}
             symbol={selectedSymbol}
@@ -899,6 +901,10 @@ function normalizeSettings(value: Partial<AppSettings>) {
 
   return {
     autoRefresh: typeof value.autoRefresh === "boolean" ? value.autoRefresh : defaultSettings.autoRefresh,
+    browserNotifications:
+      typeof value.browserNotifications === "boolean"
+        ? value.browserNotifications
+        : defaultSettings.browserNotifications,
     refreshIntervalSeconds: allowedIntervals.includes(refreshIntervalSeconds)
       ? refreshIntervalSeconds
       : defaultSettings.refreshIntervalSeconds,

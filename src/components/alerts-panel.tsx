@@ -22,6 +22,7 @@ type AlertRule = {
 
 type AlertsPanelProps = {
   analysis?: AnalysisResult;
+  browserNotifications: boolean;
   market: MarketKind;
   price?: number;
   symbol: string;
@@ -54,10 +55,19 @@ const directionLabels: Record<AlertDirection, string> = {
   below: "Altina inerse",
 };
 
-export function AlertsPanel({ analysis, market, price, symbol }: AlertsPanelProps) {
+export function AlertsPanel({
+  analysis,
+  browserNotifications,
+  market,
+  price,
+  symbol,
+}: AlertsPanelProps) {
   const [alerts, setAlerts] = useState<AlertRule[]>([]);
   const [draft, setDraft] = useState<DraftAlert>(defaultDraft);
   const [message, setMessage] = useState<string | null>(null);
+  const [notificationPermission, setNotificationPermission] =
+    useState<NotificationPermission>("default");
+  const [recentTriggers, setRecentTriggers] = useState<AlertRule[]>([]);
 
   async function loadAlerts() {
     try {
@@ -78,10 +88,31 @@ export function AlertsPanel({ analysis, market, price, symbol }: AlertsPanelProp
   useEffect(() => {
     const timer = window.setTimeout(() => {
       void loadAlerts();
+      if ("Notification" in window) {
+        setNotificationPermission(window.Notification.permission);
+      }
     }, 0);
 
     return () => window.clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    if (!browserNotifications || !("Notification" in window)) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setNotificationPermission(window.Notification.permission);
+    }, 0);
+
+    if (window.Notification.permission === "default") {
+      void window.Notification.requestPermission().then((permission) => {
+        setNotificationPermission(permission);
+      });
+    }
+
+    return () => window.clearTimeout(timer);
+  }, [browserNotifications]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -110,12 +141,20 @@ export function AlertsPanel({ analysis, market, price, symbol }: AlertsPanelProp
       const triggeredAtById = new Map(
         triggeredUpdates.map((update) => [update.id, update.triggeredAt]),
       );
+      const triggeredRules = alerts
+        .filter((alert) => triggeredAtById.has(alert.id))
+        .map((alert) => ({
+          ...alert,
+          triggeredAt: triggeredAtById.get(alert.id),
+        }));
       setAlerts((current) =>
         current.map((alert) => {
           const triggeredAt = triggeredAtById.get(alert.id);
           return triggeredAt ? { ...alert, triggeredAt } : alert;
         }),
       );
+      setRecentTriggers((current) => [...triggeredRules, ...current].slice(0, 3));
+      notifyTriggeredAlerts(triggeredRules, browserNotifications);
 
       for (const update of triggeredUpdates) {
         void updateAlertTriggeredAt(update.id, update.triggeredAt);
@@ -123,7 +162,7 @@ export function AlertsPanel({ analysis, market, price, symbol }: AlertsPanelProp
     }, 0);
 
     return () => window.clearTimeout(timer);
-  }, [alerts, analysis, market, price, symbol]);
+  }, [alerts, analysis, browserNotifications, market, price, symbol]);
 
   const relevantAlerts = useMemo(
     () => alerts.filter((alert) => alert.market === market && alert.symbol === symbol),
@@ -224,6 +263,28 @@ export function AlertsPanel({ analysis, market, price, symbol }: AlertsPanelProp
           Guncel deger
         </button>
       </div>
+
+      {browserNotifications ? (
+        <p className="mt-3 rounded-md border border-white/5 bg-white/[0.03] px-3 py-2 text-xs text-[var(--muted)]">
+          Tarayici bildirimi: {translateNotificationPermission(notificationPermission)}
+        </p>
+      ) : null}
+
+      {recentTriggers.length > 0 ? (
+        <div className="mt-4 rounded-md border border-emerald-300/20 bg-emerald-300/10 p-3">
+          <p className="flex items-center gap-2 text-sm font-semibold text-emerald-50">
+            <BellRing size={16} />
+            Son tetiklenen uyarilar
+          </p>
+          <div className="mt-2 grid gap-2 md:grid-cols-3">
+            {recentTriggers.map((alert) => (
+              <p className="rounded-md border border-emerald-300/10 bg-black/10 p-2 text-xs leading-5 text-emerald-50" key={`${alert.id}-${alert.triggeredAt}`}>
+                {describeAlert(alert)}
+              </p>
+            ))}
+          </div>
+        </div>
+      ) : null}
 
       {triggeredAlerts.length > 0 ? (
         <div className="mt-4 space-y-2">
@@ -484,4 +545,29 @@ async function updateAlertTriggeredAt(id: string, triggeredAt: string | null) {
   if (!response.ok) {
     throw new Error("Alert update failed");
   }
+}
+
+function notifyTriggeredAlerts(alerts: AlertRule[], enabled: boolean) {
+  if (!enabled || !("Notification" in window) || window.Notification.permission !== "granted") {
+    return;
+  }
+
+  for (const alert of alerts) {
+    new window.Notification("Finansman uyarisi tetiklendi", {
+      body: describeAlert(alert),
+      tag: alert.id,
+    });
+  }
+}
+
+function translateNotificationPermission(permission: NotificationPermission) {
+  if (permission === "granted") {
+    return "izin verildi";
+  }
+
+  if (permission === "denied") {
+    return "tarayici tarafindan engellendi";
+  }
+
+  return "izin bekleniyor";
 }

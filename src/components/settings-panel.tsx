@@ -4,6 +4,7 @@ import { RefreshCcw, Settings, ShieldCheck } from "lucide-react";
 
 export type AppSettings = {
   autoRefresh: boolean;
+  browserNotifications: boolean;
   refreshIntervalSeconds: number;
   riskPercent: string;
 };
@@ -32,7 +33,7 @@ export function SettingsPanel({ onChange, settings }: SettingsPanelProps) {
         </p>
       </div>
 
-      <div className="mt-5 grid gap-4 lg:grid-cols-3">
+      <div className="mt-5 grid gap-4 lg:grid-cols-4">
         <div className="rounded-md border border-white/5 bg-white/[0.03] p-3">
           <p className="flex items-center gap-2 text-xs uppercase tracking-[0.12em] text-[var(--muted)]">
             <RefreshCcw size={14} />
@@ -44,6 +45,21 @@ export function SettingsPanel({ onChange, settings }: SettingsPanelProps) {
               checked={settings.autoRefresh}
               className="h-5 w-5 accent-emerald-300"
               onChange={(event) => updateSettings({ autoRefresh: event.target.checked })}
+              type="checkbox"
+            />
+          </label>
+        </div>
+
+        <div className="rounded-md border border-white/5 bg-white/[0.03] p-3">
+          <p className="text-xs uppercase tracking-[0.12em] text-[var(--muted)]">
+            Tarayici bildirimi
+          </p>
+          <label className="mt-3 flex items-center justify-between gap-3 rounded-md border border-white/5 bg-black/10 px-3 py-2 text-sm text-white">
+            <span>{settings.browserNotifications ? "Acik" : "Kapali"}</span>
+            <input
+              checked={settings.browserNotifications}
+              className="h-5 w-5 accent-emerald-300"
+              onChange={(event) => updateSettings({ browserNotifications: event.target.checked })}
               type="checkbox"
             />
           </label>

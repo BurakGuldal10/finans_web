@@ -938,3 +938,28 @@ Kontrol:
 npm run lint
 npm run build
 ```
+
+## Mevcut Durum - Uyari Bildirimleri
+
+Eklenenler:
+
+- Ayarlar paneline tarayici bildirimi ac/kapat secenegi eklendi.
+- Uyari listesi tetiklenen kurallari "Son tetiklenen uyarilar" alaninda ozetler.
+- Tarayici bildirimi aciksa ve izin verildiyse tetiklenen uyari icin masaustu bildirimi gonderilir.
+- Bildirim izni durumu panelde okunabilir:
+  - izin bekleniyor
+  - izin verildi
+  - tarayici tarafindan engellendi
+
+Notlar:
+
+- Bildirimler tarayicinin Notification API destegine ve kullanici iznine baglidir.
+- Izin verilmezse uyarilar uygulama icinde calismaya devam eder.
+- Uygulama hala emir gondermez; sadece takip ve karar destek bildirimi uretir.
+
+Kontrol:
+
+```text
+npm run lint
+npm run build
+```
