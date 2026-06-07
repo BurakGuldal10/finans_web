@@ -33,6 +33,7 @@ import type { FundamentalAnalysis } from "@/lib/fundamentals";
 import type { MarketKind } from "@/lib/markets";
 import { PortfolioPanel } from "@/components/portfolio-panel";
 import { RiskCalculatorPanel } from "@/components/risk-calculator-panel";
+import { TechnicalIndicatorsPanel } from "@/components/technical-indicators-panel";
 import { TradeJournal } from "@/components/trade-journal";
 
 type Ticker = {
@@ -658,6 +659,8 @@ export function MarketDashboard() {
             tickers={displayedTickers}
             unit={priceUnit}
           />
+
+          <TechnicalIndicatorsPanel analysis={analysis} unit={priceUnit} />
 
           <section className="grid gap-5 xl:grid-cols-[1fr_340px]">
             <div className="rounded-lg border border-[var(--border)] bg-[rgba(13,26,23,0.82)] p-4 md:p-5">

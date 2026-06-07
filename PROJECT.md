@@ -670,3 +670,28 @@ Kontrol:
 npm run lint
 npm run build
 ```
+
+## Mevcut Durum - Teknik Indikator Detay Paneli
+
+Eklenenler:
+
+- Dashboard'a teknik indikator detay paneli eklendi.
+- Panel analiz skorunun arkasindaki ham teknik verileri gosterir:
+  - SMA20
+  - SMA50
+  - EMA20
+  - RSI14
+  - MACD
+  - MACD sinyal
+  - ATR14
+  - Hacim orani
+- Ayrica trend gucu, volatilite rejimi, destek ve direnc seviyeleri kisa notlarla gosterilir.
+- Kripto, ABD hisse ve BIST piyasalarinin hepsinde secili varligin analiz verisini kullanir.
+- Bu panel karar destek sonucu uretmez; mevcut teknik veriyi daha seffaf okumak icin eklenmistir.
+
+Kontrol:
+
+```text
+npm run lint
+npm run build
+```
