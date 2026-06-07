@@ -752,3 +752,37 @@ Kontrol:
 npm run lint
 npm run build
 ```
+
+## Mevcut Durum - Veri Disa Aktarma
+
+Eklenenler:
+
+- Yerel kayitlar icin disa aktarma endpoint'i eklendi: `/api/export`.
+- Dashboard'a "Yedek / disa aktar" paneli eklendi.
+- Disa aktarilabilen kayitlar:
+  - Trade gunlugu
+  - Portfoy
+  - Uyari kurallari
+- Desteklenen formatlar:
+  - CSV
+  - JSON
+- Ornekler:
+
+```text
+/api/export?type=trades&format=csv
+/api/export?type=portfolio&format=json
+/api/export?type=alerts&format=csv
+```
+
+Notlar:
+
+- CSV formati Excel veya benzeri tablolu analiz araclari icin uygundur.
+- JSON formati tam yedek ve ileride geri yukleme akisi icin daha uygundur.
+- Geri yukleme/import henuz eklenmedi.
+
+Kontrol:
+
+```text
+npm run lint
+npm run build
+```

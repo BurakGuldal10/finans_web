@@ -24,6 +24,7 @@ import {
   YAxis,
 } from "recharts";
 import { AlertsPanel } from "@/components/alerts-panel";
+import { ExportPanel } from "@/components/export-panel";
 import { FundamentalsPanel } from "@/components/fundamentals-panel";
 import { MarketSummaryPanel } from "@/components/market-summary-panel";
 import { PerformancePanel } from "@/components/performance-panel";
@@ -801,6 +802,8 @@ export function MarketDashboard() {
           />
 
           <PerformancePanel />
+
+          <ExportPanel />
 
           <SettingsPanel onChange={setSettings} settings={settings} />
         </div>
