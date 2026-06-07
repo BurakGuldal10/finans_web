@@ -695,3 +695,28 @@ Kontrol:
 npm run lint
 npm run build
 ```
+
+## Mevcut Durum - Kullanici Ayarlari
+
+Eklenenler:
+
+- Dashboard'a ayarlar paneli eklendi.
+- Otomatik veri yenileme acilip kapatilabilir.
+- Yenileme araligi ekrandan secilebilir:
+  - 15 saniye
+  - 30 saniye
+  - 60 saniye
+  - 120 saniye
+- Risk hesaplayici icin varsayilan risk yuzdesi ayarlanabilir.
+- Ayarlar tarayicida `localStorage` ile saklanir.
+- Varsayilan ayarlar:
+  - Otomatik yenileme: acik
+  - Yenileme araligi: 30 saniye
+  - Risk yuzdesi: 1%
+
+Kontrol:
+
+```text
+npm run lint
+npm run build
+```

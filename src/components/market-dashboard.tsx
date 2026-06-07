@@ -33,6 +33,7 @@ import type { FundamentalAnalysis } from "@/lib/fundamentals";
 import type { MarketKind } from "@/lib/markets";
 import { PortfolioPanel } from "@/components/portfolio-panel";
 import { RiskCalculatorPanel } from "@/components/risk-calculator-panel";
+import { SettingsPanel, type AppSettings } from "@/components/settings-panel";
 import { TechnicalIndicatorsPanel } from "@/components/technical-indicators-panel";
 import { TradeJournal } from "@/components/trade-journal";
 
@@ -89,6 +90,12 @@ const stockWatchlistStorageKey = "finansman-stock-watchlist";
 const bistWatchlistStorageKey = "finansman-bist-watchlist";
 const timeframeStorageKey = "finansman-timeframe";
 const marketStorageKey = "finansman-market";
+const settingsStorageKey = "finansman-settings";
+const defaultSettings: AppSettings = {
+  autoRefresh: true,
+  refreshIntervalSeconds: 30,
+  riskPercent: "1",
+};
 
 export function MarketDashboard() {
   const [selectedMarket, setSelectedMarket] = useState<MarketKind>("crypto");
@@ -106,6 +113,7 @@ export function MarketDashboard() {
   const [fundamentalsData, setFundamentalsData] = useState<FundamentalsResponse | null>(null);
   const [fundamentalsError, setFundamentalsError] = useState<string | null>(null);
   const [fundamentalsLoading, setFundamentalsLoading] = useState(false);
+  const [settings, setSettings] = useState<AppSettings>(defaultSettings);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const watchlist = watchlists[selectedMarket];
@@ -194,8 +202,17 @@ export function MarketDashboard() {
       const savedBist = window.localStorage.getItem(bistWatchlistStorageKey);
       const savedTimeframe = window.localStorage.getItem(timeframeStorageKey);
       const savedMarket = window.localStorage.getItem(marketStorageKey);
+      const savedSettings = window.localStorage.getItem(settingsStorageKey);
       if (isValidTimeframe(savedTimeframe)) {
         setSelectedTimeframe(savedTimeframe);
+      }
+
+      if (savedSettings) {
+        try {
+          setSettings(normalizeSettings(JSON.parse(savedSettings) as Partial<AppSettings>));
+        } catch {
+          window.localStorage.removeItem(settingsStorageKey);
+        }
       }
 
       const nextMarket = isValidMarket(savedMarket) ? savedMarket : "crypto";
@@ -282,18 +299,27 @@ export function MarketDashboard() {
   }, [selectedMarket]);
 
   useEffect(() => {
+    window.localStorage.setItem(settingsStorageKey, JSON.stringify(settings));
+  }, [settings]);
+
+  useEffect(() => {
     const initialTimer = window.setTimeout(() => {
       refresh(selectedMarket, selectedSymbol, selectedTimeframe);
     }, 0);
-    const timer = window.setInterval(() => {
-      refresh(selectedMarket, selectedSymbol, selectedTimeframe);
-    }, 30000);
+    const intervalMs = Math.max(settings.refreshIntervalSeconds, 5) * 1000;
+    const timer = settings.autoRefresh
+      ? window.setInterval(() => {
+          refresh(selectedMarket, selectedSymbol, selectedTimeframe);
+        }, intervalMs)
+      : null;
 
     return () => {
       window.clearTimeout(initialTimer);
-      window.clearInterval(timer);
+      if (timer) {
+        window.clearInterval(timer);
+      }
     };
-  }, [refresh, selectedMarket, selectedSymbol, selectedTimeframe]);
+  }, [refresh, selectedMarket, selectedSymbol, selectedTimeframe, settings]);
 
   async function addSymbol(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -739,6 +765,7 @@ export function MarketDashboard() {
 
           <RiskCalculatorPanel
             analysis={analysis}
+            defaultRiskPercent={settings.riskPercent}
             market={selectedMarket}
             selectedPrice={selectedTicker?.price}
             symbol={selectedSymbol}
@@ -774,6 +801,8 @@ export function MarketDashboard() {
           />
 
           <PerformancePanel />
+
+          <SettingsPanel onChange={setSettings} settings={settings} />
         </div>
       </section>
     </main>
@@ -913,4 +942,20 @@ function getSymbolPlaceholder(market: MarketKind) {
   }
 
   return "AVAXUSDT";
+}
+
+function normalizeSettings(value: Partial<AppSettings>) {
+  const refreshIntervalSeconds = Number(value.refreshIntervalSeconds);
+  const allowedIntervals = [15, 30, 60, 120];
+
+  return {
+    autoRefresh: typeof value.autoRefresh === "boolean" ? value.autoRefresh : defaultSettings.autoRefresh,
+    refreshIntervalSeconds: allowedIntervals.includes(refreshIntervalSeconds)
+      ? refreshIntervalSeconds
+      : defaultSettings.refreshIntervalSeconds,
+    riskPercent:
+      typeof value.riskPercent === "string" && Number(value.riskPercent) > 0
+        ? value.riskPercent
+        : defaultSettings.riskPercent,
+  };
 }

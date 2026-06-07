@@ -7,6 +7,7 @@ import type { MarketKind } from "@/lib/markets";
 
 type RiskCalculatorPanelProps = {
   analysis?: AnalysisResult;
+  defaultRiskPercent: string;
   market: MarketKind;
   selectedPrice?: number;
   symbol: string;
@@ -32,11 +33,15 @@ const defaultDraft: DraftRisk = {
 
 export function RiskCalculatorPanel({
   analysis,
+  defaultRiskPercent,
   market,
   selectedPrice,
   symbol,
 }: RiskCalculatorPanelProps) {
-  const [draft, setDraft] = useState<DraftRisk>(defaultDraft);
+  const [draft, setDraft] = useState<DraftRisk>({
+    ...defaultDraft,
+    riskPercent: defaultRiskPercent,
+  });
   const [message, setMessage] = useState<string | null>(null);
   const unit = market === "crypto" ? "USDT" : market === "bist" ? "TRY" : "USD";
 
@@ -44,6 +49,7 @@ export function RiskCalculatorPanel({
     const timer = window.setTimeout(() => {
       const saved = window.localStorage.getItem(storageKey);
       if (!saved) {
+        setDraft((current) => ({ ...current, riskPercent: defaultRiskPercent }));
         return;
       }
 
@@ -52,7 +58,8 @@ export function RiskCalculatorPanel({
         setDraft({
           accountSize: typeof parsed.accountSize === "string" ? parsed.accountSize : "",
           entryPrice: "",
-          riskPercent: typeof parsed.riskPercent === "string" ? parsed.riskPercent : "1",
+          riskPercent:
+            typeof parsed.riskPercent === "string" ? parsed.riskPercent : defaultRiskPercent,
           stopLoss: "",
           targetPrice: "",
         });
@@ -62,7 +69,7 @@ export function RiskCalculatorPanel({
     }, 0);
 
     return () => window.clearTimeout(timer);
-  }, []);
+  }, [defaultRiskPercent]);
 
   useEffect(() => {
     window.localStorage.setItem(
