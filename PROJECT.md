@@ -857,3 +857,27 @@ Kontrol:
 npm run lint
 npm run build
 ```
+
+## Mevcut Durum - Mum Grafik Gelistirmesi
+
+Eklenenler:
+
+- Ana fiyat grafigi kapanis cizgisi yerine mum grafigine cevrildi.
+- Yeni bilesen eklendi: `src/components/candlestick-chart.tsx`.
+- Grafik acilis, yuksek, dusuk, kapanis ve hacim bilgisini birlikte gosterir.
+- Son 80 mum gosterilir; zaman dilimi degistikce grafik ayni mum verisiyle yeniden hesaplanir.
+- Hover durumunda secili mumun tarih/saat, kapanis, acilis, yuksek ve dusuk degerleri okunabilir.
+- Grafik kripto, ABD hisse ve BIST piyasalarinin hepsinde calisir.
+- BIST temel analiz panelinin ekranda gorunme kosulu da duzeltildi; kripto disinda ABD ve BIST icin panel gosterilir.
+
+Notlar:
+
+- Bu adimda yeni grafik kutuphanesi eklenmedi; mevcut veri yapisi uzerinden ozel SVG mum grafigi olusturuldu.
+- Ileride TradingView Lightweight Charts gibi daha profesyonel grafik kutuphanesi eklenebilir.
+
+Kontrol:
+
+```text
+npm run lint
+npm run build
+```

@@ -14,16 +14,8 @@ import {
   X,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
 import { AlertsPanel } from "@/components/alerts-panel";
+import { CandlestickChart } from "@/components/candlestick-chart";
 import { ExportPanel } from "@/components/export-panel";
 import { FundamentalsPanel } from "@/components/fundamentals-panel";
 import { MarketSummaryPanel } from "@/components/market-summary-panel";
@@ -429,11 +421,6 @@ export function MarketDashboard() {
     selectedMarket !== "crypto" && analysis && fundamentalsData?.fundamentals
       ? combineStockAnalysis(analysis, fundamentalsData.fundamentals)
       : null;
-  const chartData =
-    analysisData?.candles.map((candle) => ({
-      time: formatCandleTime(candle.openTime, selectedTimeframe),
-      close: candle.close,
-    })) ?? [];
   const priceUnit = selectedMarket === "crypto" ? "USDT" : selectedMarket === "bist" ? "TRY" : "USD";
 
   return (
@@ -629,51 +616,12 @@ export function MarketDashboard() {
             </div>
 
             <div className="mt-5 h-[320px] w-full">
-              {chartData.length > 0 ? (
-                <ResponsiveContainer height="100%" width="100%">
-                  <AreaChart data={chartData}>
-                    <defs>
-                      <linearGradient id="priceFill" x1="0" x2="0" y1="0" y2="1">
-                        <stop offset="5%" stopColor="#5ee7b7" stopOpacity={0.42} />
-                        <stop offset="95%" stopColor="#5ee7b7" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid stroke="rgba(159,184,175,0.12)" vertical={false} />
-                    <XAxis
-                      dataKey="time"
-                      minTickGap={30}
-                      stroke="#9fb8af"
-                      tick={{ fontSize: 12 }}
-                      tickLine={false}
-                    />
-                    <YAxis
-                      domain={["dataMin", "dataMax"]}
-                      orientation="right"
-                      stroke="#9fb8af"
-                      tick={{ fontSize: 12 }}
-                      tickFormatter={(value) => formatPrice(Number(value))}
-                      tickLine={false}
-                      width={82}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        background: "#0d1a17",
-                        border: "1px solid #23423b",
-                        borderRadius: 8,
-                        color: "#e8f2ee",
-                      }}
-                      formatter={(value) => [`${formatPrice(Number(value))} ${priceUnit}`, "Kapanis"]}
-                      labelStyle={{ color: "#9fb8af" }}
-                    />
-                    <Area
-                      dataKey="close"
-                      fill="url(#priceFill)"
-                      stroke="#5ee7b7"
-                      strokeWidth={2}
-                      type="monotone"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
+              {analysisData?.candles.length ? (
+                <CandlestickChart
+                  candles={analysisData.candles}
+                  timeframe={selectedTimeframe}
+                  unit={priceUnit}
+                />
               ) : (
                 <LoadingPanel error={error} loading={loading} />
               )}
@@ -785,7 +733,7 @@ export function MarketDashboard() {
             symbol={selectedSymbol}
           />
 
-          {selectedMarket === "stocks" ? (
+          {selectedMarket !== "crypto" ? (
             <FundamentalsPanel
               combined={combinedAnalysis}
               data={fundamentalsData}
@@ -872,22 +820,6 @@ function compactNumber(value: number) {
     notation: "compact",
     maximumFractionDigits: 1,
   }).format(value);
-}
-
-function formatCandleTime(openTime: number, timeframe: Timeframe) {
-  const date = new Date(openTime);
-
-  if (timeframe === "1d") {
-    return date.toLocaleDateString("tr-TR", {
-      day: "2-digit",
-      month: "2-digit",
-    });
-  }
-
-  return date.toLocaleTimeString("tr-TR", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 }
 
 function normalizeCryptoSymbol(symbol: string) {
