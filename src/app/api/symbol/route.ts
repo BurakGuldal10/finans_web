@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { normalizeSymbol, validateSpotUsdtSymbol } from "@/lib/binance";
 import { normalizeMarket } from "@/lib/markets";
+import { createCacheKey, getCached } from "@/lib/server-cache";
 import {
   normalizeBistSymbol,
   normalizeStockSymbol,
   validateBistSymbol,
   validateStockSymbol,
 } from "@/lib/yahoo";
+
+const SYMBOL_CACHE_TTL_SECONDS = 60 * 60;
 
 export async function GET(request: NextRequest) {
   const market = normalizeMarket(request.nextUrl.searchParams.get("market"));
@@ -26,14 +29,26 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const validation =
-      market === "stocks"
-        ? await validateStockSymbol(symbol)
-        : market === "bist"
-          ? await validateBistSymbol(symbol)
-          : await validateSpotUsdtSymbol(symbol);
+    const cacheResult = await getCached(
+      createCacheKey(["symbol", market, symbol]),
+      SYMBOL_CACHE_TTL_SECONDS,
+      async () =>
+        market === "stocks"
+          ? await validateStockSymbol(symbol)
+          : market === "bist"
+            ? await validateBistSymbol(symbol)
+            : await validateSpotUsdtSymbol(symbol),
+    );
+    const validation = cacheResult.value;
 
-    return NextResponse.json(validation, { status: validation.valid ? 200 : 404 });
+    return NextResponse.json(
+      {
+        ...validation,
+        cached: cacheResult.hit,
+        cacheTtlSeconds: cacheResult.ttlSeconds,
+      },
+      { status: validation.valid ? 200 : 404 },
+    );
   } catch (error) {
     return NextResponse.json(
       {

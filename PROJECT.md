@@ -720,3 +720,35 @@ Kontrol:
 npm run lint
 npm run build
 ```
+
+## Mevcut Durum - Server Cache
+
+Eklenenler:
+
+- Canli veri endpoint'leri icin bellek tabanli kisa sureli server cache eklendi.
+- Yeni yardimci modul: `src/lib/server-cache.ts`.
+- Cache kullanan endpoint'ler:
+  - `/api/market`
+  - `/api/analyze`
+  - `/api/symbol`
+- Varsayilan cache sureleri:
+  - Piyasa fiyat listesi: 20 saniye
+  - Teknik analiz sonucu: 45 saniye
+  - Sembol dogrulama: 1 saat
+- API cevaplarina `cached` ve `cacheTtlSeconds` alanlari eklendi.
+- Amac:
+  - Binance/Yahoo Finance gibi kaynaklara gereksiz tekrar istekleri azaltmak
+  - Ucretsiz veri kaynaklarinda limit riskini dusurmek
+  - Dashboard yenilemelerini daha stabil hale getirmek
+
+Notlar:
+
+- Cache bellek tabanlidir; uygulama yeniden baslatildiginda temizlenir.
+- Kisisel lokal kullanim icin yeterlidir. Ileride kalici veya dagitik cache gerekirse ayrica ele alinabilir.
+
+Kontrol:
+
+```text
+npm run lint
+npm run build
+```

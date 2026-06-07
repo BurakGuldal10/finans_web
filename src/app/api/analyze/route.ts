@@ -8,6 +8,7 @@ import {
   validateSpotUsdtSymbol,
 } from "@/lib/binance";
 import { normalizeMarket } from "@/lib/markets";
+import { createCacheKey, getCached } from "@/lib/server-cache";
 import {
   fetchYahooCandles,
   isSupportedBistSymbol,
@@ -17,6 +18,8 @@ import {
   validateBistSymbol,
   validateStockSymbol,
 } from "@/lib/yahoo";
+
+const ANALYSIS_CACHE_TTL_SECONDS = 45;
 
 export async function GET(request: NextRequest) {
   const market = normalizeMarket(request.nextUrl.searchParams.get("market"));
@@ -64,16 +67,29 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: validation.reason }, { status: 404 });
     }
 
-    const candles =
-      market === "crypto" ? await fetchCandles(symbol, interval) : await fetchYahooCandles(symbol, interval);
+    const cacheResult = await getCached(
+      createCacheKey(["analysis", market, symbol, interval]),
+      ANALYSIS_CACHE_TTL_SECONDS,
+      async () => {
+        const candles =
+          market === "crypto" ? await fetchCandles(symbol, interval) : await fetchYahooCandles(symbol, interval);
+
+        return {
+          analysis: analyzeCandles(symbol, candles),
+          candles: candles.slice(-48),
+        };
+      },
+    );
 
     return NextResponse.json({
+      cached: cacheResult.hit,
+      cacheTtlSeconds: cacheResult.ttlSeconds,
       market,
       source: market === "crypto" ? "binance" : "yahoo",
       interval,
       updatedAt: new Date().toISOString(),
-      analysis: analyzeCandles(symbol, candles),
-      candles: candles.slice(-48),
+      analysis: cacheResult.value.analysis,
+      candles: cacheResult.value.candles,
     });
   } catch (error) {
     return NextResponse.json(
