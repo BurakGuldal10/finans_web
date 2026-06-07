@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { analyzeCandles } from "@/lib/analysis";
+import { analyzeCandles, summarizeTimeframes } from "@/lib/analysis";
 import {
+  type BinanceInterval,
   fetchCandles,
   isSupportedUsdtSymbol,
   normalizeInterval,
@@ -20,6 +21,13 @@ import {
 } from "@/lib/yahoo";
 
 const ANALYSIS_CACHE_TTL_SECONDS = 45;
+const TIMEFRAME_LABELS: Record<BinanceInterval, string> = {
+  "15m": "15 dakika",
+  "1h": "1 saat",
+  "4h": "4 saat",
+  "1d": "1 gun",
+};
+const CONFIRMATION_INTERVALS: BinanceInterval[] = ["15m", "1h", "4h", "1d"];
 
 export async function GET(request: NextRequest) {
   const market = normalizeMarket(request.nextUrl.searchParams.get("market"));
@@ -71,12 +79,29 @@ export async function GET(request: NextRequest) {
       createCacheKey(["analysis", market, symbol, interval]),
       ANALYSIS_CACHE_TTL_SECONDS,
       async () => {
-        const candles =
-          market === "crypto" ? await fetchCandles(symbol, interval) : await fetchYahooCandles(symbol, interval);
+        const candleSets = await Promise.all(
+          CONFIRMATION_INTERVALS.map(async (currentInterval) => ({
+            candles:
+              market === "crypto"
+                ? await fetchCandles(symbol, currentInterval)
+                : await fetchYahooCandles(symbol, currentInterval),
+            interval: currentInterval,
+          })),
+        );
+        const selectedCandles =
+          candleSets.find((item) => item.interval === interval)?.candles ?? candleSets[1].candles;
+        const timeframeAnalyses = candleSets.map((item) => ({
+          analysis: analyzeCandles(symbol, item.candles),
+          interval: item.interval,
+          label: TIMEFRAME_LABELS[item.interval],
+        }));
 
         return {
-          analysis: analyzeCandles(symbol, candles),
-          candles: candles.slice(-48),
+          analysis:
+            timeframeAnalyses.find((item) => item.interval === interval)?.analysis ??
+            analyzeCandles(symbol, selectedCandles),
+          candles: selectedCandles.slice(-80),
+          multiTimeframe: summarizeTimeframes(timeframeAnalyses),
         };
       },
     );
@@ -90,6 +115,7 @@ export async function GET(request: NextRequest) {
       updatedAt: new Date().toISOString(),
       analysis: cacheResult.value.analysis,
       candles: cacheResult.value.candles,
+      multiTimeframe: cacheResult.value.multiTimeframe,
     });
   } catch (error) {
     return NextResponse.json(

@@ -44,6 +44,25 @@ export type AnalysisResult = {
   };
 };
 
+export type TimeframeSignal = {
+  interval: "15m" | "1h" | "4h" | "1d";
+  label: string;
+  price: number;
+  score: number;
+  verdict: AnalysisResult["verdict"];
+  trendStrength: number;
+  rsi14: number;
+  priceVsEma20: "above" | "below";
+  summary: string;
+};
+
+export type MultiTimeframeAnalysis = {
+  alignment: "bullish" | "mixed" | "bearish";
+  score: number;
+  summary: string;
+  signals: TimeframeSignal[];
+};
+
 export function average(values: number[]) {
   if (values.length === 0) {
     return 0;
@@ -293,6 +312,42 @@ export function analyzeCandles(symbol: string, candles: Candle[]): AnalysisResul
   };
 }
 
+export function summarizeTimeframes(
+  analyses: Array<{
+    analysis: AnalysisResult;
+    interval: TimeframeSignal["interval"];
+    label: string;
+  }>,
+): MultiTimeframeAnalysis {
+  const signals = analyses.map(({ analysis, interval, label }): TimeframeSignal => {
+    const priceVsEma20 = analysis.price >= analysis.indicators.ema20 ? "above" : "below";
+    return {
+      interval,
+      label,
+      price: analysis.price,
+      score: analysis.score,
+      verdict: analysis.verdict,
+      trendStrength: analysis.trendStrength,
+      rsi14: analysis.indicators.rsi14,
+      priceVsEma20,
+      summary: buildTimeframeSummary(analysis, priceVsEma20),
+    };
+  });
+  const score = Math.round(average(signals.map((signal) => signal.score)));
+  const positiveCount = signals.filter((signal) => signal.verdict === "positive").length;
+  const riskyCount = signals.filter((signal) => signal.verdict === "risky").length;
+  const aboveEmaCount = signals.filter((signal) => signal.priceVsEma20 === "above").length;
+  const alignment: MultiTimeframeAnalysis["alignment"] =
+    positiveCount >= 3 && aboveEmaCount >= 3 ? "bullish" : riskyCount >= 2 && aboveEmaCount <= 1 ? "bearish" : "mixed";
+
+  return {
+    alignment,
+    score,
+    summary: buildMultiTimeframeSummary(alignment, score, positiveCount, riskyCount),
+    signals,
+  };
+}
+
 export function formatPrice(value: number) {
   if (value >= 1000) {
     return value.toLocaleString("en-US", { maximumFractionDigits: 2 });
@@ -303,4 +358,40 @@ export function formatPrice(value: number) {
   }
 
   return value.toLocaleString("en-US", { maximumFractionDigits: 8 });
+}
+
+function buildTimeframeSummary(
+  analysis: AnalysisResult,
+  priceVsEma20: TimeframeSignal["priceVsEma20"],
+) {
+  if (analysis.verdict === "positive" && priceVsEma20 === "above") {
+    return "Trend ve momentum destekli.";
+  }
+
+  if (analysis.verdict === "risky") {
+    return "Trend teyidi zayif, temkinli okunmali.";
+  }
+
+  if (priceVsEma20 === "below") {
+    return "Fiyat EMA20 altinda, ek teyit gerekir.";
+  }
+
+  return "Notr, kirilim veya destek tepkisi beklenmeli.";
+}
+
+function buildMultiTimeframeSummary(
+  alignment: MultiTimeframeAnalysis["alignment"],
+  score: number,
+  positiveCount: number,
+  riskyCount: number,
+) {
+  if (alignment === "bullish") {
+    return `Zaman dilimleri uyumlu; ${positiveCount} periyot olumlu ve genel teyit skoru ${score}/100.`;
+  }
+
+  if (alignment === "bearish") {
+    return `Ust zaman dilimi teyidi zayif; ${riskyCount} periyot riskli ve genel teyit skoru ${score}/100.`;
+  }
+
+  return `Zaman dilimleri karisik; genel teyit skoru ${score}/100, giris icin ek fiyat davranisi beklenmeli.`;
 }

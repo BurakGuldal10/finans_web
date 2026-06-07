@@ -20,7 +20,12 @@ import { ExportPanel } from "@/components/export-panel";
 import { FundamentalsPanel } from "@/components/fundamentals-panel";
 import { MarketSummaryPanel } from "@/components/market-summary-panel";
 import { PerformancePanel } from "@/components/performance-panel";
-import { formatPrice, type AnalysisResult, type Candle } from "@/lib/analysis";
+import {
+  formatPrice,
+  type AnalysisResult,
+  type Candle,
+  type MultiTimeframeAnalysis,
+} from "@/lib/analysis";
 import { combineStockAnalysis } from "@/lib/combined-analysis";
 import type { FundamentalAnalysis } from "@/lib/fundamentals";
 import type { MarketKind } from "@/lib/markets";
@@ -28,6 +33,7 @@ import { PortfolioPanel } from "@/components/portfolio-panel";
 import { RiskCalculatorPanel } from "@/components/risk-calculator-panel";
 import { SettingsPanel, type AppSettings } from "@/components/settings-panel";
 import { TechnicalIndicatorsPanel } from "@/components/technical-indicators-panel";
+import { TimeframeConfirmationPanel } from "@/components/timeframe-confirmation-panel";
 import { TradeJournal } from "@/components/trade-journal";
 
 type Ticker = {
@@ -53,6 +59,7 @@ type AnalyzeResponse = {
   updatedAt: string;
   analysis: AnalysisResult;
   candles: Candle[];
+  multiTimeframe: MultiTimeframeAnalysis;
 };
 
 type FundamentalsResponse = {
@@ -636,6 +643,8 @@ export function MarketDashboard() {
           />
 
           <TechnicalIndicatorsPanel analysis={analysis} unit={priceUnit} />
+
+          <TimeframeConfirmationPanel data={analysisData?.multiTimeframe} />
 
           <section className="grid gap-5 xl:grid-cols-[1fr_340px]">
             <div className="rounded-lg border border-[var(--border)] bg-[rgba(13,26,23,0.82)] p-4 md:p-5">

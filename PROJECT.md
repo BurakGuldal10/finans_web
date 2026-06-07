@@ -881,3 +881,30 @@ Kontrol:
 npm run lint
 npm run build
 ```
+
+## Mevcut Durum - Coklu Zaman Dilimi Teyidi
+
+Eklenenler:
+
+- `/api/analyze` cevabina coklu zaman dilimi teyidi eklendi.
+- Sistem ayni sembol icin su periyotlari birlikte analiz eder:
+  - 15 dakika
+  - 1 saat
+  - 4 saat
+  - 1 gun
+- Her periyot icin skor, trend gucu, RSI ve fiyat/EMA20 konumu hesaplanir.
+- Dashboard'a "Zaman dilimi teyidi" paneli eklendi.
+- Panel genel uyumu bullish, mixed veya bearish olarak yorumlar.
+- Genel teyit skoru trade kararinda tek zaman dilimine fazla guvenme riskini azaltmak icin kullanilir.
+
+Notlar:
+
+- Bu teyit paneli emir sinyali degildir; teknik karar destek katmanidir.
+- Ucretsiz veri kaynaklarinda coklu periyot istekleri daha fazla API cagrisi demektir; mevcut server cache bu yukleri azaltmak icin kullanilir.
+
+Kontrol:
+
+```text
+npm run lint
+npm run build
+```
