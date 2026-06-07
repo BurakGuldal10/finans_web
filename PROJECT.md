@@ -963,3 +963,31 @@ Kontrol:
 npm run lint
 npm run build
 ```
+
+## Mevcut Durum - Sistem Durumu Paneli
+
+Eklenenler:
+
+- Yeni endpoint eklendi: `/api/health`.
+- Dashboard'a "Sistem durumu" paneli eklendi.
+- Panel su bilgileri gosterir:
+  - Portfoy kayit sayisi
+  - Trade kayit sayisi
+  - Uyari kayit sayisi
+  - Tetiklenen uyari sayisi
+  - Veri kaynaklari
+  - FMP API anahtari durumu
+  - Son kontrol zamani
+- Endpoint kisisel kayit detaylarini dondurmez; sadece sayisal ozet ve kaynak durumunu verir.
+
+Notlar:
+
+- SQLite dosyasi yerel `data/finansman.db` icinde kalir ve repoya dahil edilmez.
+- FMP anahtari yoksa ABD temel analizleri sinirli kalir; panel bunu gorunur hale getirir.
+
+Kontrol:
+
+```text
+npm run lint
+npm run build
+```

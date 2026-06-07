@@ -33,6 +33,7 @@ import type { MarketKind } from "@/lib/markets";
 import { PortfolioPanel } from "@/components/portfolio-panel";
 import { RiskCalculatorPanel } from "@/components/risk-calculator-panel";
 import { SettingsPanel, type AppSettings } from "@/components/settings-panel";
+import { SystemStatusPanel } from "@/components/system-status-panel";
 import { TechnicalIndicatorsPanel } from "@/components/technical-indicators-panel";
 import { TimeframeConfirmationPanel } from "@/components/timeframe-confirmation-panel";
 import { TradePlanPanel } from "@/components/trade-plan-panel";
@@ -768,6 +769,8 @@ export function MarketDashboard() {
           <PerformancePanel />
 
           <ExportPanel />
+
+          <SystemStatusPanel />
 
           <SettingsPanel onChange={setSettings} settings={settings} />
         </div>

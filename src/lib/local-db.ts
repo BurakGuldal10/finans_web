@@ -254,3 +254,26 @@ export function updateAlertTriggeredAt(id: string, triggeredAt: string | null) {
 export function deleteAlertRule(id: string) {
   getDb().prepare("DELETE FROM alert_rules WHERE id = ?").run(id);
 }
+
+export function getLocalDataStats() {
+  const db = getDb();
+  const portfolio = db
+    .prepare("SELECT COUNT(*) AS count FROM portfolio_positions")
+    .get() as { count: number };
+  const trades = db.prepare("SELECT COUNT(*) AS count FROM trade_entries").get() as {
+    count: number;
+  };
+  const alerts = db.prepare("SELECT COUNT(*) AS count FROM alert_rules").get() as {
+    count: number;
+  };
+  const triggeredAlerts = db
+    .prepare("SELECT COUNT(*) AS count FROM alert_rules WHERE triggeredAt IS NOT NULL")
+    .get() as { count: number };
+
+  return {
+    alerts: alerts.count,
+    portfolio: portfolio.count,
+    trades: trades.count,
+    triggeredAlerts: triggeredAlerts.count,
+  };
+}
