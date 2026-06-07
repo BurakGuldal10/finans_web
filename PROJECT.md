@@ -908,3 +908,33 @@ Kontrol:
 npm run lint
 npm run build
 ```
+
+## Mevcut Durum - Trade Plani Senaryosu
+
+Eklenenler:
+
+- `/api/analyze` cevabina kural tabanli `tradePlan` alani eklendi.
+- Trade plani teknik skor ile coklu zaman dilimi teyidini birlikte kullanir.
+- Plan duruslari:
+  - Takip
+  - Bekle
+  - Kacin
+- Dashboard'a "Trade plani" paneli eklendi.
+- Panel su bilgileri gosterir:
+  - Giris tetigi
+  - Stop plani
+  - Hedefler
+  - Risk notu
+  - Pozisyon yonetim kurallari
+
+Notlar:
+
+- Bu plan emir gondermez ve yatirim tavsiyesi degildir; karar destek senaryosu olarak okunmalidir.
+- Plan skoru, teknik analiz skoru ve coklu zaman dilimi teyidi uzerinden uretilir.
+
+Kontrol:
+
+```text
+npm run lint
+npm run build
+```

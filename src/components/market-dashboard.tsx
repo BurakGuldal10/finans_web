@@ -25,6 +25,7 @@ import {
   type AnalysisResult,
   type Candle,
   type MultiTimeframeAnalysis,
+  type TradePlan,
 } from "@/lib/analysis";
 import { combineStockAnalysis } from "@/lib/combined-analysis";
 import type { FundamentalAnalysis } from "@/lib/fundamentals";
@@ -34,6 +35,7 @@ import { RiskCalculatorPanel } from "@/components/risk-calculator-panel";
 import { SettingsPanel, type AppSettings } from "@/components/settings-panel";
 import { TechnicalIndicatorsPanel } from "@/components/technical-indicators-panel";
 import { TimeframeConfirmationPanel } from "@/components/timeframe-confirmation-panel";
+import { TradePlanPanel } from "@/components/trade-plan-panel";
 import { TradeJournal } from "@/components/trade-journal";
 
 type Ticker = {
@@ -60,6 +62,7 @@ type AnalyzeResponse = {
   analysis: AnalysisResult;
   candles: Candle[];
   multiTimeframe: MultiTimeframeAnalysis;
+  tradePlan: TradePlan;
 };
 
 type FundamentalsResponse = {
@@ -645,6 +648,8 @@ export function MarketDashboard() {
           <TechnicalIndicatorsPanel analysis={analysis} unit={priceUnit} />
 
           <TimeframeConfirmationPanel data={analysisData?.multiTimeframe} />
+
+          <TradePlanPanel plan={analysisData?.tradePlan} />
 
           <section className="grid gap-5 xl:grid-cols-[1fr_340px]">
             <div className="rounded-lg border border-[var(--border)] bg-[rgba(13,26,23,0.82)] p-4 md:p-5">

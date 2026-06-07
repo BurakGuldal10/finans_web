@@ -63,6 +63,18 @@ export type MultiTimeframeAnalysis = {
   signals: TimeframeSignal[];
 };
 
+export type TradePlan = {
+  stance: "watch" | "wait" | "avoid";
+  title: string;
+  summary: string;
+  entryTrigger: string;
+  invalidation: string;
+  stopPlan: string;
+  targetPlan: string;
+  riskNote: string;
+  managementRules: string[];
+};
+
 export function average(values: number[]) {
   if (values.length === 0) {
     return 0;
@@ -348,6 +360,37 @@ export function summarizeTimeframes(
   };
 }
 
+export function buildTradePlan(
+  analysis: AnalysisResult,
+  multiTimeframe: MultiTimeframeAnalysis,
+): TradePlan {
+  const scoreBlend = Math.round(analysis.score * 0.62 + multiTimeframe.score * 0.38);
+  const stance: TradePlan["stance"] =
+    scoreBlend >= 68 && multiTimeframe.alignment === "bullish"
+      ? "watch"
+      : scoreBlend <= 42 || multiTimeframe.alignment === "bearish"
+        ? "avoid"
+        : "wait";
+  const title =
+    stance === "watch"
+      ? "Takip edilebilir trade plani"
+      : stance === "avoid"
+        ? "Yeni alim icin riskli bolge"
+        : "Teyit bekleyen senaryo";
+
+  return {
+    stance,
+    title,
+    summary: buildTradePlanSummary(stance, scoreBlend, multiTimeframe.alignment),
+    entryTrigger: buildEntryTrigger(analysis, multiTimeframe),
+    invalidation: analysis.invalidation,
+    stopPlan: `Stop bolgesi ${formatPrice(analysis.stopLoss)}. Bu seviye altinda kapanis plani iptal eder.`,
+    targetPlan: `Ilk hedef ${formatPrice(analysis.targetOne)}, ikinci hedef ${formatPrice(analysis.targetTwo)}. Risk/odul 1:${analysis.riskReward.toFixed(2)}.`,
+    riskNote: buildRiskNote(analysis, multiTimeframe),
+    managementRules: buildManagementRules(analysis, multiTimeframe),
+  };
+}
+
 export function formatPrice(value: number) {
   if (value >= 1000) {
     return value.toLocaleString("en-US", { maximumFractionDigits: 2 });
@@ -358,6 +401,80 @@ export function formatPrice(value: number) {
   }
 
   return value.toLocaleString("en-US", { maximumFractionDigits: 8 });
+}
+
+function buildTradePlanSummary(
+  stance: TradePlan["stance"],
+  scoreBlend: number,
+  alignment: MultiTimeframeAnalysis["alignment"],
+) {
+  if (stance === "watch") {
+    return `Teknik skor ve zaman dilimi teyidi uyumlu. Plan skoru ${scoreBlend}/100; giris sadece fiyat teyidiyle degerlendirilmeli.`;
+  }
+
+  if (stance === "avoid") {
+    return `Plan skoru ${scoreBlend}/100 ve zaman dilimi uyumu ${alignment}. Yeni alim icin risk/teyit dengesi zayif.`;
+  }
+
+  return `Plan skoru ${scoreBlend}/100. Sinyal tamamen reddedilmiyor, ancak giris icin ek teyit beklemek daha saglikli.`;
+}
+
+function buildEntryTrigger(
+  analysis: AnalysisResult,
+  multiTimeframe: MultiTimeframeAnalysis,
+) {
+  const buyZone = `${formatPrice(analysis.buyZone[0])} - ${formatPrice(analysis.buyZone[1])}`;
+
+  if (multiTimeframe.alignment === "bullish" && analysis.verdict === "positive") {
+    return `${buyZone} bolgesine geri cekilme veya ${formatPrice(analysis.levels.resistance)} uzeri hacimli kirilim takip edilebilir.`;
+  }
+
+  if (analysis.price <= analysis.levels.support * 1.015) {
+    return `${formatPrice(analysis.levels.support)} destek bolgesinde tepki mumu ve hacim artisi beklenmeli.`;
+  }
+
+  return `${formatPrice(analysis.levels.resistance)} direnci uzerinde kapanis veya coklu zaman dilimi skorunda iyilesme beklenmeli.`;
+}
+
+function buildRiskNote(
+  analysis: AnalysisResult,
+  multiTimeframe: MultiTimeframeAnalysis,
+) {
+  if (analysis.volatility.regime === "high") {
+    return "Volatilite yuksek; pozisyon boyutu normalden dusuk tutulmali ve stop genisligi hesaba katilmali.";
+  }
+
+  if (multiTimeframe.alignment === "bearish") {
+    return "Ust zaman dilimi teyidi zayif; acele giris yerine toparlanma teyidi beklenmeli.";
+  }
+
+  if (analysis.riskReward < 1.4) {
+    return "Risk/odul zayif; giris fiyati iyilesmeden pozisyon acmak verimsiz olabilir.";
+  }
+
+  return "Risk seviyesi plana bagli yonetilebilir; pozisyon boyutu risk hesaplayici ile belirlenmeli.";
+}
+
+function buildManagementRules(
+  analysis: AnalysisResult,
+  multiTimeframe: MultiTimeframeAnalysis,
+) {
+  const rules = [
+    `Fiyat ${formatPrice(analysis.targetOne)} hedefine ulasirsa stop maliyet bolgesine yaklastirilabilir.`,
+    `Fiyat ${formatPrice(analysis.stopLoss)} altinda kapanirsa plan gecersiz kabul edilmeli.`,
+  ];
+
+  if (multiTimeframe.alignment !== "bullish") {
+    rules.push("Coklu zaman dilimi uyumu bullish olmadan agresif pozisyon artirilmamali.");
+  }
+
+  if (analysis.indicators.rsi14 > 70) {
+    rules.push("RSI asiri alim bolgesinde; hedefe yakin yerde kar alma daha oncelikli olmali.");
+  } else {
+    rules.push("Hacim ortalama uzerine cikmadan kirilim islemleri daha temkinli izlenmeli.");
+  }
+
+  return rules;
 }
 
 function buildTimeframeSummary(

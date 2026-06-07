@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { analyzeCandles, summarizeTimeframes } from "@/lib/analysis";
+import { analyzeCandles, buildTradePlan, summarizeTimeframes } from "@/lib/analysis";
 import {
   type BinanceInterval,
   fetchCandles,
@@ -96,12 +96,16 @@ export async function GET(request: NextRequest) {
           label: TIMEFRAME_LABELS[item.interval],
         }));
 
+        const analysis =
+          timeframeAnalyses.find((item) => item.interval === interval)?.analysis ??
+          analyzeCandles(symbol, selectedCandles);
+        const multiTimeframe = summarizeTimeframes(timeframeAnalyses);
+
         return {
-          analysis:
-            timeframeAnalyses.find((item) => item.interval === interval)?.analysis ??
-            analyzeCandles(symbol, selectedCandles),
+          analysis,
           candles: selectedCandles.slice(-80),
-          multiTimeframe: summarizeTimeframes(timeframeAnalyses),
+          multiTimeframe,
+          tradePlan: buildTradePlan(analysis, multiTimeframe),
         };
       },
     );
@@ -116,6 +120,7 @@ export async function GET(request: NextRequest) {
       analysis: cacheResult.value.analysis,
       candles: cacheResult.value.candles,
       multiTimeframe: cacheResult.value.multiTimeframe,
+      tradePlan: cacheResult.value.tradePlan,
     });
   } catch (error) {
     return NextResponse.json(
