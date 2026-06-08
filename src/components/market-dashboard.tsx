@@ -872,6 +872,7 @@ export function MarketDashboard() {
             <>
               <AnalysisSnapshotPanel
                 analysis={analysis}
+                currentPrice={selectedTicker?.price}
                 decisionReport={analysisData?.decisionReport}
                 interval={selectedTimeframe}
                 market={selectedMarket}

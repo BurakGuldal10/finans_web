@@ -167,15 +167,19 @@ Adimlar:
 3. Yeni kaydin analiz gecmisi listesine eklendigini kontrol et.
 4. Kayit detayinin otomatik acildigini kontrol et.
 5. Detayda karar raporu, trade plani, RSI, trend gucu, risk/odul ve stop bilgisini oku.
-6. Ayni sembol seciliyken karsilastirma metriklerini kontrol et.
-7. Farkli sembole gec ve eski kaydi ac.
-8. Karsilastirma uyarisinin gorundugunu kontrol et.
-9. Kaydi sil.
+6. Ayni sembol seciliyken snapshot performans ozetini kontrol et.
+7. Detayda guncel fiyat, fiyat getirisi, gecen sure ve okuma alanlarini kontrol et.
+8. Ayni sembol seciliyken karsilastirma metriklerini kontrol et.
+9. Farkli sembole gec ve eski kaydi ac.
+10. Karsilastirma uyarisinin gorundugunu kontrol et.
+11. Kaydi sil.
 
 Beklenen sonuc:
 
 - Snapshot SQLite'a kaydedilmeli.
 - Detay paneli eski raporu okunur sekilde gostermeli.
+- Secili sembol icin kayit fiyatlari guncel fiyatla karsilastirilmali.
+- Ortalama, en iyi, en kotu ve durus bazli snapshot getirileri gorunmeli.
 - Ayni sembolde fiyat, skor, guven ve durus farki hesaplanmali.
 - Silinen kayit listeden kalkmali.
 

@@ -1352,3 +1352,31 @@ Kontrol:
 ```text
 npm run test:all
 ```
+
+## Mevcut Durum - Snapshot Performans Takibi
+
+Eklenenler:
+
+- Analiz gecmisi paneli secili sembol icin snapshot performans ozeti gosterir.
+- Kayitli snapshot fiyatlari guncel fiyatla karsilastirilir.
+- Panel su ozetleri uretir:
+  - Ortalama fiyat getirisi
+  - En iyi snapshot getirisi
+  - En kotu snapshot getirisi
+  - Trade plan durusuna gore ortalama getiri
+- Snapshot detayinda ek alanlar gosterilir:
+  - Guncel fiyat
+  - Fiyat getirisi
+  - Kayittan bu yana gecen sure
+  - Basit performans okumasi
+
+Notlar:
+
+- Bu hesap emir sonucu veya gercek PnL degildir; sadece kayit fiyati ile guncel fiyat arasindaki degisimi gosterir.
+- Ileride bu temel, belirli gun sonrasi performans ve sinyal dogrulugu raporuna genisletilebilir.
+
+Kontrol:
+
+```text
+npm run test:all
+```

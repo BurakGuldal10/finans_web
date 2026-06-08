@@ -1,6 +1,6 @@
 "use client";
 
-import { Archive, Eye, GitCompare, Save, Trash2, X } from "lucide-react";
+import { Archive, Eye, GitCompare, Save, Sigma, Trash2, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { formatPrice, type AnalysisResult, type DecisionReport, type TradePlan } from "@/lib/analysis";
 import type { MarketKind } from "@/lib/markets";
@@ -30,6 +30,7 @@ type SnapshotReport = {
 
 type Props = {
   analysis?: AnalysisResult;
+  currentPrice?: number;
   decisionReport?: DecisionReport;
   interval: string;
   market: MarketKind;
@@ -39,6 +40,7 @@ type Props = {
 
 export function AnalysisSnapshotPanel({
   analysis,
+  currentPrice,
   decisionReport,
   interval,
   market,
@@ -57,6 +59,20 @@ export function AnalysisSnapshotPanel({
   const selectedReport = useMemo(
     () => (selectedSnapshot ? parseSnapshotReport(selectedSnapshot.reportJson) : null),
     [selectedSnapshot],
+  );
+  const comparableSnapshots = useMemo(
+    () =>
+      snapshots.filter(
+        (snapshot) =>
+          snapshot.market === market &&
+          snapshot.symbol === symbol &&
+          Number.isFinite(currentPrice),
+      ),
+    [currentPrice, market, snapshots, symbol],
+  );
+  const performance = useMemo(
+    () => buildSnapshotPerformance(comparableSnapshots, currentPrice),
+    [comparableSnapshots, currentPrice],
   );
 
   const loadSnapshots = useCallback(async () => {
@@ -177,6 +193,8 @@ export function AnalysisSnapshotPanel({
         </p>
       ) : null}
 
+      {performance ? <SnapshotPerformanceSummary performance={performance} /> : null}
+
       <div className="mt-4 grid gap-3">
         {snapshots.length > 0 ? (
           snapshots.map((snapshot) => (
@@ -200,6 +218,7 @@ export function AnalysisSnapshotPanel({
           currentAnalysis={analysis}
           currentDecisionReport={decisionReport}
           currentMarket={market}
+          currentPrice={currentPrice}
           currentSymbol={symbol}
           currentTradePlan={tradePlan}
           onClose={() => setSelectedSnapshotId(null)}
@@ -279,6 +298,7 @@ function SnapshotDetail({
   currentAnalysis,
   currentDecisionReport,
   currentMarket,
+  currentPrice,
   currentSymbol,
   currentTradePlan,
   onClose,
@@ -288,6 +308,7 @@ function SnapshotDetail({
   currentAnalysis?: AnalysisResult;
   currentDecisionReport?: DecisionReport;
   currentMarket: MarketKind;
+  currentPrice?: number;
   currentSymbol: string;
   currentTradePlan?: TradePlan;
   onClose: () => void;
@@ -297,6 +318,8 @@ function SnapshotDetail({
   const savedAnalysis = report?.analysis;
   const savedDecisionReport = report?.decisionReport;
   const savedTradePlan = report?.tradePlan;
+  const comparableCurrentPrice =
+    typeof currentPrice === "number" && Number.isFinite(currentPrice) ? currentPrice : null;
   const canCompare =
     currentAnalysis &&
     currentDecisionReport &&
@@ -333,6 +356,21 @@ function SnapshotDetail({
         <DetailMetric label="Kayit guveni" value={`${snapshot.confidence}/100`} />
         <DetailMetric label="Durus" value={stanceLabel(snapshot.stance)} />
       </div>
+
+      {canCompare && comparableCurrentPrice !== null ? (
+        <div className="mt-4 grid gap-3 md:grid-cols-4">
+          <DetailMetric label="Guncel fiyat" value={formatPrice(comparableCurrentPrice)} />
+          <ReturnMetric current={comparableCurrentPrice} previous={snapshot.price} />
+          <DetailMetric label="Gecen sure" value={formatAge(snapshot.createdAt)} />
+          <DetailMetric
+            label="Okuma"
+            value={describeReturn(
+              snapshot.stance,
+              calculateReturnPercent(snapshot.price, comparableCurrentPrice),
+            )}
+          />
+        </div>
+      ) : null}
 
       {canCompare ? (
         <div className="mt-4 grid gap-3 md:grid-cols-4">
@@ -446,6 +484,165 @@ function ComparisonMetric({
       <p className="mt-1 text-xs text-[var(--muted)]">Guncel: {formatter(current)}</p>
     </div>
   );
+}
+
+type SnapshotPerformance = {
+  averageReturnPercent: number;
+  bestReturnPercent: number;
+  count: number;
+  stanceBuckets: Array<{
+    averageReturnPercent: number;
+    count: number;
+    stance: AnalysisSnapshotRecord["stance"];
+  }>;
+  worstReturnPercent: number;
+};
+
+function SnapshotPerformanceSummary({ performance }: { performance: SnapshotPerformance }) {
+  return (
+    <div className="mt-4 rounded-md border border-emerald-300/20 bg-emerald-300/10 p-3">
+      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+        <div>
+          <p className="flex items-center gap-2 text-sm font-semibold text-emerald-50">
+            <Sigma size={16} />
+            Secili sembol snapshot performansi
+          </p>
+          <p className="mt-1 text-xs leading-5 text-emerald-50/80">
+            Kayit fiyatlari guncel fiyatla karsilastirilir; emir veya kesin sonuc degildir.
+          </p>
+        </div>
+        <span className="rounded-md border border-emerald-300/30 px-2 py-1 font-mono text-xs text-emerald-50">
+          {performance.count} kayit
+        </span>
+      </div>
+
+      <div className="mt-3 grid gap-3 md:grid-cols-3">
+        <PerformanceCell label="Ortalama" value={formatPercent(performance.averageReturnPercent)} />
+        <PerformanceCell label="En iyi" value={formatPercent(performance.bestReturnPercent)} />
+        <PerformanceCell label="En kotu" value={formatPercent(performance.worstReturnPercent)} />
+      </div>
+
+      <div className="mt-3 grid gap-2 md:grid-cols-3">
+        {performance.stanceBuckets.map((bucket) => (
+          <div className="rounded-md border border-white/10 bg-black/10 p-2" key={bucket.stance}>
+            <p className="text-xs uppercase tracking-[0.12em] text-emerald-50/70">
+              {stanceLabel(bucket.stance)}
+            </p>
+            <p className="mt-1 font-mono text-sm font-semibold text-white">
+              {formatPercent(bucket.averageReturnPercent)}
+            </p>
+            <p className="mt-1 text-xs text-emerald-50/70">{bucket.count} kayit</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function PerformanceCell({ label, value }: { label: string; value: string }) {
+  const positive = !value.startsWith("-");
+
+  return (
+    <div className="rounded-md border border-white/10 bg-black/10 p-2">
+      <p className="text-xs uppercase tracking-[0.12em] text-emerald-50/70">{label}</p>
+      <p className={`mt-1 font-mono text-sm font-semibold ${positive ? "text-emerald-50" : "text-red-100"}`}>
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function ReturnMetric({ current, previous }: { current: number; previous: number }) {
+  const returnPercent = calculateReturnPercent(previous, current);
+
+  return (
+    <DetailMetric label="Fiyat getirisi" value={formatPercent(returnPercent)} />
+  );
+}
+
+function buildSnapshotPerformance(
+  snapshots: AnalysisSnapshotRecord[],
+  currentPrice?: number,
+): SnapshotPerformance | null {
+  if (typeof currentPrice !== "number" || !Number.isFinite(currentPrice) || snapshots.length === 0) {
+    return null;
+  }
+
+  const returns = snapshots.map((snapshot) => calculateReturnPercent(snapshot.price, currentPrice));
+  const stanceBuckets = (["watch", "wait", "avoid"] as const)
+    .map((stance) => {
+      const stanceReturns = snapshots
+        .filter((snapshot) => snapshot.stance === stance)
+        .map((snapshot) => calculateReturnPercent(snapshot.price, currentPrice));
+
+      return {
+        averageReturnPercent: averageNumbers(stanceReturns),
+        count: stanceReturns.length,
+        stance,
+      };
+    })
+    .filter((bucket) => bucket.count > 0);
+
+  return {
+    averageReturnPercent: averageNumbers(returns),
+    bestReturnPercent: Math.max(...returns),
+    count: snapshots.length,
+    stanceBuckets,
+    worstReturnPercent: Math.min(...returns),
+  };
+}
+
+function averageNumbers(values: number[]) {
+  if (values.length === 0) {
+    return 0;
+  }
+
+  return values.reduce((total, value) => total + value, 0) / values.length;
+}
+
+function calculateReturnPercent(previous: number, current: number) {
+  if (previous <= 0) {
+    return 0;
+  }
+
+  return ((current - previous) / previous) * 100;
+}
+
+function formatPercent(value: number) {
+  const prefix = value > 0 ? "+" : "";
+  return `${prefix}${value.toFixed(2)}%`;
+}
+
+function formatAge(createdAt: string) {
+  const created = Date.parse(createdAt);
+  if (Number.isNaN(created)) {
+    return "Bilinmiyor";
+  }
+
+  const diffMs = Date.now() - created;
+  const diffHours = Math.max(Math.floor(diffMs / 36e5), 0);
+
+  if (diffHours < 24) {
+    return `${diffHours} saat`;
+  }
+
+  return `${Math.floor(diffHours / 24)} gun`;
+}
+
+function describeReturn(stance: AnalysisSnapshotRecord["stance"], returnPercent: number) {
+  if (stance === "watch" && returnPercent > 0) {
+    return "Takip olumlu";
+  }
+
+  if (stance === "avoid" && returnPercent < 0) {
+    return "Kacin uyumlu";
+  }
+
+  if (Math.abs(returnPercent) < 1) {
+    return "Notr";
+  }
+
+  return returnPercent > 0 ? "Yukari gitti" : "Asagi gitti";
 }
 
 function parseSnapshotReport(reportJson: string): SnapshotReport | null {
