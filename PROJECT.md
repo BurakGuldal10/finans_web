@@ -1132,3 +1132,30 @@ Kontrol:
 npm run lint
 npm run build
 ```
+
+## Mevcut Durum - Analiz Detayi ve Karsilastirma
+
+Eklenenler:
+
+- Analiz gecmisi panelinde kayit detayini acma butonu eklendi.
+- Kaydedilen snapshot icindeki karar raporu ve trade plani tekrar okunabilir hale getirildi.
+- Kayit detayinda o anki fiyat, skor, guven puani, durus, RSI, trend gucu, risk/odul ve stop seviyesi gosterilir.
+- Ekranda ayni piyasa ve sembol seciliyken kayitli rapor ile guncel analiz karsilastirilir:
+  - Fiyat farki
+  - Teknik skor farki
+  - Guven puani farki
+  - Trade plan durusu degisimi
+- Yeni kaydedilen rapor otomatik olarak detay modunda acilir.
+
+Notlar:
+
+- Bu ozellik analiz gecmisini pasif arsiv olmaktan cikarip karar kalitesini takip etmeye baslayan bir gunluk haline getirir.
+- Karsilastirma ayni sembol ve ayni piyasa seciliyken calisir; farkli sembolde kullaniciya acik uyari gosterilir.
+- Bir sonraki gelistirme adimi snapshot export/import veya snapshot'tan trade gunlugu kaydi olusturma olabilir.
+
+Kontrol:
+
+```text
+npm run lint
+npm run build
+```
