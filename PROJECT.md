@@ -1458,3 +1458,35 @@ Kontrol:
 ```text
 npm run test:all
 ```
+
+## Mevcut Durum - Gunluk Kullanim Notlari
+
+Eklenenler:
+
+- Sistem sekmesindeki Gunluk kullanim testi paneline gun sonu not formu eklendi.
+- Gunluk notlar yerel SQLite veritabaninda `usage_trial_notes` tablosunda saklanir.
+- Yeni endpoint eklendi: `/api/usage-notes`.
+- Endpoint gunluk not listeleme, ekleme ve silme islemlerini destekler.
+- Kayit alanlari:
+  - Tarih
+  - Incelenen semboller
+  - Kaydedilen snapshot sayisi
+  - Trade / gozlem notu
+  - En faydali panel
+  - Kafa karistiran panel
+  - Veri hatasi veya gecikme
+  - Sonraki kontrol notu
+- Sistem durumu paneli kullanim notu sayisini gosterir.
+- API smoke test gunluk not olusturma, listeleme ve silme akisini da kontrol eder.
+
+Notlar:
+
+- Checklist maddeleri gun bazli `localStorage` ile saklanmaya devam eder.
+- Gun sonu notlari SQLite'ta kaldigi icin tarayici temizlense bile korunur.
+- Bu ozellik 7 gunluk deneme sonunda hangi panellerin ise yaradigini ve hangi kisimlarin karisik kaldigini okumak icin kullanilacak.
+
+Kontrol:
+
+```text
+npm run test:all
+```

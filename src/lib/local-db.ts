@@ -52,6 +52,19 @@ export type AnalysisSnapshotRecord = {
   createdAt: string;
 };
 
+export type UsageTrialNoteRecord = {
+  id: string;
+  date: string;
+  symbols: string;
+  snapshots: number;
+  tradeNotes: string;
+  usefulPanel: string;
+  confusingPanel: string;
+  dataIssue: string;
+  nextAction: string;
+  createdAt: string;
+};
+
 let database: DatabaseSync | null = null;
 
 export function getDb() {
@@ -107,6 +120,19 @@ export function getDb() {
         stance TEXT NOT NULL,
         confidence REAL NOT NULL,
         reportJson TEXT NOT NULL,
+        createdAt TEXT NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS usage_trial_notes (
+        id TEXT PRIMARY KEY,
+        date TEXT NOT NULL,
+        symbols TEXT NOT NULL,
+        snapshots REAL NOT NULL,
+        tradeNotes TEXT NOT NULL,
+        usefulPanel TEXT NOT NULL,
+        confusingPanel TEXT NOT NULL,
+        dataIssue TEXT NOT NULL,
+        nextAction TEXT NOT NULL,
         createdAt TEXT NOT NULL
       );
     `);
@@ -335,6 +361,38 @@ export function deleteAnalysisSnapshot(id: string) {
   getDb().prepare("DELETE FROM analysis_snapshots WHERE id = ?").run(id);
 }
 
+export function listUsageTrialNotes(limit = 20) {
+  return getDb()
+    .prepare("SELECT * FROM usage_trial_notes ORDER BY date DESC, createdAt DESC LIMIT ?")
+    .all(limit) as UsageTrialNoteRecord[];
+}
+
+export function createUsageTrialNote(note: UsageTrialNoteRecord) {
+  getDb()
+    .prepare(
+      `INSERT INTO usage_trial_notes
+        (id, date, symbols, snapshots, tradeNotes, usefulPanel, confusingPanel, dataIssue, nextAction, createdAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    )
+    .run(
+      note.id,
+      note.date,
+      note.symbols,
+      note.snapshots,
+      note.tradeNotes,
+      note.usefulPanel,
+      note.confusingPanel,
+      note.dataIssue,
+      note.nextAction,
+      note.createdAt,
+    );
+  return note;
+}
+
+export function deleteUsageTrialNote(id: string) {
+  getDb().prepare("DELETE FROM usage_trial_notes WHERE id = ?").run(id);
+}
+
 export function getLocalDataStats() {
   const db = getDb();
   const portfolio = db
@@ -352,6 +410,9 @@ export function getLocalDataStats() {
   const snapshots = db.prepare("SELECT COUNT(*) AS count FROM analysis_snapshots").get() as {
     count: number;
   };
+  const usageNotes = db.prepare("SELECT COUNT(*) AS count FROM usage_trial_notes").get() as {
+    count: number;
+  };
 
   return {
     alerts: alerts.count,
@@ -359,5 +420,6 @@ export function getLocalDataStats() {
     snapshots: snapshots.count,
     trades: trades.count,
     triggeredAlerts: triggeredAlerts.count,
+    usageNotes: usageNotes.count,
   };
 }

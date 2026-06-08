@@ -14,6 +14,7 @@ Her gun ayni sirayla ilerle:
 6. Gerekli gorursen fiyat, skor veya RSI uyarisi kur.
 7. Gun sonunda Geçmiş sekmesinde snapshot performansini kontrol et.
 8. Sistem sekmesindeki Gunluk kullanim testi listesini isaretle.
+9. Sistem sekmesindeki Gun sonu notu formuna kisa deneme notunu kaydet.
 
 ## 7 Gunluk Hedefler
 
@@ -25,6 +26,8 @@ Her gun ayni sirayla ilerle:
 - En az 1 kez `npm run test:all` calistir.
 
 ## Gun Sonu Not Sablonu
+
+Bu sablon artik Sistem sekmesindeki Gunluk kullanim testi panelinden SQLite'a kaydedilebilir.
 
 ```text
 Tarih:

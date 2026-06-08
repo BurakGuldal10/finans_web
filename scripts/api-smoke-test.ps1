@@ -133,6 +133,25 @@ $alertDelete = Invoke-JsonRequest -Method "DELETE" -Path "/api/alerts?id=$alertI
 Assert-Truthy $alertDelete.ok "Uyari kaydi silinemedi."
 Write-Host "[OK] /api/alerts"
 
+$usageNoteBody = @{
+  date = (Get-Date).ToString("yyyy-MM-dd")
+  symbols = "BTCUSDT, ETHUSDT"
+  snapshots = 1
+  tradeNotes = "Smoke test notu"
+  usefulPanel = "Karar raporu"
+  confusingPanel = ""
+  dataIssue = ""
+  nextAction = "Smoke test temizligi"
+}
+$usageNote = Invoke-JsonRequest -Method "POST" -Path "/api/usage-notes" -Body $usageNoteBody
+$usageNoteId = $usageNote.note.id
+Assert-Truthy $usageNoteId "Kullanim notu olusmadi."
+$usageNotes = Invoke-JsonRequest -Method "GET" -Path "/api/usage-notes"
+Assert-Truthy ($usageNotes.notes | Where-Object { $_.id -eq $usageNoteId }) "Kullanim notu listede bulunamadi."
+$usageNoteDelete = Invoke-JsonRequest -Method "DELETE" -Path "/api/usage-notes?id=$usageNoteId"
+Assert-Truthy $usageNoteDelete.ok "Kullanim notu silinemedi."
+Write-Host "[OK] /api/usage-notes"
+
 $exportJson = Invoke-JsonRequest -Method "GET" -Path "/api/export?type=trades&format=json"
 Assert-Truthy ($null -ne $exportJson.records) "Trade JSON export records alani yok."
 $snapshotExportJson = Invoke-JsonRequest -Method "GET" -Path "/api/export?type=snapshots&format=json"

@@ -13,6 +13,7 @@ type HealthResponse = {
     snapshots: number;
     trades: number;
     triggeredAlerts: number;
+    usageNotes: number;
   };
   environment: {
     fmpApiKey: boolean;
@@ -90,12 +91,13 @@ export function SystemStatusPanel() {
 
       {health ? (
         <div className="mt-4 grid gap-3 lg:grid-cols-[1.4fr_1fr]">
-          <div className="grid gap-3 md:grid-cols-5">
+          <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
             <StatusMetric label="Portfoy" value={health.data.portfolio.toString()} />
             <StatusMetric label="Trade" value={health.data.trades.toString()} />
             <StatusMetric label="Uyari" value={health.data.alerts.toString()} />
             <StatusMetric label="Rapor" value={health.data.snapshots.toString()} />
             <StatusMetric label="Tetiklenen" value={health.data.triggeredAlerts.toString()} />
+            <StatusMetric label="Kullanim" value={health.data.usageNotes.toString()} />
           </div>
 
           <div className="grid gap-3 md:grid-cols-2">

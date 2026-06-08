@@ -58,7 +58,7 @@ Beklenen sonuc:
 
 - ESLint hata vermemeli.
 - Next.js production build basariyla tamamlanmali.
-- Build ciktisinda `/api/snapshots`, `/api/analyze`, `/api/market`, `/api/portfolio`, `/api/trades`, `/api/alerts`, `/api/export`, `/api/import` ve `/api/health` route'lari gorunmeli.
+- Build ciktisinda `/api/snapshots`, `/api/analyze`, `/api/market`, `/api/portfolio`, `/api/trades`, `/api/alerts`, `/api/usage-notes`, `/api/export`, `/api/import` ve `/api/health` route'lari gorunmeli.
 
 API endpoint'leri icin yerel sunucu acikken su komut calistirilir:
 
@@ -68,7 +68,7 @@ npm run test:api
 
 Beklenen sonuc:
 
-- Script `[OK]` satirlariyla health, market, analyze, snapshots, trades, portfolio, alerts, export ve import kontrollerini tamamlamali.
+- Script `[OK]` satirlariyla health, market, analyze, snapshots, trades, portfolio, alerts, usage-notes, export ve import kontrollerini tamamlamali.
 - Export/import kontrolleri analiz gecmisi snapshot kayitlarini da kapsamalidir.
 - Script'in olusturdugu gecici kayitlar test sonunda silinmeli.
 - `LOCAL_APP_PASSWORD` aktifse bu smoke test oturum cookie'si tasimadigi icin once kilit kapali ortamda calistirilmalidir.
@@ -277,14 +277,18 @@ Adimlar:
 2. Gunluk kullanim testi listesinden en az bir maddeyi isaretle.
 3. Sayfayi yenile ve isaretin korundugunu kontrol et.
 4. Bugunu sifirla butonunu dene.
-5. Sistem durumu panelinde `Kontrol et` butonuna bas.
-6. Portfoy, trade, uyari, rapor ve tetiklenen uyari sayilarini kontrol et.
-7. `/api/health` cevabini tarayicida veya terminalde ac.
+5. Gun sonu notu formuna incelenen sembolleri, snapshot sayisini ve kisa notu girip kaydet.
+6. Kaydedilen notun Son gunluk notlar listesinde gorundugunu kontrol et.
+7. Notu sil ve listeden kalktigini kontrol et.
+8. Sistem durumu panelinde `Kontrol et` butonuna bas.
+9. Portfoy, trade, uyari, rapor, kullanim notu ve tetiklenen uyari sayilarini kontrol et.
+10. `/api/health` cevabini tarayicida veya terminalde ac.
 
 Beklenen sonuc:
 
 - Panel sayisal ozetleri gostermeli.
 - Gunluk kullanim testi ayni gun icin tarayicida saklanmali.
+- Gun sonu notu SQLite'a kaydedilmeli, listelenmeli ve silinebilmelidir.
 - API anahtari durumlari ve eksikse ne yapilacagi dogru gorunmeli.
 - Lokal kilit aktifse cikis butonu gorunmeli.
 
