@@ -1287,3 +1287,30 @@ Kontrol:
 ```text
 npm run test:all
 ```
+
+## Mevcut Durum - Analiz Gecmisi Yedekleme
+
+Eklenenler:
+
+- Analiz gecmisi snapshot kayitlari export/import sistemine dahil edildi.
+- Yedek paneline "Analiz gecmisi" karti eklendi.
+- Snapshot kayitlari CSV ve JSON olarak disa aktarilabilir.
+- Snapshot JSON yedekleri tekrar ice aktarilabilir.
+- Import islemi `id` alanina gore kaydi ekler veya gunceller.
+- Snapshot import dogrulamalari eklendi:
+  - Piyasa: crypto, stocks veya bist
+  - Durus: watch, wait veya avoid
+  - Skor ve guven: 0-100 araligi
+  - `reportJson`: gecerli JSON metni
+- API smoke test snapshot export/import akisini da kontrol eder.
+
+Notlar:
+
+- Bu adim analiz karar gecmisinin veri kaybi riskini azaltir.
+- SQLite dosyasi kaybolsa bile JSON yedekten analiz gecmisi geri yuklenebilir.
+
+Kontrol:
+
+```text
+npm run test:all
+```

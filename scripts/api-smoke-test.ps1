@@ -135,8 +135,12 @@ Write-Host "[OK] /api/alerts"
 
 $exportJson = Invoke-JsonRequest -Method "GET" -Path "/api/export?type=trades&format=json"
 Assert-Truthy ($null -ne $exportJson.records) "Trade JSON export records alani yok."
+$snapshotExportJson = Invoke-JsonRequest -Method "GET" -Path "/api/export?type=snapshots&format=json"
+Assert-Truthy ($null -ne $snapshotExportJson.records) "Snapshot JSON export records alani yok."
 $exportCsv = Invoke-WebRequest -Method "GET" -Uri "$BaseUrl/api/export?type=portfolio&format=csv" -UseBasicParsing
 Assert-Truthy ($exportCsv.Content -match "id") "Portfolio CSV export beklenen basligi icermiyor."
+$snapshotExportCsv = Invoke-WebRequest -Method "GET" -Uri "$BaseUrl/api/export?type=snapshots&format=csv" -UseBasicParsing
+Assert-Truthy ($snapshotExportCsv.Content -match "reportJson") "Snapshot CSV export beklenen basligi icermiyor."
 Write-Host "[OK] /api/export"
 
 $importId = New-TestId -Prefix "import-trade"
@@ -162,6 +166,28 @@ $import = Invoke-JsonRequest -Method "POST" -Path "/api/import?type=trades" -Bod
 Assert-Truthy $import.ok "Import basarisiz."
 $cleanupImport = Invoke-JsonRequest -Method "DELETE" -Path "/api/trades?id=$importId"
 Assert-Truthy $cleanupImport.ok "Import test kaydi temizlenemedi."
+
+$snapshotImportId = New-TestId -Prefix "import-snapshot"
+$snapshotImportBody = @{
+  records = @(
+    @{
+      id = $snapshotImportId
+      market = "crypto"
+      symbol = "BTCUSDT"
+      interval = "1h"
+      price = 100
+      score = 55
+      stance = "wait"
+      confidence = 60
+      reportJson = "{`"source`":`"api-smoke-test`"}"
+      createdAt = (Get-Date).ToUniversalTime().ToString("o")
+    }
+  )
+}
+$snapshotImport = Invoke-JsonRequest -Method "POST" -Path "/api/import?type=snapshots" -Body $snapshotImportBody
+Assert-Truthy $snapshotImport.ok "Snapshot import basarisiz."
+$cleanupSnapshotImport = Invoke-JsonRequest -Method "DELETE" -Path "/api/snapshots?id=$snapshotImportId"
+Assert-Truthy $cleanupSnapshotImport.ok "Snapshot import test kaydi temizlenemedi."
 Write-Host "[OK] /api/import"
 
 Write-Host "API smoke test tamamlandi."

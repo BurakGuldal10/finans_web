@@ -6,7 +6,7 @@ import { Download, FileJson, Sheet, Upload } from "lucide-react";
 type ExportItem = {
   description: string;
   label: string;
-  type: "alerts" | "portfolio" | "trades";
+  type: "alerts" | "portfolio" | "snapshots" | "trades";
 };
 
 type ImportState = Partial<Record<ExportItem["type"], string>>;
@@ -26,6 +26,11 @@ const exportItems: ExportItem[] = [
     description: "Fiyat, RSI ve skor uyari kurallari.",
     label: "Uyarilar",
     type: "alerts",
+  },
+  {
+    description: "Kaydedilen karar raporlari, trade planlari ve analiz snapshot'lari.",
+    label: "Analiz gecmisi",
+    type: "snapshots",
   },
 ];
 
@@ -80,7 +85,7 @@ export function ExportPanel() {
         </p>
       </div>
 
-      <div className="mt-5 grid gap-3 lg:grid-cols-3">
+      <div className="mt-5 grid gap-3 lg:grid-cols-4">
         {exportItems.map((item) => (
           <article className="rounded-md border border-white/5 bg-white/[0.03] p-3" key={item.type}>
             <div>

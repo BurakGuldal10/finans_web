@@ -309,6 +309,28 @@ export function createAnalysisSnapshot(snapshot: AnalysisSnapshotRecord) {
   return snapshot;
 }
 
+export function upsertAnalysisSnapshot(snapshot: AnalysisSnapshotRecord) {
+  getDb()
+    .prepare(
+      `INSERT OR REPLACE INTO analysis_snapshots
+        (id, market, symbol, interval, price, score, stance, confidence, reportJson, createdAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    )
+    .run(
+      snapshot.id,
+      snapshot.market,
+      snapshot.symbol,
+      snapshot.interval,
+      snapshot.price,
+      snapshot.score,
+      snapshot.stance,
+      snapshot.confidence,
+      snapshot.reportJson,
+      snapshot.createdAt,
+    );
+  return snapshot;
+}
+
 export function deleteAnalysisSnapshot(id: string) {
   getDb().prepare("DELETE FROM analysis_snapshots WHERE id = ?").run(id);
 }

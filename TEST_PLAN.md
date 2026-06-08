@@ -69,6 +69,7 @@ npm run test:api
 Beklenen sonuc:
 
 - Script `[OK]` satirlariyla health, market, analyze, snapshots, trades, portfolio, alerts, export ve import kontrollerini tamamlamali.
+- Export/import kontrolleri analiz gecmisi snapshot kayitlarini da kapsamalidir.
 - Script'in olusturdugu gecici kayitlar test sonunda silinmeli.
 - `LOCAL_APP_PASSWORD` aktifse bu smoke test oturum cookie'si tasimadigi icin once kilit kapali ortamda calistirilmalidir.
 
@@ -220,7 +221,7 @@ Beklenen sonuc:
 
 Adimlar:
 
-1. Trade, portfoy ve uyari icin JSON export al.
+1. Trade, portfoy, uyari ve analiz gecmisi icin JSON export al.
 2. CSV export linklerini kontrol et.
 3. JSON dosyasini import et.
 4. Ayni dosyayi tekrar import ederek kayitlarin cogalmadigini kontrol et.
@@ -230,6 +231,7 @@ Beklenen sonuc:
 - Export dosyalari indirilebilir olmali.
 - JSON import kayitlari `id` alanina gore eklemeli veya guncellemeli.
 - Bozuk JSON dosyasi reddedilmeli.
+- Analiz gecmisi import edilirken `reportJson` gecerli JSON metni degilse reddedilmeli.
 
 ### 10. Sistem Durumu Testi
 

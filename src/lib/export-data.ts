@@ -1,19 +1,23 @@
 import {
+  listAnalysisSnapshots,
   listAlertRules,
   listPortfolioPositions,
   listTradeEntries,
+  upsertAnalysisSnapshot,
   upsertAlertRule,
   upsertPortfolioPosition,
   upsertTradeEntry,
+  type AnalysisSnapshotRecord,
   type AlertRuleRecord,
   type PortfolioPositionRecord,
   type TradeEntryRecord,
 } from "@/lib/local-db";
 
 export type ExportFormat = "csv" | "json";
-export type ExportResource = "alerts" | "portfolio" | "trades";
+export type ExportResource = "alerts" | "portfolio" | "snapshots" | "trades";
 
 type ExportPayload =
+  | AnalysisSnapshotRecord[]
   | AlertRuleRecord[]
   | PortfolioPositionRecord[]
   | TradeEntryRecord[];
@@ -59,8 +63,21 @@ const alertHeaders: Array<keyof AlertRuleRecord> = [
   "triggeredAt",
 ];
 
+const snapshotHeaders: Array<keyof AnalysisSnapshotRecord> = [
+  "id",
+  "market",
+  "symbol",
+  "interval",
+  "price",
+  "score",
+  "stance",
+  "confidence",
+  "reportJson",
+  "createdAt",
+];
+
 export function normalizeExportResource(value: string | null): ExportResource {
-  if (value === "portfolio" || value === "alerts") {
+  if (value === "portfolio" || value === "alerts" || value === "snapshots") {
     return value;
   }
 
@@ -85,6 +102,14 @@ export function getExportData(resource: ExportResource) {
       filenameBase: "alerts",
       headers: alertHeaders,
       records: listAlertRules(),
+    };
+  }
+
+  if (resource === "snapshots") {
+    return {
+      filenameBase: "snapshots",
+      headers: snapshotHeaders,
+      records: listAnalysisSnapshots(1000),
     };
   }
 
@@ -134,12 +159,20 @@ export function parseImportPayload(resource: ExportResource, payload: unknown) {
     return records.map(normalizeAlertImportRecord);
   }
 
+  if (resource === "snapshots") {
+    return records.map(normalizeSnapshotImportRecord);
+  }
+
   return records.map(normalizeTradeImportRecord);
 }
 
 export function importRecords(
   resource: ExportResource,
-  records: AlertRuleRecord[] | PortfolioPositionRecord[] | TradeEntryRecord[],
+  records:
+    | AlertRuleRecord[]
+    | AnalysisSnapshotRecord[]
+    | PortfolioPositionRecord[]
+    | TradeEntryRecord[],
 ) {
   if (resource === "portfolio") {
     for (const record of records as PortfolioPositionRecord[]) {
@@ -148,6 +181,10 @@ export function importRecords(
   } else if (resource === "alerts") {
     for (const record of records as AlertRuleRecord[]) {
       upsertAlertRule(record);
+    }
+  } else if (resource === "snapshots") {
+    for (const record of records as AnalysisSnapshotRecord[]) {
+      upsertAnalysisSnapshot(record);
     }
   } else {
     for (const record of records as TradeEntryRecord[]) {
@@ -238,6 +275,22 @@ function normalizeAlertImportRecord(record: unknown): AlertRuleRecord {
   };
 }
 
+function normalizeSnapshotImportRecord(record: unknown): AnalysisSnapshotRecord {
+  const raw = requireRecord(record);
+  return {
+    id: readRequiredString(raw, "id"),
+    market: readEnum(raw, "market", ["crypto", "stocks", "bist"]),
+    symbol: readRequiredString(raw, "symbol").toUpperCase(),
+    interval: readRequiredString(raw, "interval"),
+    price: readPositiveNumber(raw, "price"),
+    score: readBoundedNumber(raw, "score", 0, 100),
+    stance: readEnum(raw, "stance", ["watch", "wait", "avoid"]),
+    confidence: readBoundedNumber(raw, "confidence", 0, 100),
+    reportJson: readJsonString(raw, "reportJson"),
+    createdAt: readDateString(raw, "createdAt"),
+  };
+}
+
 function requireRecord(value: unknown) {
   if (!isRecord(value)) {
     throw new Error("Kayit nesne formatinda olmali.");
@@ -291,6 +344,15 @@ function readNonNegativeNumber(record: Record<string, unknown>, key: string) {
   return value;
 }
 
+function readBoundedNumber(record: Record<string, unknown>, key: string, min: number, max: number) {
+  const value = readFiniteNumber(record, key);
+  if (value < min || value > max) {
+    throw new Error(`${key} alani ${min}-${max} araliginda olmali.`);
+  }
+
+  return value;
+}
+
 function readEnum<const T extends string>(
   record: Record<string, unknown>,
   key: string,
@@ -302,6 +364,17 @@ function readEnum<const T extends string>(
   }
 
   throw new Error(`${key} alani gecersiz.`);
+}
+
+function readJsonString(record: Record<string, unknown>, key: string) {
+  const value = readRequiredString(record, key);
+  try {
+    JSON.parse(value);
+  } catch {
+    throw new Error(`${key} alani gecerli JSON metni olmali.`);
+  }
+
+  return value;
 }
 
 function readDateString(record: Record<string, unknown>, key: string) {
