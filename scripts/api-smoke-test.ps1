@@ -42,6 +42,12 @@ $health = Invoke-JsonRequest -Method "GET" -Path "/api/health"
 Assert-Truthy $health.checkedAt "Health cevabinda checkedAt yok."
 Write-Host "[OK] /api/health"
 
+$readiness = Invoke-JsonRequest -Method "GET" -Path "/api/readiness"
+Assert-Truthy $readiness.report.generatedAt "Readiness cevabinda generatedAt yok."
+Assert-Truthy ($readiness.report.items.Count -ge 1) "Readiness madde listesi yok."
+Assert-Truthy ($readiness.report.score -ge 0) "Readiness skoru gecersiz."
+Write-Host "[OK] /api/readiness"
+
 $market = Invoke-JsonRequest -Method "GET" -Path "/api/market?market=crypto&symbols=BTCUSDT,ETHUSDT"
 Assert-Truthy ($market.tickers.Count -ge 1) "Market cevabinda ticker yok."
 Write-Host "[OK] /api/market"

@@ -35,6 +35,7 @@ import { combineStockAnalysis } from "@/lib/combined-analysis";
 import type { FundamentalAnalysis } from "@/lib/fundamentals";
 import type { MarketKind } from "@/lib/markets";
 import { PortfolioPanel } from "@/components/portfolio-panel";
+import { ReadinessPanel } from "@/components/readiness-panel";
 import { RiskCalculatorPanel } from "@/components/risk-calculator-panel";
 import { SettingsPanel, type AppSettings } from "@/components/settings-panel";
 import { SystemStatusPanel } from "@/components/system-status-panel";
@@ -903,6 +904,8 @@ export function MarketDashboard() {
 
           {activeTab === "system" ? (
             <>
+              <ReadinessPanel />
+
               <UsageSummaryPanel />
 
               <UsageTrialPanel />

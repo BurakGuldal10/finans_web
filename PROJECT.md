@@ -1527,3 +1527,34 @@ Kontrol:
 ```text
 npm run test:all
 ```
+
+## Mevcut Durum - MVP Hazirlik Durumu
+
+Eklenenler:
+
+- Yeni endpoint eklendi: `/api/readiness`.
+- Sistem sekmesine "MVP hazirlik durumu" paneli eklendi.
+- Panel uygulamanin kisisel MVP kullanimi icin durumunu yuzdelik skorla ozetler.
+- Degerlendirilen basliklar:
+  - Piyasa veri akisi
+  - Karar destek motoru
+  - Analiz gecmisi
+  - Portfoy ve trade gunlugu
+  - Gercek kullanim denemesi
+  - Temel analiz verisi
+  - AI yorum
+  - Lokal erisim kilidi
+  - Yedekleme ve test
+- Panel, eksik kalan maddeler icin siradaki kontroller listesini uretir.
+- API smoke test readiness endpoint'ini de kontrol eder.
+
+Notlar:
+
+- Bu panel "uygulama tamamen bitti" anlamina gelmez; MVP kabulunden once hangi kontrollerin kaldigini gorunur yapar.
+- 7 gunluk gercek kullanim denemesi ve manuel tarayici kontrolu hala kullanici tarafinda tamamlanmalidir.
+
+Kontrol:
+
+```text
+npm run test:all
+```

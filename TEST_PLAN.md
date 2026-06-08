@@ -58,7 +58,7 @@ Beklenen sonuc:
 
 - ESLint hata vermemeli.
 - Next.js production build basariyla tamamlanmali.
-- Build ciktisinda `/api/snapshots`, `/api/analyze`, `/api/market`, `/api/portfolio`, `/api/trades`, `/api/alerts`, `/api/usage-notes`, `/api/usage-summary`, `/api/export`, `/api/import` ve `/api/health` route'lari gorunmeli.
+- Build ciktisinda `/api/snapshots`, `/api/analyze`, `/api/market`, `/api/portfolio`, `/api/trades`, `/api/alerts`, `/api/usage-notes`, `/api/usage-summary`, `/api/readiness`, `/api/export`, `/api/import` ve `/api/health` route'lari gorunmeli.
 
 API endpoint'leri icin yerel sunucu acikken su komut calistirilir:
 
@@ -68,7 +68,7 @@ npm run test:api
 
 Beklenen sonuc:
 
-- Script `[OK]` satirlariyla health, market, analyze, snapshots, trades, portfolio, alerts, usage-notes, usage-summary, export ve import kontrollerini tamamlamali.
+- Script `[OK]` satirlariyla health, readiness, market, analyze, snapshots, trades, portfolio, alerts, usage-notes, usage-summary, export ve import kontrollerini tamamlamali.
 - Export/import kontrolleri analiz gecmisi snapshot kayitlarini da kapsamalidir.
 - Script'in olusturdugu gecici kayitlar test sonunda silinmeli.
 - `LOCAL_APP_PASSWORD` aktifse bu smoke test oturum cookie'si tasimadigi icin once kilit kapali ortamda calistirilmalidir.
@@ -274,21 +274,23 @@ Beklenen sonuc:
 Adimlar:
 
 1. `Sistem` sekmesine gec.
-2. Gunluk kullanim testi listesinden en az bir maddeyi isaretle.
-3. Sayfayi yenile ve isaretin korundugunu kontrol et.
-4. Bugunu sifirla butonunu dene.
-5. Gun sonu notu formuna incelenen sembolleri, snapshot sayisini ve kisa notu girip kaydet.
-6. Kaydedilen notun Son gunluk notlar listesinde gorundugunu kontrol et.
-7. Kullanim ozeti panelinde not, aktif gun, snapshot ve sembol/panel ozetlerinin guncellendigini kontrol et.
-8. Kullanim ozeti panelindeki Oneriler alaninda en az bir iyilestirme onerisi gorundugunu kontrol et.
-9. Notu sil ve listeden kalktigini kontrol et.
-10. Sistem durumu panelinde `Kontrol et` butonuna bas.
-11. Portfoy, trade, uyari, rapor, kullanim notu ve tetiklenen uyari sayilarini kontrol et.
-12. `/api/health` cevabini tarayicida veya terminalde ac.
+2. MVP hazirlik durumu panelinde skor, durum metni ve kontrol maddelerinin gorundugunu kontrol et.
+3. Gunluk kullanim testi listesinden en az bir maddeyi isaretle.
+4. Sayfayi yenile ve isaretin korundugunu kontrol et.
+5. Bugunu sifirla butonunu dene.
+6. Gun sonu notu formuna incelenen sembolleri, snapshot sayisini ve kisa notu girip kaydet.
+7. Kaydedilen notun Son gunluk notlar listesinde gorundugunu kontrol et.
+8. Kullanim ozeti panelinde not, aktif gun, snapshot ve sembol/panel ozetlerinin guncellendigini kontrol et.
+9. Kullanim ozeti panelindeki Oneriler alaninda en az bir iyilestirme onerisi gorundugunu kontrol et.
+10. Notu sil ve listeden kalktigini kontrol et.
+11. Sistem durumu panelinde `Kontrol et` butonuna bas.
+12. Portfoy, trade, uyari, rapor, kullanim notu ve tetiklenen uyari sayilarini kontrol et.
+13. `/api/health` ve `/api/readiness` cevaplarini tarayicida veya terminalde ac.
 
 Beklenen sonuc:
 
 - Panel sayisal ozetleri gostermeli.
+- MVP hazirlik paneli hazir, dikkat veya bekleyen durumlarini acikca gostermeli.
 - Gunluk kullanim testi ayni gun icin tarayicida saklanmali.
 - Gun sonu notu SQLite'a kaydedilmeli, listelenmeli ve silinebilmelidir.
 - Kullanim ozeti son 7 gunluk notlardan sembol, panel, veri sorunu ve aksiyon ozetleri uretmelidir.
