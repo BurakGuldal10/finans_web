@@ -1258,3 +1258,32 @@ npm run lint
 npm run build
 npm run test:page
 ```
+
+## Mevcut Durum - Test Runbook ve Toplu Test Komutu
+
+Eklenenler:
+
+- Yeni test rehberi olusturuldu: `TEST_RUNBOOK.md`.
+- Yeni npm komutu eklendi:
+
+```text
+npm run test:all
+```
+
+- `test:all` su komutlari sirayla calistirir:
+  - `npm run lint`
+  - `npm run build`
+  - `npm run test:api`
+  - `npm run test:page`
+- Test basarisiz olursa izlenecek kisa hata ayiklama adimlari dokumante edildi.
+
+Notlar:
+
+- API ve sayfa smoke testleri icin yerel server'in `127.0.0.1:3000` adresinde calismasi gerekir.
+- Bu komut kisisel lokal kullanim icin temel regresyon paketi olarak kullanilacak.
+
+Kontrol:
+
+```text
+npm run test:all
+```

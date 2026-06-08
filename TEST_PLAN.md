@@ -42,6 +42,18 @@ npm run lint
 npm run build
 ```
 
+Tum otomatik kontrolleri tek komutla calistirmak icin:
+
+```text
+npm run test:all
+```
+
+Kisa calistirma rehberi icin:
+
+```text
+TEST_RUNBOOK.md
+```
+
 Beklenen sonuc:
 
 - ESLint hata vermemeli.
