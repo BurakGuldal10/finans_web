@@ -152,6 +152,12 @@ $usageNoteDelete = Invoke-JsonRequest -Method "DELETE" -Path "/api/usage-notes?i
 Assert-Truthy $usageNoteDelete.ok "Kullanim notu silinemedi."
 Write-Host "[OK] /api/usage-notes"
 
+$usageSummary = Invoke-JsonRequest -Method "GET" -Path "/api/usage-summary?days=7"
+Assert-Truthy $usageSummary.summary.generatedAt "Kullanim ozetinde generatedAt yok."
+Assert-Truthy ($usageSummary.summary.range.days -eq 7) "Kullanim ozeti gun araligi hatali."
+Assert-Truthy ($null -ne $usageSummary.summary.totals.notes) "Kullanim ozeti toplam not alani yok."
+Write-Host "[OK] /api/usage-summary"
+
 $exportJson = Invoke-JsonRequest -Method "GET" -Path "/api/export?type=trades&format=json"
 Assert-Truthy ($null -ne $exportJson.records) "Trade JSON export records alani yok."
 $snapshotExportJson = Invoke-JsonRequest -Method "GET" -Path "/api/export?type=snapshots&format=json"

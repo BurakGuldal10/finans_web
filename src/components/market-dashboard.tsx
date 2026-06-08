@@ -42,6 +42,7 @@ import { TechnicalIndicatorsPanel } from "@/components/technical-indicators-pane
 import { TimeframeConfirmationPanel } from "@/components/timeframe-confirmation-panel";
 import { TradePlanPanel } from "@/components/trade-plan-panel";
 import { TradeJournal } from "@/components/trade-journal";
+import { UsageSummaryPanel } from "@/components/usage-summary-panel";
 import { UsageTrialPanel } from "@/components/usage-trial-panel";
 
 type Ticker = {
@@ -902,6 +903,8 @@ export function MarketDashboard() {
 
           {activeTab === "system" ? (
             <>
+              <UsageSummaryPanel />
+
               <UsageTrialPanel />
 
               <SystemStatusPanel />

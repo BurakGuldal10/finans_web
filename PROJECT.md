@@ -1490,3 +1490,33 @@ Kontrol:
 ```text
 npm run test:all
 ```
+
+## Mevcut Durum - 7 Gunluk Kullanim Ozeti
+
+Eklenenler:
+
+- Gunluk kullanim notlarindan otomatik ozet cikaran modul eklendi.
+- Yeni endpoint eklendi: `/api/usage-summary`.
+- Sistem sekmesine "Kullanim ozeti" paneli eklendi.
+- Panel son 7 gun icin su alanlari gosterir:
+  - Toplam gunluk not sayisi
+  - Aktif gun sayisi
+  - Toplam kaydedilen snapshot sayisi
+  - En cok incelenen semboller
+  - En faydali gorulen paneller
+  - Kafa karistiran paneller
+  - Veri sorunu notlari
+  - Siradaki aksiyon notlari
+- API smoke test kullanim ozeti endpoint'ini de kontrol eder.
+
+Notlar:
+
+- Ozet, yerel SQLite'taki `usage_trial_notes` kayitlarindan uretilir.
+- Gunluk not girilmediyse panel bos durum mesajlariyla calisir.
+- Bu adim 7 gunluk deneme sonunda hangi ekranlarin ise yaradigini ve hangi sorunlarin tekrar ettigini daha kolay gormeyi saglar.
+
+Kontrol:
+
+```text
+npm run test:all
+```
