@@ -480,7 +480,7 @@ export function MarketDashboard() {
   const isStaleData = Boolean(market?.stale || analysisData?.stale);
 
   return (
-    <main className="min-h-screen px-5 py-5 md:px-8 lg:px-10">
+    <main className="min-h-screen px-3 py-4 sm:px-5 md:px-8 lg:px-10">
       <header className="mx-auto flex max-w-7xl flex-col gap-4 pb-6 md:flex-row md:items-center md:justify-between">
         <div>
           <div className="flex items-center gap-2 text-sm text-emerald-200">
@@ -497,7 +497,7 @@ export function MarketDashboard() {
         </div>
 
         <button
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-[var(--border)] bg-[var(--panel)] px-4 text-sm font-medium text-white transition hover:border-emerald-300 hover:bg-[var(--panel-strong)]"
+          className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md border border-[var(--border)] bg-[var(--panel)] px-4 text-sm font-medium text-white transition hover:border-emerald-300 hover:bg-[var(--panel-strong)] sm:w-auto"
           onClick={() => refresh(selectedMarket, selectedSymbol, selectedTimeframe)}
           type="button"
         >
@@ -506,7 +506,7 @@ export function MarketDashboard() {
         </button>
       </header>
 
-      <section className="mx-auto grid max-w-7xl gap-5 lg:grid-cols-[360px_1fr]">
+      <section className="mx-auto grid max-w-7xl gap-4 lg:grid-cols-[340px_minmax(0,1fr)] xl:grid-cols-[360px_minmax(0,1fr)]">
         <aside className="rounded-lg border border-[var(--border)] bg-[rgba(13,26,23,0.82)] p-4 shadow-2xl shadow-black/20">
           <div className="mb-4 flex items-center justify-between">
             <div>
@@ -567,7 +567,7 @@ export function MarketDashboard() {
             </p>
           ) : null}
 
-          <div className="space-y-2">
+          <div className="max-h-[360px] space-y-2 overflow-auto pr-1 lg:max-h-[calc(100vh-300px)]">
             {displayedTickers.map((ticker) => {
               const active = ticker.symbol === selectedSymbol;
               const positive = (ticker.changePercent ?? 0) >= 0;
@@ -625,7 +625,7 @@ export function MarketDashboard() {
           </div>
         </aside>
 
-        <div className="space-y-5">
+        <div className="min-w-0 space-y-4 md:space-y-5">
           <section className="rounded-lg border border-[var(--border)] bg-[rgba(13,26,23,0.82)] p-4 shadow-2xl shadow-black/20 md:p-5">
             <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
               <div>
@@ -697,7 +697,7 @@ export function MarketDashboard() {
               })}
             </div>
 
-            <div className="mt-5 h-[320px] w-full">
+            <div className="mt-5 h-[280px] w-full sm:h-[320px]">
               {analysisData?.candles.length ? (
                 <CandlestickChart
                   candles={analysisData.candles}
@@ -711,13 +711,16 @@ export function MarketDashboard() {
           </section>
 
           <section className="rounded-lg border border-[var(--border)] bg-[rgba(13,26,23,0.82)] p-3 shadow-2xl shadow-black/20">
-            <div className="grid gap-2 md:grid-cols-5">
+            <div
+              aria-label="Dashboard bolumleri"
+              className="flex snap-x gap-2 overflow-x-auto pb-1 md:grid md:grid-cols-5 md:overflow-visible md:pb-0"
+            >
               {dashboardTabs.map((tab) => {
                 const active = tab.value === activeTab;
 
                 return (
                   <button
-                    className={`rounded-md border p-3 text-left transition ${
+                    className={`min-w-[156px] snap-start rounded-md border p-3 text-left transition md:min-w-0 ${
                       active
                         ? "border-emerald-300 bg-emerald-300/10 text-white"
                         : "border-white/5 bg-white/[0.03] text-[var(--muted)] hover:border-emerald-300/40 hover:text-white"

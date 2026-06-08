@@ -26,6 +26,7 @@
 
 body {
   min-height: 100vh;
+  overflow-x: hidden;
   margin: 0;
   background:
     radial-gradient(circle at top left, rgba(94, 231, 183, 0.12), transparent 32rem),
@@ -36,8 +37,15 @@ body {
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
+}
+
+svg,
+canvas,
+img {
+  max-width: 100%;
 }
 
 ::selection {

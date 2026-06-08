@@ -88,6 +88,24 @@ Beklenen sonuc:
 
 ## Manuel Test Senaryolari
 
+### Mobil / Kucuk Ekran Kontrolu
+
+Adimlar:
+
+1. Tarayiciyi yaklasik telefon genisligine getir.
+2. Yenile butonunun tam genislikte ve kolay tiklanabilir oldugunu kontrol et.
+3. Izleme listesinin sayfayi gereksiz uzatmadan kendi icinde kaydigini kontrol et.
+4. Sekmelerin yatay kaydirilabilir oldugunu kontrol et.
+5. Mum grafiginin ekran disina tasmadigini kontrol et.
+6. Portfoy, trade, uyarilar, gecmis ve sistem sekmelerinde yatay tasma olmadigini kontrol et.
+
+Beklenen sonuc:
+
+- Sayfada yatay body scroll olusmamali.
+- Sekmeler mobilde tek tek okunabilir ve tiklanabilir olmali.
+- Grafik paneli kucuk ekranda da okunabilir kalmali.
+- Geniş tablolar kendi kapsayicisi icinde kaymali, sayfanın tamamını taşırmamalı.
+
 ### 1. Dashboard Acilis Testi
 
 Adimlar:

@@ -1406,3 +1406,27 @@ Kontrol:
 ```text
 npm run test:all
 ```
+
+## Mevcut Durum - Mobil Duzen Iyilestirmesi
+
+Eklenenler:
+
+- Ana sayfa yatay body overflow olusturmayacak sekilde guvenceye alindi.
+- Kucuk ekranda ana padding azaltildi.
+- Yenile butonu mobilde tam genislikte gosterilir.
+- Dashboard ana grid'i `minmax(0, 1fr)` kullanacak sekilde guclendirildi.
+- Izleme listesi kendi icinde kaydirilabilir hale getirildi.
+- Sekmeler mobilde yatay kaydirilabilir ve snap davranisli kompakt yapıya alindi.
+- Mum grafik paneli mobilde daha kisa ve sıkı spacing ile gosterilir.
+- SVG/canvas/img elemanlari kapsayici disina tasmayacak sekilde global CSS ile sinirlandi.
+
+Notlar:
+
+- Browser screenshot araci bu oturumda kullanilamadigi icin dogrulama build ve smoke test uzerinden yapildi.
+- Manuel mobil kontrol adimlari `TEST_PLAN.md` icine eklendi.
+
+Kontrol:
+
+```text
+npm run test:all
+```

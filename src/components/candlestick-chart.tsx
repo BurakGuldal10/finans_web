@@ -40,7 +40,7 @@ export function CandlestickChart({ candles, timeframe, unit }: CandlestickChartP
     activeIndex === null ? chart.candles.at(-1) : chart.candles.find((item) => item.index === activeIndex);
 
   return (
-    <div className="h-full min-h-80 rounded-md border border-white/5 bg-black/10 p-3">
+    <div className="h-full min-h-72 rounded-md border border-white/5 bg-black/10 p-2 sm:min-h-80 sm:p-3">
       <div className="mb-2 flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
         <div>
           <p className="text-xs uppercase tracking-[0.12em] text-[var(--muted)]">Mum grafigi</p>
@@ -49,7 +49,7 @@ export function CandlestickChart({ candles, timeframe, unit }: CandlestickChartP
           </p>
         </div>
         {active ? (
-          <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-right font-mono text-xs text-[var(--muted)] md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-left font-mono text-[11px] text-[var(--muted)] sm:text-xs md:grid-cols-4 md:text-right">
             <span>A {formatPrice(active.open)}</span>
             <span>Y {formatPrice(active.high)}</span>
             <span>D {formatPrice(active.low)}</span>
@@ -60,7 +60,7 @@ export function CandlestickChart({ candles, timeframe, unit }: CandlestickChartP
 
       <svg
         aria-label="Mum grafigi"
-        className="h-[calc(100%-52px)] min-h-64 w-full overflow-visible"
+        className="h-[calc(100%-64px)] min-h-56 w-full overflow-visible sm:h-[calc(100%-52px)] sm:min-h-64"
         onMouseLeave={() => setActiveIndex(null)}
         preserveAspectRatio="none"
         role="img"
