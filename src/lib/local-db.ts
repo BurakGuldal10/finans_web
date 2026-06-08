@@ -39,6 +39,19 @@ export type AlertRuleRecord = {
   triggeredAt?: string;
 };
 
+export type AnalysisSnapshotRecord = {
+  id: string;
+  market: "crypto" | "stocks" | "bist";
+  symbol: string;
+  interval: string;
+  price: number;
+  score: number;
+  stance: "watch" | "wait" | "avoid";
+  confidence: number;
+  reportJson: string;
+  createdAt: string;
+};
+
 let database: DatabaseSync | null = null;
 
 export function getDb() {
@@ -82,6 +95,19 @@ export function getDb() {
         note TEXT NOT NULL,
         createdAt TEXT NOT NULL,
         triggeredAt TEXT
+      );
+
+      CREATE TABLE IF NOT EXISTS analysis_snapshots (
+        id TEXT PRIMARY KEY,
+        market TEXT NOT NULL,
+        symbol TEXT NOT NULL,
+        interval TEXT NOT NULL,
+        price REAL NOT NULL,
+        score REAL NOT NULL,
+        stance TEXT NOT NULL,
+        confidence REAL NOT NULL,
+        reportJson TEXT NOT NULL,
+        createdAt TEXT NOT NULL
       );
     `);
   }
@@ -255,6 +281,38 @@ export function deleteAlertRule(id: string) {
   getDb().prepare("DELETE FROM alert_rules WHERE id = ?").run(id);
 }
 
+export function listAnalysisSnapshots(limit = 20) {
+  return getDb()
+    .prepare("SELECT * FROM analysis_snapshots ORDER BY createdAt DESC LIMIT ?")
+    .all(limit) as AnalysisSnapshotRecord[];
+}
+
+export function createAnalysisSnapshot(snapshot: AnalysisSnapshotRecord) {
+  getDb()
+    .prepare(
+      `INSERT INTO analysis_snapshots
+        (id, market, symbol, interval, price, score, stance, confidence, reportJson, createdAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    )
+    .run(
+      snapshot.id,
+      snapshot.market,
+      snapshot.symbol,
+      snapshot.interval,
+      snapshot.price,
+      snapshot.score,
+      snapshot.stance,
+      snapshot.confidence,
+      snapshot.reportJson,
+      snapshot.createdAt,
+    );
+  return snapshot;
+}
+
+export function deleteAnalysisSnapshot(id: string) {
+  getDb().prepare("DELETE FROM analysis_snapshots WHERE id = ?").run(id);
+}
+
 export function getLocalDataStats() {
   const db = getDb();
   const portfolio = db
@@ -269,10 +327,14 @@ export function getLocalDataStats() {
   const triggeredAlerts = db
     .prepare("SELECT COUNT(*) AS count FROM alert_rules WHERE triggeredAt IS NOT NULL")
     .get() as { count: number };
+  const snapshots = db.prepare("SELECT COUNT(*) AS count FROM analysis_snapshots").get() as {
+    count: number;
+  };
 
   return {
     alerts: alerts.count,
     portfolio: portfolio.count,
+    snapshots: snapshots.count,
     trades: trades.count,
     triggeredAlerts: triggeredAlerts.count,
   };

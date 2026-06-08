@@ -10,6 +10,7 @@ type HealthResponse = {
   data: {
     alerts: number;
     portfolio: number;
+    snapshots: number;
     trades: number;
     triggeredAlerts: number;
   };
@@ -89,10 +90,11 @@ export function SystemStatusPanel() {
 
       {health ? (
         <div className="mt-4 grid gap-3 lg:grid-cols-[1.4fr_1fr]">
-          <div className="grid gap-3 md:grid-cols-4">
+          <div className="grid gap-3 md:grid-cols-5">
             <StatusMetric label="Portfoy" value={health.data.portfolio.toString()} />
             <StatusMetric label="Trade" value={health.data.trades.toString()} />
             <StatusMetric label="Uyari" value={health.data.alerts.toString()} />
+            <StatusMetric label="Rapor" value={health.data.snapshots.toString()} />
             <StatusMetric label="Tetiklenen" value={health.data.triggeredAlerts.toString()} />
           </div>
 

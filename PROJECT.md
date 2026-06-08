@@ -1100,3 +1100,35 @@ Kontrol:
 npm run lint
 npm run build
 ```
+
+## Mevcut Durum - Analiz Gecmisi
+
+Eklenenler:
+
+- Yeni endpoint eklendi: `/api/snapshots`.
+- Dashboard'a "Analiz gecmisi" paneli eklendi.
+- Secili varligin teknik analiz, karar raporu ve trade plani tek tikla yerel SQLite veritabanina kaydedilebilir.
+- Kayitlar su ozet alanlarla listelenir:
+  - Piyasa
+  - Sembol
+  - Zaman dilimi
+  - Son fiyat
+  - Teknik skor
+  - Trade plan durusu
+  - Guven puani
+  - Kayit zamani
+- Kaydedilen raporlar silinebilir.
+- Sistem durumu paneline kayitli rapor sayisi eklendi.
+
+Notlar:
+
+- Snapshot kayitlari `data/finansman.db` icinde kalir ve repoya dahil edilmez.
+- Bu ozellik trade kararlarinin zaman icinde nasil degistigini takip etmek icin temel olusturur.
+- Ileride snapshot detay sayfasi, iki raporu karsilastirma ve CSV/JSON export kapsami genisletilebilir.
+
+Kontrol:
+
+```text
+npm run lint
+npm run build
+```

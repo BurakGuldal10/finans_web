@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AiCommentaryPanel } from "@/components/ai-commentary-panel";
+import { AnalysisSnapshotPanel } from "@/components/analysis-snapshot-panel";
 import { AlertsPanel } from "@/components/alerts-panel";
 import { CandlestickChart } from "@/components/candlestick-chart";
 import { DecisionReportPanel } from "@/components/decision-report-panel";
@@ -691,6 +692,15 @@ export function MarketDashboard() {
           />
 
           <TradePlanPanel plan={analysisData?.tradePlan} />
+
+          <AnalysisSnapshotPanel
+            analysis={analysis}
+            decisionReport={analysisData?.decisionReport}
+            interval={selectedTimeframe}
+            market={selectedMarket}
+            symbol={selectedSymbol}
+            tradePlan={analysisData?.tradePlan}
+          />
 
           <section className="grid gap-5 xl:grid-cols-[1fr_340px]">
             <div className="rounded-lg border border-[var(--border)] bg-[rgba(13,26,23,0.82)] p-4 md:p-5">
