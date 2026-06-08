@@ -156,6 +156,7 @@ $usageSummary = Invoke-JsonRequest -Method "GET" -Path "/api/usage-summary?days=
 Assert-Truthy $usageSummary.summary.generatedAt "Kullanim ozetinde generatedAt yok."
 Assert-Truthy ($usageSummary.summary.range.days -eq 7) "Kullanim ozeti gun araligi hatali."
 Assert-Truthy ($null -ne $usageSummary.summary.totals.notes) "Kullanim ozeti toplam not alani yok."
+Assert-Truthy ($usageSummary.summary.recommendations.Count -ge 1) "Kullanim ozeti onerileri yok."
 Write-Host "[OK] /api/usage-summary"
 
 $exportJson = Invoke-JsonRequest -Method "GET" -Path "/api/export?type=trades&format=json"

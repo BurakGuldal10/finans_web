@@ -280,10 +280,11 @@ Adimlar:
 5. Gun sonu notu formuna incelenen sembolleri, snapshot sayisini ve kisa notu girip kaydet.
 6. Kaydedilen notun Son gunluk notlar listesinde gorundugunu kontrol et.
 7. Kullanim ozeti panelinde not, aktif gun, snapshot ve sembol/panel ozetlerinin guncellendigini kontrol et.
-8. Notu sil ve listeden kalktigini kontrol et.
-9. Sistem durumu panelinde `Kontrol et` butonuna bas.
-10. Portfoy, trade, uyari, rapor, kullanim notu ve tetiklenen uyari sayilarini kontrol et.
-11. `/api/health` cevabini tarayicida veya terminalde ac.
+8. Kullanim ozeti panelindeki Oneriler alaninda en az bir iyilestirme onerisi gorundugunu kontrol et.
+9. Notu sil ve listeden kalktigini kontrol et.
+10. Sistem durumu panelinde `Kontrol et` butonuna bas.
+11. Portfoy, trade, uyari, rapor, kullanim notu ve tetiklenen uyari sayilarini kontrol et.
+12. `/api/health` cevabini tarayicida veya terminalde ac.
 
 Beklenen sonuc:
 
@@ -291,6 +292,7 @@ Beklenen sonuc:
 - Gunluk kullanim testi ayni gun icin tarayicida saklanmali.
 - Gun sonu notu SQLite'a kaydedilmeli, listelenmeli ve silinebilmelidir.
 - Kullanim ozeti son 7 gunluk notlardan sembol, panel, veri sorunu ve aksiyon ozetleri uretmelidir.
+- Kullanim ozeti paneli deneme ritmi, snapshot disiplini, panel sadeligi veya veri guvenilirligi icin en az bir oneriyi gostermelidir.
 - API anahtari durumlari ve eksikse ne yapilacagi dogru gorunmeli.
 - Lokal kilit aktifse cikis butonu gorunmeli.
 

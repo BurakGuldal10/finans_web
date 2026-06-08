@@ -1,6 +1,6 @@
 "use client";
 
-import { BarChart3, RefreshCcw } from "lucide-react";
+import { BarChart3, Lightbulb, RefreshCcw } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import type { UsageSummary } from "@/lib/usage-summary";
 
@@ -83,6 +83,23 @@ export function UsageSummaryPanel() {
             <TextList emptyText="Aksiyon notu yok." items={summary.nextActions} title="Siradaki aksiyonlar" />
           </div>
 
+          <div className="rounded-md border border-white/5 bg-white/[0.03] p-3">
+            <h4 className="flex items-center gap-2 text-sm font-semibold text-white">
+              <Lightbulb size={16} />
+              Oneriler
+            </h4>
+            <div className="mt-3 grid gap-2">
+              {summary.recommendations.map((recommendation) => (
+                <RecommendationCard
+                  detail={recommendation.detail}
+                  key={`${recommendation.title}-${recommendation.detail}`}
+                  title={recommendation.title}
+                  tone={recommendation.tone}
+                />
+              ))}
+            </div>
+          </div>
+
           <p className="text-xs text-[var(--muted)]">
             Aralik: {summary.range.from} - {summary.range.to}. Son uretim:{" "}
             {new Date(summary.generatedAt).toLocaleString("tr-TR")}.
@@ -149,6 +166,30 @@ function TextList({ emptyText, items, title }: { emptyText: string; items: strin
           <p className="text-sm text-[var(--muted)]">{emptyText}</p>
         )}
       </div>
+    </div>
+  );
+}
+
+function RecommendationCard({
+  detail,
+  title,
+  tone,
+}: {
+  detail: string;
+  title: string;
+  tone: "positive" | "warning" | "info";
+}) {
+  const toneClass =
+    tone === "positive"
+      ? "border-emerald-300/20 bg-emerald-300/10 text-emerald-50"
+      : tone === "warning"
+        ? "border-yellow-300/20 bg-yellow-300/10 text-yellow-50"
+        : "border-white/5 bg-black/15 text-[var(--muted)]";
+
+  return (
+    <div className={`rounded-md border p-3 ${toneClass}`}>
+      <p className="text-sm font-semibold text-white">{title}</p>
+      <p className="mt-1 text-sm leading-6">{detail}</p>
     </div>
   );
 }

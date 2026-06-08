@@ -46,6 +46,7 @@ Yarin duzeltilecek/kontrol edilecek not:
 7 gun sonunda sunlara bak:
 
 - Sistem sekmesindeki Kullanim ozeti panelinde en cok hangi semboller ve paneller one cikiyor?
+- Kullanim ozeti panelindeki oneriler sonraki gelistirme adimini isabetli sekilde gosteriyor mu?
 - En cok hangi piyasa tarafini kullandin?
 - Karar raporu gercekten karar vermeyi kolaylastirdi mi?
 - Trade plani uygulanabilir ve net miydi?

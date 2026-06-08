@@ -1508,12 +1508,19 @@ Eklenenler:
   - Veri sorunu notlari
   - Siradaki aksiyon notlari
 - API smoke test kullanim ozeti endpoint'ini de kontrol eder.
+- Ozet verisinden kuralli iyilestirme onerileri uretilir:
+  - Deneme verisi yetersizse gunluk not ritmi onerilir.
+  - Snapshot sayisi aktif gun sayisinin altindaysa snapshot disiplini onerilir.
+  - Tek sembole sikisan kullanimda piyasa cesitliligi onerilir.
+  - Kafa karistiran panel notlari varsa panel sadelestirme onerilir.
+  - Veri sorunu notlari varsa kaynak ve anahtar kontrolu onerilir.
 
 Notlar:
 
 - Ozet, yerel SQLite'taki `usage_trial_notes` kayitlarindan uretilir.
 - Gunluk not girilmediyse panel bos durum mesajlariyla calisir.
 - Bu adim 7 gunluk deneme sonunda hangi ekranlarin ise yaradigini ve hangi sorunlarin tekrar ettigini daha kolay gormeyi saglar.
+- Oneriler yatirim tavsiyesi degildir; uygulamanin hangi bolumlerinin iyilestirilecegini bulmak icin kullanilir.
 
 Kontrol:
 
