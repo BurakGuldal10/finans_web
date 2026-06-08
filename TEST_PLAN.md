@@ -274,13 +274,17 @@ Beklenen sonuc:
 Adimlar:
 
 1. `Sistem` sekmesine gec.
-2. Sistem durumu panelinde `Kontrol et` butonuna bas.
-3. Portfoy, trade, uyari, rapor ve tetiklenen uyari sayilarini kontrol et.
-4. `/api/health` cevabini tarayicida veya terminalde ac.
+2. Gunluk kullanim testi listesinden en az bir maddeyi isaretle.
+3. Sayfayi yenile ve isaretin korundugunu kontrol et.
+4. Bugunu sifirla butonunu dene.
+5. Sistem durumu panelinde `Kontrol et` butonuna bas.
+6. Portfoy, trade, uyari, rapor ve tetiklenen uyari sayilarini kontrol et.
+7. `/api/health` cevabini tarayicida veya terminalde ac.
 
 Beklenen sonuc:
 
 - Panel sayisal ozetleri gostermeli.
+- Gunluk kullanim testi ayni gun icin tarayicida saklanmali.
 - API anahtari durumlari ve eksikse ne yapilacagi dogru gorunmeli.
 - Lokal kilit aktifse cikis butonu gorunmeli.
 

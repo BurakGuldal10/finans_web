@@ -1430,3 +1430,31 @@ Kontrol:
 ```text
 npm run test:all
 ```
+
+## Mevcut Durum - Gercek Kullanim Denemesi
+
+Eklenenler:
+
+- Yeni dokuman olusturuldu: `USAGE_TRIAL.md`.
+- Sistem sekmesine "Gunluk kullanim testi" paneli eklendi.
+- Panel gunluk kontrol listesi sunar:
+  - Piyasa/sembol kontrolu
+  - Snapshot kaydi
+  - Risk hesaplayici kontrolu
+  - Trade gunlugu notu
+  - Uyari kurulumu
+  - Gun sonu performans gozden gecirme
+- Isaretlenen maddeler gun bazli `localStorage` ile saklanir.
+- "Bugunu sifirla" butonu ile gunluk liste temizlenebilir.
+- `TEST_PLAN.md` sistem testi bu gunluk kontrol panelini de kapsayacak sekilde guncellendi.
+
+Notlar:
+
+- Bu adim uygulamayi teknik prototipten gunluk kullanim denemesine tasir.
+- 7 gunluk deneme sonunda hangi panellerin ise yaradigi ve hangi kisimlarin kalabalik yaptigi not edilmelidir.
+
+Kontrol:
+
+```text
+npm run test:all
+```
