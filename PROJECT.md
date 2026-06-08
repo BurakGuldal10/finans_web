@@ -1190,3 +1190,40 @@ Kontrol:
 npm run lint
 npm run build
 ```
+
+## Mevcut Durum - API Smoke Test
+
+Eklenenler:
+
+- Yeni test script'i eklendi: `scripts/api-smoke-test.ps1`.
+- Yeni npm komutu eklendi:
+
+```text
+npm run test:api
+```
+
+- Script su endpoint'leri kontrol eder:
+  - `/api/health`
+  - `/api/market`
+  - `/api/analyze`
+  - `/api/snapshots`
+  - `/api/trades`
+  - `/api/portfolio`
+  - `/api/alerts`
+  - `/api/export`
+  - `/api/import`
+- Test script'i snapshot, trade, portfoy, uyari ve import icin gecici kayit olusturur ve test sonunda siler.
+
+Notlar:
+
+- Script calismadan once yerel dev server acik olmalidir.
+- Varsayilan adres `http://127.0.0.1:3000` olarak ayarlandi.
+- Lokal parola kilidi aktifken cookie tasimadigi icin test kilitsiz ortamda calistirilmalidir.
+
+Kontrol:
+
+```text
+npm run lint
+npm run build
+npm run test:api
+```

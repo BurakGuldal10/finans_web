@@ -48,6 +48,18 @@ Beklenen sonuc:
 - Next.js production build basariyla tamamlanmali.
 - Build ciktisinda `/api/snapshots`, `/api/analyze`, `/api/market`, `/api/portfolio`, `/api/trades`, `/api/alerts`, `/api/export`, `/api/import` ve `/api/health` route'lari gorunmeli.
 
+API endpoint'leri icin yerel sunucu acikken su komut calistirilir:
+
+```text
+npm run test:api
+```
+
+Beklenen sonuc:
+
+- Script `[OK]` satirlariyla health, market, analyze, snapshots, trades, portfolio, alerts, export ve import kontrollerini tamamlamali.
+- Script'in olusturdugu gecici kayitlar test sonunda silinmeli.
+- `LOCAL_APP_PASSWORD` aktifse bu smoke test oturum cookie'si tasimadigi icin once kilit kapali ortamda calistirilmalidir.
+
 ## Manuel Test Senaryolari
 
 ### 1. Dashboard Acilis Testi
