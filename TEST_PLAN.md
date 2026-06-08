@@ -1,0 +1,231 @@
+# Finansman Asistani Test Plani
+
+Bu dosya uygulamayi her buyuk degisiklikten sonra elle ve otomatik kontrollerle test etmek icin ana referanstir.
+
+## Test Oncesi Hazirlik
+
+1. Bagimliliklar kurulu olmali:
+
+```text
+npm install
+```
+
+2. Uygulama yerelde calismali:
+
+```text
+npm run dev -- --hostname 127.0.0.1 --port 3000
+```
+
+3. Tarayicida acilacak adres:
+
+```text
+http://127.0.0.1:3000
+```
+
+4. Ortam degiskenleri opsiyoneldir:
+
+```text
+FMP_API_KEY=
+OPENAI_API_KEY=
+OPENAI_MODEL=gpt-5.5
+LOCAL_APP_PASSWORD=
+```
+
+`LOCAL_APP_PASSWORD` doluysa testten once `/login` sayfasindan giris yapilmalidir.
+
+## Standart Kontrol Komutlari
+
+Her test turunda once bu komutlar calistirilir:
+
+```text
+npm run lint
+npm run build
+```
+
+Beklenen sonuc:
+
+- ESLint hata vermemeli.
+- Next.js production build basariyla tamamlanmali.
+- Build ciktisinda `/api/snapshots`, `/api/analyze`, `/api/market`, `/api/portfolio`, `/api/trades`, `/api/alerts`, `/api/export`, `/api/import` ve `/api/health` route'lari gorunmeli.
+
+## Manuel Test Senaryolari
+
+### 1. Dashboard Acilis Testi
+
+Adimlar:
+
+1. `http://127.0.0.1:3000` adresini ac.
+2. Dashboard basliginin gorundugunu kontrol et.
+3. Izleme listesi, grafik alani, karar raporu, trade plani ve analiz gecmisi panellerini kontrol et.
+
+Beklenen sonuc:
+
+- Sayfa bos veya kirik gelmemeli.
+- Varsayilan kripto listesi gorunmeli.
+- Veri yuklenemese bile kullaniciya anlasilir hata veya eski veri uyarisi gosterilmeli.
+
+### 2. Kripto Piyasa Akisi
+
+Adimlar:
+
+1. Piyasa secimini `Kripto` yap.
+2. `BTCUSDT` sembolunu sec.
+3. `15m`, `1h`, `4h`, `1d` zaman dilimlerini tek tek sec.
+4. Izleme listesine `AVAXUSDT` ekle.
+5. Eklenen sembolu sec ve sonra listeden kaldir.
+
+Beklenen sonuc:
+
+- Fiyat, mum grafik, teknik indikatorler, karar raporu ve trade plani yenilenmeli.
+- Gecerli Binance USDT sembolu eklenebilmeli.
+- Liste en az bir sembol kalacak sekilde sembol silmeye izin vermeli.
+
+### 3. ABD Hisse Akisi
+
+Adimlar:
+
+1. Piyasa secimini `ABD Hisse` yap.
+2. `AAPL` veya `MSFT` sembolunu sec.
+3. `1d` zaman diliminde analiz uretildigini kontrol et.
+4. Yeni sembol olarak `NVDA` eklemeyi dene.
+5. Temel analiz panelini kontrol et.
+
+Beklenen sonuc:
+
+- Yahoo Finance verisiyle fiyat ve mumlar yuklenmeli.
+- FMP anahtari yoksa temel analiz paneli bunu acikca soylemeli.
+- FMP anahtari varsa temel metrikler ve birlesik skor gorunmeli.
+
+### 4. BIST Akisi
+
+Adimlar:
+
+1. Piyasa secimini `BIST` yap.
+2. `THYAO.IS` veya `GARAN.IS` sembolunu sec.
+3. Yeni sembol olarak `ASELS` gir.
+4. Sistemin sembolu `ASELS.IS` formatina cevirdigini kontrol et.
+5. Temel analiz panelini kontrol et.
+
+Beklenen sonuc:
+
+- BIST fiyatlari TRY birimiyle gorunmeli.
+- Yahoo Finance verisi eksikse panel bozulmadan uyari veya sinirli snapshot gostermeli.
+- Teknik analiz ve trade plani BIST icin de calismali.
+
+### 5. Snapshot / Analiz Gecmisi Testi
+
+Adimlar:
+
+1. Herhangi bir sembolde analiz yuklendikten sonra `Raporu kaydet` butonuna bas.
+2. Yeni kaydin analiz gecmisi listesine eklendigini kontrol et.
+3. Kayit detayinin otomatik acildigini kontrol et.
+4. Detayda karar raporu, trade plani, RSI, trend gucu, risk/odul ve stop bilgisini oku.
+5. Ayni sembol seciliyken karsilastirma metriklerini kontrol et.
+6. Farkli sembole gec ve eski kaydi ac.
+7. Karsilastirma uyarisinin gorundugunu kontrol et.
+8. Kaydi sil.
+
+Beklenen sonuc:
+
+- Snapshot SQLite'a kaydedilmeli.
+- Detay paneli eski raporu okunur sekilde gostermeli.
+- Ayni sembolde fiyat, skor, guven ve durus farki hesaplanmali.
+- Silinen kayit listeden kalkmali.
+
+### 6. Trade Gunlugu Testi
+
+Adimlar:
+
+1. Bir sembolde analiz yuklendikten sonra trade gunlugunde `Analizden doldur` butonuna bas.
+2. Giris, stop, hedef ve not alanlarinin doldugunu kontrol et.
+3. Miktar gir ve kaydi olustur.
+4. Kaydin durumunu `Acik`, sonra `Kar` veya `Zarar` olarak degistir.
+5. Kaydi sil.
+
+Beklenen sonuc:
+
+- Trade kaydi SQLite'a yazilmali.
+- Durum degisikligi kalici olmali.
+- Performans paneli kayda gore guncellenmeli.
+
+### 7. Portfoy Testi
+
+Adimlar:
+
+1. Secili sembol icin portfoy paneline pozisyon ekle.
+2. Ortalama maliyet, miktar ve stop gir.
+3. Kaydin kar/zarar ve risk hesaplarini kontrol et.
+4. Kaydi sil.
+
+Beklenen sonuc:
+
+- Pozisyon SQLite'a yazilmali.
+- Canli fiyat varsa piyasa degeri ve kar/zarar hesaplanmali.
+- Stop riski sifirdan buyukse risk ozeti gorunmeli.
+
+### 8. Uyari Testi
+
+Adimlar:
+
+1. Secili sembol icin fiyat, skor veya RSI uyarisi ekle.
+2. Guncel deger butonuyla esik alanini doldur.
+3. Kosulu tetiklenecek sekilde uzerine/altina ayarla.
+4. Yenileme sonrasi tetiklenen uyarilar bolumunu kontrol et.
+5. Uyariyi sifirla ve sil.
+
+Beklenen sonuc:
+
+- Uyari SQLite'a yazilmali.
+- Tetiklenen uyari panelde vurgulanmali.
+- Tarayici bildirimi aciksa ve izin verildiyse bildirim gonderilmeli.
+
+### 9. Export / Import Testi
+
+Adimlar:
+
+1. Trade, portfoy ve uyari icin JSON export al.
+2. CSV export linklerini kontrol et.
+3. JSON dosyasini import et.
+4. Ayni dosyayi tekrar import ederek kayitlarin cogalmadigini kontrol et.
+
+Beklenen sonuc:
+
+- Export dosyalari indirilebilir olmali.
+- JSON import kayitlari `id` alanina gore eklemeli veya guncellemeli.
+- Bozuk JSON dosyasi reddedilmeli.
+
+### 10. Sistem Durumu Testi
+
+Adimlar:
+
+1. Sistem durumu panelinde `Kontrol et` butonuna bas.
+2. Portfoy, trade, uyari, rapor ve tetiklenen uyari sayilarini kontrol et.
+3. `/api/health` cevabini tarayicida veya terminalde ac.
+
+Beklenen sonuc:
+
+- Panel sayisal ozetleri gostermeli.
+- API anahtari durumlari dogru gorunmeli.
+- Lokal kilit aktifse cikis butonu gorunmeli.
+
+## Bilinen Limitler
+
+- Ucretsiz veri kaynaklari gecikmeli, eksik veya limitli cevap verebilir.
+- Yahoo Finance BIST temel veri alanlari her sembolde dolu gelmeyebilir.
+- AI yorum icin `OPENAI_API_KEY` gerekir; anahtar yoksa uygulama calismaya devam eder.
+- Lokal parola kilidi kisisel kullanim icin basit koruma saglar; halka acik yayina uygun tam auth sistemi degildir.
+- Uygulama emir gondermez ve yatirim tavsiyesi vermez; sadece karar destek araci olarak test edilir.
+
+## Test Sonrasi Kayit
+
+Her test turunda su bilgiler not edilir:
+
+```text
+Tarih:
+Commit:
+Test eden:
+Calistirilan komutlar:
+Basarili senaryolar:
+Hata bulunan senaryolar:
+Notlar:
+```

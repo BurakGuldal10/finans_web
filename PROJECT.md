@@ -1159,3 +1159,34 @@ Kontrol:
 npm run lint
 npm run build
 ```
+
+## Mevcut Durum - Test Plani
+
+Eklenenler:
+
+- Yeni test dokumani olusturuldu: `TEST_PLAN.md`.
+- Manuel test senaryolari yazildi:
+  - Dashboard acilisi
+  - Kripto piyasa akisi
+  - ABD hisse akisi
+  - BIST akisi
+  - Snapshot / analiz gecmisi
+  - Trade gunlugu
+  - Portfoy
+  - Uyari sistemi
+  - Export / import
+  - Sistem durumu
+- Her senaryo icin adimlar ve beklenen sonuc ayrildi.
+- Standart kontrol komutlari ve bilinen limitler dokumante edildi.
+
+Notlar:
+
+- Sonraki test adimi API endpoint'leri icin terminalden calistirilabilir kontrol script'i eklemek olabilir.
+- Bu dosya her buyuk gelistirme sonrasi regresyon kontrol listesi olarak kullanilacak.
+
+Kontrol:
+
+```text
+npm run lint
+npm run build
+```
