@@ -1069,3 +1069,34 @@ Kontrol:
 npm run lint
 npm run build
 ```
+
+## Mevcut Durum - Lokal Erisim Kilidi
+
+Eklenenler:
+
+- Opsiyonel lokal parola kilidi eklendi.
+- Yeni endpoint eklendi: `/api/auth`.
+- Yeni sayfa eklendi: `/login`.
+- `LOCAL_APP_PASSWORD` tanimliysa dashboard ve API endpoint'leri giris cookie'si olmadan acilmaz.
+- `LOCAL_APP_PASSWORD` bos ise uygulama eski davranisla kilitsiz calisir.
+- Sistem durumu paneline lokal kilit durumu ve cikis butonu eklendi.
+- `.env.example` icine `LOCAL_APP_PASSWORD=` eklendi.
+
+Ornek yerel ortam:
+
+```text
+LOCAL_APP_PASSWORD=guclu-bir-parola
+```
+
+Notlar:
+
+- Bu kilit lokal/kisisel kullanim icin basit bir koruma katmanidir.
+- Uygulama halka acik yayinlanacaksa gercek auth sistemi ayrica tasarlanmalidir.
+- Cookie httpOnly olarak saklanir ve varsayilan sure 7 gundur.
+
+Kontrol:
+
+```text
+npm run lint
+npm run build
+```

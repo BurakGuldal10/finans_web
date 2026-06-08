@@ -3,6 +3,7 @@
 import { Database, KeyRound, Server } from "lucide-react";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
+import { LocalLogoutButton } from "@/components/local-logout-button";
 
 type HealthResponse = {
   checkedAt: string;
@@ -14,6 +15,7 @@ type HealthResponse = {
   };
   environment: {
     fmpApiKey: boolean;
+    localAuth: boolean;
     nodeEnv: string;
     openAiApiKey: boolean;
     openAiModel: string;
@@ -67,13 +69,16 @@ export function SystemStatusPanel() {
             Yerel veri, kaynak ve ortam durumunu ozetler.
           </p>
         </div>
-        <button
-          className="inline-flex h-9 items-center justify-center rounded-md border border-[var(--border)] px-3 text-sm text-white transition hover:border-emerald-300"
-          onClick={() => void loadHealth()}
-          type="button"
-        >
-          Kontrol et
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            className="inline-flex h-9 items-center justify-center rounded-md border border-[var(--border)] px-3 text-sm text-white transition hover:border-emerald-300"
+            onClick={() => void loadHealth()}
+            type="button"
+          >
+            Kontrol et
+          </button>
+          {health?.environment.localAuth ? <LocalLogoutButton /> : null}
+        </div>
       </div>
 
       {error ? (
@@ -118,7 +123,8 @@ export function SystemStatusPanel() {
           <p className="text-xs text-[var(--muted)] lg:col-span-2">
             Son kontrol: {new Date(health.checkedAt).toLocaleString("tr-TR")} - Ortam:{" "}
             {health.environment.nodeEnv} - Eski veri yedegi:{" "}
-            {health.resilience.staleCacheFallback ? "aktif" : "kapali"}
+            {health.resilience.staleCacheFallback ? "aktif" : "kapali"} - Lokal kilit:{" "}
+            {health.environment.localAuth ? "aktif" : "kapali"}
           </p>
         </div>
       ) : (

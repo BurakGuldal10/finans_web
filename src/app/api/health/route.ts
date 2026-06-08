@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isLocalAuthEnabled } from "@/lib/local-auth";
 import { getLocalDataStats } from "@/lib/local-db";
 
 export async function GET() {
@@ -7,6 +8,7 @@ export async function GET() {
     data: getLocalDataStats(),
     environment: {
       fmpApiKey: Boolean(process.env.FMP_API_KEY),
+      localAuth: isLocalAuthEnabled(),
       nodeEnv: process.env.NODE_ENV ?? "development",
       openAiApiKey: Boolean(process.env.OPENAI_API_KEY),
       openAiModel: process.env.OPENAI_MODEL || "gpt-5.5",
