@@ -16,6 +16,9 @@ type HealthResponse = {
     fmpApiKey: boolean;
     nodeEnv: string;
   };
+  resilience: {
+    staleCacheFallback: boolean;
+  };
   sources: {
     bist: string;
     crypto: string;
@@ -102,7 +105,8 @@ export function SystemStatusPanel() {
 
           <p className="text-xs text-[var(--muted)] lg:col-span-2">
             Son kontrol: {new Date(health.checkedAt).toLocaleString("tr-TR")} - Ortam:{" "}
-            {health.environment.nodeEnv}
+            {health.environment.nodeEnv} - Eski veri yedegi:{" "}
+            {health.resilience.staleCacheFallback ? "aktif" : "kapali"}
           </p>
         </div>
       ) : (

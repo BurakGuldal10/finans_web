@@ -46,6 +46,8 @@ export async function GET(request: NextRequest) {
         ...validation,
         cached: cacheResult.hit,
         cacheTtlSeconds: cacheResult.ttlSeconds,
+        stale: cacheResult.stale,
+        staleReason: cacheResult.staleReason,
       },
       { status: validation.valid ? 200 : 404 },
     );

@@ -5,6 +5,8 @@ type CacheEntry<T> = {
 
 type CacheResult<T> = {
   hit: boolean;
+  stale: boolean;
+  staleReason?: string;
   ttlSeconds: number;
   value: T;
 };
@@ -22,12 +24,29 @@ export async function getCached<T>(
   if (existing && existing.expiresAt > now) {
     return {
       hit: true,
+      stale: false,
       ttlSeconds: Math.max(0, Math.ceil((existing.expiresAt - now) / 1000)),
       value: existing.value,
     };
   }
 
-  const value = await load();
+  let value: T;
+  try {
+    value = await load();
+  } catch (error) {
+    if (existing) {
+      return {
+        hit: true,
+        stale: true,
+        staleReason: error instanceof Error ? error.message : "Live data refresh failed",
+        ttlSeconds: 0,
+        value: existing.value,
+      };
+    }
+
+    throw error;
+  }
+
   cache.set(key, {
     expiresAt: now + ttlSeconds * 1000,
     value,
@@ -35,6 +54,7 @@ export async function getCached<T>(
 
   return {
     hit: false,
+    stale: false,
     ttlSeconds,
     value,
   };

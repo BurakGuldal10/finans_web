@@ -991,3 +991,25 @@ Kontrol:
 npm run lint
 npm run build
 ```
+
+## Mevcut Durum - Eski Veri Yedegi
+
+Eklenenler:
+
+- Server cache mekanizmasina stale fallback eklendi.
+- Canli veri kaynagi hata verirse ve elde daha once basarili alinmis veri varsa API eski veriyi `stale: true` ile dondurur.
+- `/api/market`, `/api/analyze` ve `/api/symbol` cevaplarina `stale` ve `staleReason` alanlari eklendi.
+- Dashboard eski veri kullanildiginda "Eski veri" uyarisi gosterir.
+- `/api/health` cevabina stale cache fallback durumu eklendi.
+
+Notlar:
+
+- Eski veri, canli veri yerine gecmez; sadece gecici kaynak kesintisinde ekranin tamamen bos kalmasini engeller.
+- Dashboard bu durumda kullaniciya acik uyari gosterir.
+
+Kontrol:
+
+```text
+npm run lint
+npm run build
+```

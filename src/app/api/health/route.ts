@@ -15,5 +15,8 @@ export async function GET() {
       stocks: "yahoo",
       stockFundamentals: process.env.FMP_API_KEY ? "financialmodelingprep" : "missing-key",
     },
+    resilience: {
+      staleCacheFallback: true,
+    },
   });
 }

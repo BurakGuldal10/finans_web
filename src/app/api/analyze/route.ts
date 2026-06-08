@@ -113,6 +113,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       cached: cacheResult.hit,
       cacheTtlSeconds: cacheResult.ttlSeconds,
+      stale: cacheResult.stale,
+      staleReason: cacheResult.staleReason,
       market,
       source: market === "crypto" ? "binance" : "yahoo",
       interval,

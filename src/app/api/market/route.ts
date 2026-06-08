@@ -26,6 +26,8 @@ export async function GET(request: Request) {
     return NextResponse.json({
       cached: cacheResult.hit,
       cacheTtlSeconds: cacheResult.ttlSeconds,
+      stale: cacheResult.stale,
+      staleReason: cacheResult.staleReason,
       market,
       source: market === "crypto" ? "binance" : "yahoo",
       updatedAt: new Date().toISOString(),

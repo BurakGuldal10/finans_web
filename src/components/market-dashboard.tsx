@@ -49,16 +49,24 @@ type Ticker = {
 };
 
 type MarketResponse = {
+  cached?: boolean;
+  cacheTtlSeconds?: number;
   market: MarketKind;
   source: string;
+  stale?: boolean;
+  staleReason?: string;
   updatedAt: string;
   tickers: Ticker[];
 };
 
 type AnalyzeResponse = {
+  cached?: boolean;
+  cacheTtlSeconds?: number;
   market: MarketKind;
   source: string;
   interval: Timeframe;
+  stale?: boolean;
+  staleReason?: string;
   updatedAt: string;
   analysis: AnalysisResult;
   candles: Candle[];
@@ -434,6 +442,8 @@ export function MarketDashboard() {
       ? combineStockAnalysis(analysis, fundamentalsData.fundamentals)
       : null;
   const priceUnit = selectedMarket === "crypto" ? "USDT" : selectedMarket === "bist" ? "TRY" : "USD";
+  const staleReason = market?.staleReason ?? analysisData?.staleReason;
+  const isStaleData = Boolean(market?.stale || analysisData?.stale);
 
   return (
     <main className="min-h-screen px-5 py-5 md:px-8 lg:px-10">
@@ -596,15 +606,29 @@ export function MarketDashboard() {
                 </p>
               </div>
 
-              <div className="flex items-center gap-2 rounded-md border border-[var(--border)] px-3 py-2 text-xs text-[var(--muted)]">
-                <Clock3 size={14} />
-                <span>
-                  {market?.updatedAt
-                    ? new Date(market.updatedAt).toLocaleTimeString("tr-TR")
-                    : "Bekleniyor"}
-                </span>
+              <div className="flex flex-wrap items-center gap-2">
+                {isStaleData ? (
+                  <span className="rounded-md border border-yellow-300/30 bg-yellow-300/10 px-3 py-2 text-xs font-medium text-yellow-100">
+                    Eski veri
+                  </span>
+                ) : null}
+                <div className="flex items-center gap-2 rounded-md border border-[var(--border)] px-3 py-2 text-xs text-[var(--muted)]">
+                  <Clock3 size={14} />
+                  <span>
+                    {market?.updatedAt
+                      ? new Date(market.updatedAt).toLocaleTimeString("tr-TR")
+                      : "Bekleniyor"}
+                  </span>
+                </div>
               </div>
             </div>
+
+            {isStaleData ? (
+              <p className="mt-4 rounded-md border border-yellow-300/20 bg-yellow-300/10 p-3 text-sm leading-6 text-yellow-100">
+                Canli veri kaynagi gecici olarak yanit vermedi; son basarili veri gosteriliyor.
+                {staleReason ? ` Kaynak mesaji: ${staleReason}` : ""}
+              </p>
+            ) : null}
 
             <div className="mt-5 flex flex-wrap gap-2">
               {timeframes.map((timeframe) => {
