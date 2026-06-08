@@ -1227,3 +1227,34 @@ npm run lint
 npm run build
 npm run test:api
 ```
+
+## Mevcut Durum - Sayfa Smoke Test
+
+Eklenenler:
+
+- Yeni test script'i eklendi: `scripts/page-smoke-test.ps1`.
+- Yeni npm komutu eklendi:
+
+```text
+npm run test:page
+```
+
+- Script su kontrolleri yapar:
+  - Dashboard sayfasi `/` HTTP 200 donuyor mu?
+  - Login sayfasi `/login` HTTP 200 donuyor mu?
+  - Dashboard HTML'i ana baslik ve aciklama metinlerini iceriyor mu?
+  - Dashboard'un kullandigi health, market, analyze ve snapshot API baglantilari cevap veriyor mu?
+
+Notlar:
+
+- Bu test tam tarayici tiklama testi degil, hafif uctan uca smoke testtir.
+- Yerel dev server calisirken kullanilir.
+- Tam DOM etkilesimi gerektiginde Playwright veya benzeri arac ayri bir adim olarak eklenebilir.
+
+Kontrol:
+
+```text
+npm run lint
+npm run build
+npm run test:page
+```

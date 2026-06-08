@@ -60,6 +60,19 @@ Beklenen sonuc:
 - Script'in olusturdugu gecici kayitlar test sonunda silinmeli.
 - `LOCAL_APP_PASSWORD` aktifse bu smoke test oturum cookie'si tasimadigi icin once kilit kapali ortamda calistirilmalidir.
 
+Sayfa ve dashboard baglantilari icin yerel sunucu acikken su komut calistirilir:
+
+```text
+npm run test:page
+```
+
+Beklenen sonuc:
+
+- Dashboard ve login sayfalari HTTP 200 donmeli.
+- Dashboard HTML'i ana baslik ve aciklama metinlerini icermeli.
+- Dashboard'un kullandigi health, market, analyze ve snapshots endpoint'leri cevap vermeli.
+- Bu test hafif smoke testtir; gercek tiklama/DOM etkilesimi yerine sayfa ve veri baglantilarinin ayakta oldugunu dogrular.
+
 ## Manuel Test Senaryolari
 
 ### 1. Dashboard Acilis Testi
@@ -219,6 +232,27 @@ Beklenen sonuc:
 - Panel sayisal ozetleri gostermeli.
 - API anahtari durumlari dogru gorunmeli.
 - Lokal kilit aktifse cikis butonu gorunmeli.
+
+## Hafif Uctan Uca Test
+
+Terminal testi:
+
+```text
+npm run test:page
+```
+
+Kapsam:
+
+- `/` dashboard sayfasi acilir.
+- `/login` sayfasi acilir.
+- Dashboard ana metinleri HTML cevabinda aranir.
+- Dashboard'un ihtiyac duydugu temel API baglantilari kontrol edilir.
+
+Beklenen sonuc:
+
+- Tum kontroller `[OK]` satirlariyla tamamlanir.
+- Veri kaynagi gecici sorun yasarsa test, hatayi endpoint adiyla gorunur hale getirir.
+- Tam tarayici tiklama testi gerektiginde Playwright gibi ayri bir arac ileride eklenebilir.
 
 ## Bilinen Limitler
 

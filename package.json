@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:api": "powershell -ExecutionPolicy Bypass -File scripts/api-smoke-test.ps1"
+    "test:api": "powershell -ExecutionPolicy Bypass -File scripts/api-smoke-test.ps1",
+    "test:page": "powershell -ExecutionPolicy Bypass -File scripts/page-smoke-test.ps1"
   },
   "dependencies": {
     "lucide-react": "latest",
