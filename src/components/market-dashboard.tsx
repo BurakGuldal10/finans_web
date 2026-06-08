@@ -658,10 +658,22 @@ export function MarketDashboard() {
             </div>
 
             {isStaleData ? (
-              <p className="mt-4 rounded-md border border-yellow-300/20 bg-yellow-300/10 p-3 text-sm leading-6 text-yellow-100">
-                Canli veri kaynagi gecici olarak yanit vermedi; son basarili veri gosteriliyor.
-                {staleReason ? ` Kaynak mesaji: ${staleReason}` : ""}
-              </p>
+              <div className="mt-4 rounded-md border border-yellow-300/20 bg-yellow-300/10 p-3 text-sm leading-6 text-yellow-100">
+                <p className="font-semibold">Canli veri gecici olarak yenilenemedi.</p>
+                <p className="mt-1">
+                  Ekranda son basarili veri gosteriliyor. Kaynak:{" "}
+                  {getMarketSourceLabel(selectedMarket)}. Son guncelleme:{" "}
+                  {market?.updatedAt
+                    ? new Date(market.updatedAt).toLocaleString("tr-TR")
+                    : "bilinmiyor"}
+                  .
+                </p>
+                {staleReason ? <p className="mt-1">Kaynak mesaji: {staleReason}</p> : null}
+                <p className="mt-1">
+                  Bir sure sonra yenilemeyi tekrar deneyin; ucretsiz kaynaklarda limit veya gecikme
+                  yasanabilir.
+                </p>
+              </div>
             ) : null}
 
             <div className="mt-5 flex flex-wrap gap-2">
@@ -939,8 +951,13 @@ function Metric({
 function LoadingPanel({ error, loading }: { error: string | null; loading: boolean }) {
   if (error) {
     return (
-      <div className="flex h-full min-h-40 items-center justify-center rounded-md border border-red-300/20 bg-red-300/10 p-5 text-sm text-red-100">
-        {error}
+      <div className="flex h-full min-h-40 flex-col justify-center rounded-md border border-red-300/20 bg-red-300/10 p-5 text-sm leading-6 text-red-100">
+        <p className="font-semibold">Veri yuklenemedi.</p>
+        <p className="mt-1">{error}</p>
+        <p className="mt-2 text-red-100/80">
+          Internet baglantisini, veri kaynagi limitlerini ve sembol formatini kontrol edin; sonra
+          Yenile butonuyla tekrar deneyin.
+        </p>
       </div>
     );
   }

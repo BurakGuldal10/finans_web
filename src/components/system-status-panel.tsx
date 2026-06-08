@@ -107,7 +107,11 @@ export function SystemStatusPanel() {
             <SourceCard
               icon={<KeyRound size={15} />}
               label="Temel analiz"
-              text={health.environment.fmpApiKey ? "FMP anahtari aktif" : "FMP anahtari yok"}
+              text={
+                health.environment.fmpApiKey
+                  ? "FMP anahtari aktif"
+                  : "FMP anahtari yok. ABD bilanco verisi icin FMP_API_KEY ekleyin."
+              }
               tone={health.environment.fmpApiKey ? "positive" : "warning"}
             />
             <SourceCard
@@ -116,9 +120,19 @@ export function SystemStatusPanel() {
               text={
                 health.environment.openAiApiKey
                   ? `OpenAI aktif (${health.environment.openAiModel})`
-                  : "OPENAI_API_KEY yok"
+                  : "OPENAI_API_KEY yok. AI yorum paneli manuel veriyle calisir ama yorum uretemez."
               }
               tone={health.environment.openAiApiKey ? "positive" : "warning"}
+            />
+            <SourceCard
+              icon={<Database size={15} />}
+              label="Veri dayanıkliligi"
+              text={
+                health.resilience.staleCacheFallback
+                  ? "Canli kaynak hata verirse son basarili veri eski veri uyarisi ile gosterilir."
+                  : "Eski veri yedegi kapali; kaynak hatasinda ekran bos kalabilir."
+              }
+              tone={health.resilience.staleCacheFallback ? "positive" : "warning"}
             />
           </div>
 

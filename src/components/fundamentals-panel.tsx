@@ -39,7 +39,15 @@ export function FundamentalsPanel({ combined, data, error, loading }: Fundamenta
       {!loading && error ? (
         <div className="mt-4 flex gap-3 rounded-md border border-yellow-300/20 bg-yellow-300/10 p-4 text-sm leading-6 text-yellow-100">
           <KeyRound className="mt-1 shrink-0" size={17} />
-          <span>{error}</span>
+          <div>
+            <p className="font-semibold">Temel analiz verisi tamamlanamadi.</p>
+            <p className="mt-1">{error}</p>
+            <p className="mt-2 text-yellow-100/80">
+              ABD hisselerinde canli bilanco icin `.env.local` dosyasina `FMP_API_KEY` eklenmeli.
+              BIST tarafinda Yahoo verisi eksik donebilir; bu durumda teknik analiz calismaya devam
+              eder.
+            </p>
+          </div>
         </div>
       ) : null}
 

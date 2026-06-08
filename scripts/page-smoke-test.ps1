@@ -36,6 +36,7 @@ Assert-Truthy ($dashboardPage.Content -match "Portfoy") "Portfoy sekmesi HTML ic
 Assert-Truthy ($dashboardPage.Content -match "Uyarilar") "Uyarilar sekmesi HTML icinde bulunamadi."
 Assert-Truthy ($dashboardPage.Content -match "Gecmis") "Gecmis sekmesi HTML icinde bulunamadi."
 Assert-Truthy ($dashboardPage.Content -match "Sistem") "Sistem sekmesi HTML icinde bulunamadi."
+Assert-Truthy ($dashboardPage.Content -match "AI yorum") "AI yorum panel basligi HTML icinde bulunamadi."
 Write-Host "[OK] Dashboard HTML"
 
 $login = Invoke-Page -Path "/login"

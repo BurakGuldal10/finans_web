@@ -109,6 +109,7 @@ Beklenen sonuc:
 - Varsayilan kripto listesi gorunmeli.
 - Veri yuklenemese bile kullaniciya anlasilir hata veya eski veri uyarisi gosterilmeli.
 - Dashboard tek uzun sayfa gibi davranmamali; ana islevler sekmelerde gruplanmali.
+- Hata veya eski veri durumunda mesaj ne oldugunu ve hangi adimin denenebilecegini aciklamali.
 
 ### 2. Kripto Piyasa Akisi
 
@@ -139,7 +140,7 @@ Adimlar:
 Beklenen sonuc:
 
 - Yahoo Finance verisiyle fiyat ve mumlar yuklenmeli.
-- FMP anahtari yoksa temel analiz paneli bunu acikca soylemeli.
+- FMP anahtari yoksa temel analiz paneli bunu ve `.env.local` icin `FMP_API_KEY` gerektigini acikca soylemeli.
 - FMP anahtari varsa temel metrikler ve birlesik skor gorunmeli.
 
 ### 4. BIST Akisi
@@ -262,7 +263,7 @@ Adimlar:
 Beklenen sonuc:
 
 - Panel sayisal ozetleri gostermeli.
-- API anahtari durumlari dogru gorunmeli.
+- API anahtari durumlari ve eksikse ne yapilacagi dogru gorunmeli.
 - Lokal kilit aktifse cikis butonu gorunmeli.
 
 ## Hafif Uctan Uca Test

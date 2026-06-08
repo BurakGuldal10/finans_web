@@ -1380,3 +1380,29 @@ Kontrol:
 ```text
 npm run test:all
 ```
+
+## Mevcut Durum - Hata ve Eksik Veri Mesajlari
+
+Eklenenler:
+
+- Eski veri uyarisi daha acik hale getirildi:
+  - Hangi kaynak kullaniliyor
+  - Son guncelleme zamani
+  - Kaynak hata mesaji
+  - Kullanici ne yapabilir
+- Genel veri yuklenemedi paneli sembol, internet ve kaynak limiti kontrolunu onerir.
+- Temel analiz hatasi artik `FMP_API_KEY` eksikligini ve BIST/Yahoo veri eksigi olasiligini aciklar.
+- AI yorum hatasi artik `OPENAI_API_KEY` eksikligini ve Sistem sekmesinden kontrol edilebilecegini anlatir.
+- Sistem durumu panelinde eksik FMP/OpenAI anahtarlari icin daha acik aksiyon metinleri eklendi.
+- Veri dayanıkliligi karti eklendi; stale cache davranisi kullaniciya aciklanir.
+
+Notlar:
+
+- Bu adim uygulamanin veri kaynagi sorunlarinda daha anlasilir davranmasini saglar.
+- Finansal veri kaynaklari ucretsiz ve limitli oldugu icin bu mesajlar gunluk kullanimda kritik olacak.
+
+Kontrol:
+
+```text
+npm run test:all
+```

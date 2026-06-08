@@ -104,7 +104,12 @@ export function AiCommentaryPanel({
 
       {message ? (
         <div className="mt-4 rounded-md border border-yellow-300/20 bg-yellow-300/10 p-3 text-sm leading-6 text-yellow-100">
-          {message}
+          <p className="font-semibold">AI yorum hazirlanamadi.</p>
+          <p className="mt-1">{message}</p>
+          <p className="mt-2 text-yellow-100/80">
+            AI yorum opsiyoneldir. Kullanmak icin `.env.local` dosyasina `OPENAI_API_KEY`
+            ekleyin; model durumunu Sistem sekmesinden kontrol edebilirsiniz.
+          </p>
         </div>
       ) : null}
 
