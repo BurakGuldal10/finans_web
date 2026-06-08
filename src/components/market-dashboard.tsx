@@ -16,6 +16,7 @@ import {
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AlertsPanel } from "@/components/alerts-panel";
 import { CandlestickChart } from "@/components/candlestick-chart";
+import { DecisionReportPanel } from "@/components/decision-report-panel";
 import { ExportPanel } from "@/components/export-panel";
 import { FundamentalsPanel } from "@/components/fundamentals-panel";
 import { MarketSummaryPanel } from "@/components/market-summary-panel";
@@ -24,6 +25,7 @@ import {
   formatPrice,
   type AnalysisResult,
   type Candle,
+  type DecisionReport,
   type MultiTimeframeAnalysis,
   type TradePlan,
 } from "@/lib/analysis";
@@ -70,6 +72,7 @@ type AnalyzeResponse = {
   updatedAt: string;
   analysis: AnalysisResult;
   candles: Candle[];
+  decisionReport: DecisionReport;
   multiTimeframe: MultiTimeframeAnalysis;
   tradePlan: TradePlan;
 };
@@ -674,6 +677,8 @@ export function MarketDashboard() {
           <TechnicalIndicatorsPanel analysis={analysis} unit={priceUnit} />
 
           <TimeframeConfirmationPanel data={analysisData?.multiTimeframe} />
+
+          <DecisionReportPanel report={analysisData?.decisionReport} />
 
           <TradePlanPanel plan={analysisData?.tradePlan} />
 

@@ -1013,3 +1013,28 @@ Kontrol:
 npm run lint
 npm run build
 ```
+
+## Mevcut Durum - Karar Raporu
+
+Eklenenler:
+
+- `/api/analyze` cevabina `decisionReport` alani eklendi.
+- Rapor teknik analiz, coklu zaman dilimi teyidi ve trade planini birlikte ozetler.
+- Dashboard'a "Karar raporu" paneli eklendi.
+- Panel su alanlari gosterir:
+  - Baslik ve genel yorum
+  - Guven puani
+  - Trend, momentum, RSI, risk/odul ve zaman teyidi kontrol listesi
+  - Sonraki adimlar
+
+Notlar:
+
+- Bu rapor deterministik kural tabanli calisir; harici LLM/API kullanmaz.
+- Ileride OpenAI veya baska bir LLM entegrasyonu eklenirse bu rapor veri paketi olarak kullanilabilir.
+
+Kontrol:
+
+```text
+npm run lint
+npm run build
+```

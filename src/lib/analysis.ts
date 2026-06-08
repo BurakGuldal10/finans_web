@@ -75,6 +75,19 @@ export type TradePlan = {
   managementRules: string[];
 };
 
+export type DecisionReport = {
+  headline: string;
+  overview: string;
+  bias: "positive" | "neutral" | "negative";
+  confidence: number;
+  checklist: Array<{
+    label: string;
+    passed: boolean;
+    text: string;
+  }>;
+  nextSteps: string[];
+};
+
 export function average(values: number[]) {
   if (values.length === 0) {
     return 0;
@@ -391,6 +404,66 @@ export function buildTradePlan(
   };
 }
 
+export function buildDecisionReport(
+  analysis: AnalysisResult,
+  multiTimeframe: MultiTimeframeAnalysis,
+  tradePlan: TradePlan,
+): DecisionReport {
+  const trendOk = analysis.trendStrength >= 55;
+  const momentumOk = analysis.indicators.macd >= analysis.indicators.macdSignal;
+  const rsiOk = analysis.indicators.rsi14 >= 42 && analysis.indicators.rsi14 <= 70;
+  const riskRewardOk = analysis.riskReward >= 1.4;
+  const timeframeOk = multiTimeframe.alignment === "bullish";
+  const passedCount = [trendOk, momentumOk, rsiOk, riskRewardOk, timeframeOk].filter(Boolean).length;
+  const confidence = Math.round((analysis.score * 0.5 + multiTimeframe.score * 0.35 + passedCount * 20 * 0.15));
+  const bias: DecisionReport["bias"] =
+    tradePlan.stance === "watch" ? "positive" : tradePlan.stance === "avoid" ? "negative" : "neutral";
+
+  return {
+    headline: buildReportHeadline(bias, analysis.symbol),
+    overview: buildReportOverview(analysis, multiTimeframe, tradePlan, confidence),
+    bias,
+    confidence,
+    checklist: [
+      {
+        label: "Trend",
+        passed: trendOk,
+        text: trendOk
+          ? `Trend gucu ${analysis.trendStrength}/100 ile yeterli.`
+          : `Trend gucu ${analysis.trendStrength}/100; net yon teyidi zayif.`,
+      },
+      {
+        label: "Momentum",
+        passed: momentumOk,
+        text: momentumOk ? "MACD momentum tarafinda destek veriyor." : "MACD henuz momentum teyidi vermiyor.",
+      },
+      {
+        label: "RSI",
+        passed: rsiOk,
+        text: rsiOk
+          ? `RSI ${analysis.indicators.rsi14.toFixed(1)} ile takip edilebilir bolgede.`
+          : `RSI ${analysis.indicators.rsi14.toFixed(1)} ile dikkat istiyor.`,
+      },
+      {
+        label: "Risk/odul",
+        passed: riskRewardOk,
+        text: riskRewardOk
+          ? `Risk/odul 1:${analysis.riskReward.toFixed(2)} ile kabul edilebilir.`
+          : `Risk/odul 1:${analysis.riskReward.toFixed(2)}; giris fiyati iyilesmeli.`,
+      },
+      {
+        label: "Zaman teyidi",
+        passed: timeframeOk,
+        text:
+          multiTimeframe.alignment === "bullish"
+            ? "Coklu zaman dilimi uyumu olumlu."
+            : `Coklu zaman dilimi uyumu ${multiTimeframe.alignment}; ek teyit beklenmeli.`,
+      },
+    ],
+    nextSteps: buildReportNextSteps(analysis, multiTimeframe, tradePlan),
+  };
+}
+
 export function formatPrice(value: number) {
   if (value >= 1000) {
     return value.toLocaleString("en-US", { maximumFractionDigits: 2 });
@@ -401,6 +474,45 @@ export function formatPrice(value: number) {
   }
 
   return value.toLocaleString("en-US", { maximumFractionDigits: 8 });
+}
+
+function buildReportHeadline(bias: DecisionReport["bias"], symbol: string) {
+  if (bias === "positive") {
+    return `${symbol} icin takip edilebilir olumlu senaryo`;
+  }
+
+  if (bias === "negative") {
+    return `${symbol} icin yeni alim riskli gorunuyor`;
+  }
+
+  return `${symbol} icin teyit bekleyen notr senaryo`;
+}
+
+function buildReportOverview(
+  analysis: AnalysisResult,
+  multiTimeframe: MultiTimeframeAnalysis,
+  tradePlan: TradePlan,
+  confidence: number,
+) {
+  return `Teknik skor ${analysis.score}/100, zaman dilimi teyidi ${multiTimeframe.score}/100 ve plan durusu ${tradePlan.stance}. Guven puani ${confidence}/100; karar giris tetigi ve stop planiyla birlikte okunmali.`;
+}
+
+function buildReportNextSteps(
+  analysis: AnalysisResult,
+  multiTimeframe: MultiTimeframeAnalysis,
+  tradePlan: TradePlan,
+) {
+  const steps = [
+    tradePlan.entryTrigger,
+    `Stop ve gecersizlik: ${analysis.invalidation}`,
+    `Hedef takibi: ${formatPrice(analysis.targetOne)} ilk hedef, ${formatPrice(analysis.targetTwo)} ikinci hedef.`,
+  ];
+
+  if (multiTimeframe.alignment !== "bullish") {
+    steps.push("Coklu zaman dilimi bullish olmadan pozisyon boyutu artirilmamali.");
+  }
+
+  return steps;
 }
 
 function buildTradePlanSummary(
