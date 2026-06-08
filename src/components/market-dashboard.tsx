@@ -87,6 +87,7 @@ type FundamentalsResponse = {
 };
 
 type Timeframe = "15m" | "1h" | "4h" | "1d";
+type DashboardTab = "alerts" | "analysis" | "history" | "portfolio" | "system";
 
 const cryptoSymbols = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "XRPUSDT"];
 const stockSymbols = ["AAPL", "MSFT", "NVDA", "TSLA", "SPY"];
@@ -101,6 +102,33 @@ const timeframes: Array<{ label: string; value: Timeframe }> = [
   { label: "1s", value: "1h" },
   { label: "4s", value: "4h" },
   { label: "1g", value: "1d" },
+];
+const dashboardTabs: Array<{ description: string; label: string; value: DashboardTab }> = [
+  {
+    description: "Teknik veriler, karar raporu ve risk hesabi.",
+    label: "Analiz",
+    value: "analysis",
+  },
+  {
+    description: "Pozisyon, trade gunlugu ve performans.",
+    label: "Portfoy",
+    value: "portfolio",
+  },
+  {
+    description: "Fiyat, skor ve RSI takip kurallari.",
+    label: "Uyarilar",
+    value: "alerts",
+  },
+  {
+    description: "Kayitli raporlar ve yedekleme.",
+    label: "Gecmis",
+    value: "history",
+  },
+  {
+    description: "Kaynak, ortam ve uygulama ayarlari.",
+    label: "Sistem",
+    value: "system",
+  },
 ];
 const watchlistStorageKey = "finansman-watchlist";
 const stockWatchlistStorageKey = "finansman-stock-watchlist";
@@ -132,6 +160,7 @@ export function MarketDashboard() {
   const [fundamentalsError, setFundamentalsError] = useState<string | null>(null);
   const [fundamentalsLoading, setFundamentalsLoading] = useState(false);
   const [settings, setSettings] = useState<AppSettings>(defaultSettings);
+  const [activeTab, setActiveTab] = useState<DashboardTab>("analysis");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const watchlist = watchlists[selectedMarket];
@@ -669,159 +698,198 @@ export function MarketDashboard() {
             </div>
           </section>
 
-          <MarketSummaryPanel
-            onSelectSymbol={setSelectedSymbol}
-            selectedSymbol={selectedSymbol}
-            tickers={displayedTickers}
-            unit={priceUnit}
-          />
+          <section className="rounded-lg border border-[var(--border)] bg-[rgba(13,26,23,0.82)] p-3 shadow-2xl shadow-black/20">
+            <div className="grid gap-2 md:grid-cols-5">
+              {dashboardTabs.map((tab) => {
+                const active = tab.value === activeTab;
 
-          <TechnicalIndicatorsPanel analysis={analysis} unit={priceUnit} />
-
-          <TimeframeConfirmationPanel data={analysisData?.multiTimeframe} />
-
-          <DecisionReportPanel report={analysisData?.decisionReport} />
-
-          <AiCommentaryPanel
-            analysis={analysis}
-            decisionReport={analysisData?.decisionReport}
-            interval={selectedTimeframe}
-            market={selectedMarket}
-            multiTimeframe={analysisData?.multiTimeframe}
-            tradePlan={analysisData?.tradePlan}
-          />
-
-          <TradePlanPanel plan={analysisData?.tradePlan} />
-
-          <AnalysisSnapshotPanel
-            analysis={analysis}
-            decisionReport={analysisData?.decisionReport}
-            interval={selectedTimeframe}
-            market={selectedMarket}
-            symbol={selectedSymbol}
-            tradePlan={analysisData?.tradePlan}
-          />
-
-          <section className="grid gap-5 xl:grid-cols-[1fr_340px]">
-            <div className="rounded-lg border border-[var(--border)] bg-[rgba(13,26,23,0.82)] p-4 md:p-5">
-              <h3 className="flex items-center gap-2 text-base font-semibold text-white">
-                <ShieldCheck size={18} />
-                Karar destek ozeti
-              </h3>
-
-              {analysis ? (
-                <div className="mt-4 grid gap-3 md:grid-cols-2">
-                  <Metric label="Skor" value={`${analysis.score}/100`} />
-                  <Metric
-                    label="Risk / odul"
-                    value={`1:${analysis.riskReward.toFixed(2)}`}
-                  />
-                  <Metric
-                    label="Alim bolgesi"
-                    value={`${formatPrice(analysis.buyZone[0])} - ${formatPrice(
-                      analysis.buyZone[1],
-                    )}`}
-                  />
-                  <Metric label="Stop loss" tone="danger" value={formatPrice(analysis.stopLoss)} />
-                  <Metric label="Hedef 1" tone="positive" value={formatPrice(analysis.targetOne)} />
-                  <Metric label="Hedef 2" tone="positive" value={formatPrice(analysis.targetTwo)} />
-                  <Metric label="Destek" value={formatPrice(analysis.levels.support)} />
-                  <Metric label="Direnc" value={formatPrice(analysis.levels.resistance)} />
-                  <Metric label="Trend gucu" value={`${analysis.trendStrength}/100`} />
-                  <Metric
-                    label="Volatilite"
-                    tone={analysis.volatility.regime === "high" ? "danger" : "default"}
-                    value={`${analysis.volatility.percent.toFixed(2)}%`}
-                  />
-                </div>
-              ) : (
-                <LoadingPanel error={error} loading={loading} />
-              )}
-            </div>
-
-            <div className="rounded-lg border border-[var(--border)] bg-[rgba(13,26,23,0.82)] p-4 md:p-5">
-              <h3 className="flex items-center gap-2 text-base font-semibold text-white">
-                <Target size={18} />
-                Gerekceler
-              </h3>
-
-              {analysis ? (
-                <div className="mt-4 space-y-3">
-                  <p className="rounded-md border border-emerald-300/20 bg-emerald-300/10 p-3 text-sm leading-6 text-emerald-50">
-                    {analysis.actionSummary}
-                  </p>
-                  {analysis.reasons.map((reason) => (
-                    <p
-                      className="rounded-md border border-white/5 bg-white/[0.03] p-3 text-sm leading-6 text-[var(--muted)]"
-                      key={reason}
-                    >
-                      {reason}
-                    </p>
-                  ))}
-                  {analysis.risks.map((risk) => (
-                    <p
-                      className="rounded-md border border-red-300/20 bg-red-300/10 p-3 text-sm leading-6 text-red-100"
-                      key={risk}
-                    >
-                      {risk}
-                    </p>
-                  ))}
-                  <p className="flex gap-2 rounded-md border border-yellow-300/20 bg-yellow-300/10 p-3 text-sm leading-6 text-yellow-100">
-                    <AlertTriangle className="mt-1 shrink-0" size={16} />
-                    {analysis.invalidation}
-                  </p>
-                </div>
-              ) : (
-                <LoadingPanel error={error} loading={loading} />
-              )}
+                return (
+                  <button
+                    className={`rounded-md border p-3 text-left transition ${
+                      active
+                        ? "border-emerald-300 bg-emerald-300/10 text-white"
+                        : "border-white/5 bg-white/[0.03] text-[var(--muted)] hover:border-emerald-300/40 hover:text-white"
+                    }`}
+                    key={tab.value}
+                    onClick={() => setActiveTab(tab.value)}
+                    type="button"
+                  >
+                    <span className="block text-sm font-semibold">{tab.label}</span>
+                    <span className="mt-1 block text-xs leading-5">{tab.description}</span>
+                  </button>
+                );
+              })}
             </div>
           </section>
 
-          <RiskCalculatorPanel
-            analysis={analysis}
-            defaultRiskPercent={settings.riskPercent}
-            market={selectedMarket}
-            selectedPrice={selectedTicker?.price}
-            symbol={selectedSymbol}
-          />
+          {activeTab === "analysis" ? (
+            <>
+              <MarketSummaryPanel
+                onSelectSymbol={setSelectedSymbol}
+                selectedSymbol={selectedSymbol}
+                tickers={displayedTickers}
+                unit={priceUnit}
+              />
 
-          <PortfolioPanel
-            currentPrice={selectedTicker?.price}
-            selectedSymbol={selectedSymbol}
-            tickers={displayedTickers}
-          />
+              <TechnicalIndicatorsPanel analysis={analysis} unit={priceUnit} />
 
-          <AlertsPanel
-            analysis={analysis}
-            browserNotifications={settings.browserNotifications}
-            market={selectedMarket}
-            price={selectedTicker?.price}
-            symbol={selectedSymbol}
-          />
+              <TimeframeConfirmationPanel data={analysisData?.multiTimeframe} />
 
-          {selectedMarket !== "crypto" ? (
-            <FundamentalsPanel
-              combined={combinedAnalysis}
-              data={fundamentalsData}
-              error={fundamentalsError}
-              loading={fundamentalsLoading}
+              <DecisionReportPanel report={analysisData?.decisionReport} />
+
+              <AiCommentaryPanel
+                analysis={analysis}
+                decisionReport={analysisData?.decisionReport}
+                interval={selectedTimeframe}
+                market={selectedMarket}
+                multiTimeframe={analysisData?.multiTimeframe}
+                tradePlan={analysisData?.tradePlan}
+              />
+
+              <TradePlanPanel plan={analysisData?.tradePlan} />
+
+              <section className="grid gap-5 xl:grid-cols-[1fr_340px]">
+                <div className="rounded-lg border border-[var(--border)] bg-[rgba(13,26,23,0.82)] p-4 md:p-5">
+                  <h3 className="flex items-center gap-2 text-base font-semibold text-white">
+                    <ShieldCheck size={18} />
+                    Karar destek ozeti
+                  </h3>
+
+                  {analysis ? (
+                    <div className="mt-4 grid gap-3 md:grid-cols-2">
+                      <Metric label="Skor" value={`${analysis.score}/100`} />
+                      <Metric label="Risk / odul" value={`1:${analysis.riskReward.toFixed(2)}`} />
+                      <Metric
+                        label="Alim bolgesi"
+                        value={`${formatPrice(analysis.buyZone[0])} - ${formatPrice(
+                          analysis.buyZone[1],
+                        )}`}
+                      />
+                      <Metric label="Stop loss" tone="danger" value={formatPrice(analysis.stopLoss)} />
+                      <Metric label="Hedef 1" tone="positive" value={formatPrice(analysis.targetOne)} />
+                      <Metric label="Hedef 2" tone="positive" value={formatPrice(analysis.targetTwo)} />
+                      <Metric label="Destek" value={formatPrice(analysis.levels.support)} />
+                      <Metric label="Direnc" value={formatPrice(analysis.levels.resistance)} />
+                      <Metric label="Trend gucu" value={`${analysis.trendStrength}/100`} />
+                      <Metric
+                        label="Volatilite"
+                        tone={analysis.volatility.regime === "high" ? "danger" : "default"}
+                        value={`${analysis.volatility.percent.toFixed(2)}%`}
+                      />
+                    </div>
+                  ) : (
+                    <LoadingPanel error={error} loading={loading} />
+                  )}
+                </div>
+
+                <div className="rounded-lg border border-[var(--border)] bg-[rgba(13,26,23,0.82)] p-4 md:p-5">
+                  <h3 className="flex items-center gap-2 text-base font-semibold text-white">
+                    <Target size={18} />
+                    Gerekceler
+                  </h3>
+
+                  {analysis ? (
+                    <div className="mt-4 space-y-3">
+                      <p className="rounded-md border border-emerald-300/20 bg-emerald-300/10 p-3 text-sm leading-6 text-emerald-50">
+                        {analysis.actionSummary}
+                      </p>
+                      {analysis.reasons.map((reason) => (
+                        <p
+                          className="rounded-md border border-white/5 bg-white/[0.03] p-3 text-sm leading-6 text-[var(--muted)]"
+                          key={reason}
+                        >
+                          {reason}
+                        </p>
+                      ))}
+                      {analysis.risks.map((risk) => (
+                        <p
+                          className="rounded-md border border-red-300/20 bg-red-300/10 p-3 text-sm leading-6 text-red-100"
+                          key={risk}
+                        >
+                          {risk}
+                        </p>
+                      ))}
+                      <p className="flex gap-2 rounded-md border border-yellow-300/20 bg-yellow-300/10 p-3 text-sm leading-6 text-yellow-100">
+                        <AlertTriangle className="mt-1 shrink-0" size={16} />
+                        {analysis.invalidation}
+                      </p>
+                    </div>
+                  ) : (
+                    <LoadingPanel error={error} loading={loading} />
+                  )}
+                </div>
+              </section>
+
+              <RiskCalculatorPanel
+                analysis={analysis}
+                defaultRiskPercent={settings.riskPercent}
+                market={selectedMarket}
+                selectedPrice={selectedTicker?.price}
+                symbol={selectedSymbol}
+              />
+
+              {selectedMarket !== "crypto" ? (
+                <FundamentalsPanel
+                  combined={combinedAnalysis}
+                  data={fundamentalsData}
+                  error={fundamentalsError}
+                  loading={fundamentalsLoading}
+                />
+              ) : null}
+            </>
+          ) : null}
+
+          {activeTab === "portfolio" ? (
+            <>
+              <PortfolioPanel
+                currentPrice={selectedTicker?.price}
+                selectedSymbol={selectedSymbol}
+                tickers={displayedTickers}
+              />
+
+              <TradeJournal
+                analysis={analysis}
+                selectedPrice={selectedTicker?.price}
+                selectedSymbol={selectedSymbol}
+                timeframe={selectedTimeframe}
+              />
+
+              <PerformancePanel />
+            </>
+          ) : null}
+
+          {activeTab === "alerts" ? (
+            <AlertsPanel
+              analysis={analysis}
+              browserNotifications={settings.browserNotifications}
+              market={selectedMarket}
+              price={selectedTicker?.price}
+              symbol={selectedSymbol}
             />
           ) : null}
 
-          <TradeJournal
-            analysis={analysis}
-            selectedPrice={selectedTicker?.price}
-            selectedSymbol={selectedSymbol}
-            timeframe={selectedTimeframe}
-          />
+          {activeTab === "history" ? (
+            <>
+              <AnalysisSnapshotPanel
+                analysis={analysis}
+                decisionReport={analysisData?.decisionReport}
+                interval={selectedTimeframe}
+                market={selectedMarket}
+                symbol={selectedSymbol}
+                tradePlan={analysisData?.tradePlan}
+              />
 
-          <PerformancePanel />
+              <ExportPanel />
+            </>
+          ) : null}
 
-          <ExportPanel />
+          {activeTab === "system" ? (
+            <>
+              <SystemStatusPanel />
 
-          <SystemStatusPanel />
-
-          <SettingsPanel onChange={setSettings} settings={settings} />
+              <SettingsPanel onChange={setSettings} settings={settings} />
+            </>
+          ) : null}
         </div>
       </section>
     </main>

@@ -94,13 +94,21 @@ Adimlar:
 
 1. `http://127.0.0.1:3000` adresini ac.
 2. Dashboard basliginin gorundugunu kontrol et.
-3. Izleme listesi, grafik alani, karar raporu, trade plani ve analiz gecmisi panellerini kontrol et.
+3. Izleme listesi ve grafik alaninin gorundugunu kontrol et.
+4. Sekmelerin gorundugunu kontrol et:
+   - Analiz
+   - Portfoy
+   - Uyarilar
+   - Gecmis
+   - Sistem
+5. Her sekmeye tiklayarak ilgili panel grubunun acildigini kontrol et.
 
 Beklenen sonuc:
 
 - Sayfa bos veya kirik gelmemeli.
 - Varsayilan kripto listesi gorunmeli.
 - Veri yuklenemese bile kullaniciya anlasilir hata veya eski veri uyarisi gosterilmeli.
+- Dashboard tek uzun sayfa gibi davranmamali; ana islevler sekmelerde gruplanmali.
 
 ### 2. Kripto Piyasa Akisi
 
@@ -154,14 +162,15 @@ Beklenen sonuc:
 
 Adimlar:
 
-1. Herhangi bir sembolde analiz yuklendikten sonra `Raporu kaydet` butonuna bas.
-2. Yeni kaydin analiz gecmisi listesine eklendigini kontrol et.
-3. Kayit detayinin otomatik acildigini kontrol et.
-4. Detayda karar raporu, trade plani, RSI, trend gucu, risk/odul ve stop bilgisini oku.
-5. Ayni sembol seciliyken karsilastirma metriklerini kontrol et.
-6. Farkli sembole gec ve eski kaydi ac.
-7. Karsilastirma uyarisinin gorundugunu kontrol et.
-8. Kaydi sil.
+1. `Gecmis` sekmesine gec.
+2. Herhangi bir sembolde analiz yuklendikten sonra `Raporu kaydet` butonuna bas.
+3. Yeni kaydin analiz gecmisi listesine eklendigini kontrol et.
+4. Kayit detayinin otomatik acildigini kontrol et.
+5. Detayda karar raporu, trade plani, RSI, trend gucu, risk/odul ve stop bilgisini oku.
+6. Ayni sembol seciliyken karsilastirma metriklerini kontrol et.
+7. Farkli sembole gec ve eski kaydi ac.
+8. Karsilastirma uyarisinin gorundugunu kontrol et.
+9. Kaydi sil.
 
 Beklenen sonuc:
 
@@ -174,11 +183,12 @@ Beklenen sonuc:
 
 Adimlar:
 
-1. Bir sembolde analiz yuklendikten sonra trade gunlugunde `Analizden doldur` butonuna bas.
-2. Giris, stop, hedef ve not alanlarinin doldugunu kontrol et.
-3. Miktar gir ve kaydi olustur.
-4. Kaydin durumunu `Acik`, sonra `Kar` veya `Zarar` olarak degistir.
-5. Kaydi sil.
+1. `Portfoy` sekmesine gec.
+2. Bir sembolde analiz yuklendikten sonra trade gunlugunde `Analizden doldur` butonuna bas.
+3. Giris, stop, hedef ve not alanlarinin doldugunu kontrol et.
+4. Miktar gir ve kaydi olustur.
+5. Kaydin durumunu `Acik`, sonra `Kar` veya `Zarar` olarak degistir.
+6. Kaydi sil.
 
 Beklenen sonuc:
 
@@ -190,10 +200,11 @@ Beklenen sonuc:
 
 Adimlar:
 
-1. Secili sembol icin portfoy paneline pozisyon ekle.
-2. Ortalama maliyet, miktar ve stop gir.
-3. Kaydin kar/zarar ve risk hesaplarini kontrol et.
-4. Kaydi sil.
+1. `Portfoy` sekmesine gec.
+2. Secili sembol icin portfoy paneline pozisyon ekle.
+3. Ortalama maliyet, miktar ve stop gir.
+4. Kaydin kar/zarar ve risk hesaplarini kontrol et.
+5. Kaydi sil.
 
 Beklenen sonuc:
 
@@ -205,11 +216,12 @@ Beklenen sonuc:
 
 Adimlar:
 
-1. Secili sembol icin fiyat, skor veya RSI uyarisi ekle.
-2. Guncel deger butonuyla esik alanini doldur.
-3. Kosulu tetiklenecek sekilde uzerine/altina ayarla.
-4. Yenileme sonrasi tetiklenen uyarilar bolumunu kontrol et.
-5. Uyariyi sifirla ve sil.
+1. `Uyarilar` sekmesine gec.
+2. Secili sembol icin fiyat, skor veya RSI uyarisi ekle.
+3. Guncel deger butonuyla esik alanini doldur.
+4. Kosulu tetiklenecek sekilde uzerine/altina ayarla.
+5. Yenileme sonrasi tetiklenen uyarilar bolumunu kontrol et.
+6. Uyariyi sifirla ve sil.
 
 Beklenen sonuc:
 
@@ -221,10 +233,11 @@ Beklenen sonuc:
 
 Adimlar:
 
-1. Trade, portfoy, uyari ve analiz gecmisi icin JSON export al.
-2. CSV export linklerini kontrol et.
-3. JSON dosyasini import et.
-4. Ayni dosyayi tekrar import ederek kayitlarin cogalmadigini kontrol et.
+1. `Gecmis` sekmesine gec.
+2. Trade, portfoy, uyari ve analiz gecmisi icin JSON export al.
+3. CSV export linklerini kontrol et.
+4. JSON dosyasini import et.
+5. Ayni dosyayi tekrar import ederek kayitlarin cogalmadigini kontrol et.
 
 Beklenen sonuc:
 
@@ -237,9 +250,10 @@ Beklenen sonuc:
 
 Adimlar:
 
-1. Sistem durumu panelinde `Kontrol et` butonuna bas.
-2. Portfoy, trade, uyari, rapor ve tetiklenen uyari sayilarini kontrol et.
-3. `/api/health` cevabini tarayicida veya terminalde ac.
+1. `Sistem` sekmesine gec.
+2. Sistem durumu panelinde `Kontrol et` butonuna bas.
+3. Portfoy, trade, uyari, rapor ve tetiklenen uyari sayilarini kontrol et.
+4. `/api/health` cevabini tarayicida veya terminalde ac.
 
 Beklenen sonuc:
 

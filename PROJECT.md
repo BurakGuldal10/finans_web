@@ -1314,3 +1314,41 @@ Kontrol:
 ```text
 npm run test:all
 ```
+
+## Mevcut Durum - Sekmeli Dashboard
+
+Eklenenler:
+
+- Dashboard tek uzun sayfa olmaktan cikarildi ve ana islevler sekmelere ayrildi.
+- Yeni sekmeler:
+  - Analiz
+  - Portfoy
+  - Uyarilar
+  - Gecmis
+  - Sistem
+- Analiz sekmesi su bolumleri toplar:
+  - Piyasa ozeti
+  - Teknik indikatorler
+  - Zaman dilimi teyidi
+  - Karar raporu
+  - AI yorum
+  - Trade plani
+  - Karar destek ozeti
+  - Risk hesaplayici
+  - Temel analiz
+- Portfoy sekmesi portfoy, trade gunlugu ve performans ozetini toplar.
+- Uyarilar sekmesi uyari listesi ve bildirim akisini toplar.
+- Gecmis sekmesi analiz gecmisi ve yedekleme panelini toplar.
+- Sistem sekmesi sistem durumu ve ayarlari toplar.
+- Sayfa smoke test sekme etiketlerini de kontrol edecek sekilde genisletildi.
+
+Notlar:
+
+- Veri yenileme, izleme listesi ve grafik alani ana ekranda kalmaya devam eder.
+- Bu degisiklik uygulamayi gunluk kullanim icin daha taranabilir hale getirir.
+
+Kontrol:
+
+```text
+npm run test:all
+```
