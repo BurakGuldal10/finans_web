@@ -14,6 +14,7 @@ import {
   X,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { AiCommentaryPanel } from "@/components/ai-commentary-panel";
 import { AlertsPanel } from "@/components/alerts-panel";
 import { CandlestickChart } from "@/components/candlestick-chart";
 import { DecisionReportPanel } from "@/components/decision-report-panel";
@@ -679,6 +680,15 @@ export function MarketDashboard() {
           <TimeframeConfirmationPanel data={analysisData?.multiTimeframe} />
 
           <DecisionReportPanel report={analysisData?.decisionReport} />
+
+          <AiCommentaryPanel
+            analysis={analysis}
+            decisionReport={analysisData?.decisionReport}
+            interval={selectedTimeframe}
+            market={selectedMarket}
+            multiTimeframe={analysisData?.multiTimeframe}
+            tradePlan={analysisData?.tradePlan}
+          />
 
           <TradePlanPanel plan={analysisData?.tradePlan} />
 

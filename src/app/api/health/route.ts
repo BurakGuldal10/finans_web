@@ -8,6 +8,8 @@ export async function GET() {
     environment: {
       fmpApiKey: Boolean(process.env.FMP_API_KEY),
       nodeEnv: process.env.NODE_ENV ?? "development",
+      openAiApiKey: Boolean(process.env.OPENAI_API_KEY),
+      openAiModel: process.env.OPENAI_MODEL || "gpt-5.5",
     },
     sources: {
       bist: "yahoo",

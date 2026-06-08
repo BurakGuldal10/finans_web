@@ -15,6 +15,8 @@ type HealthResponse = {
   environment: {
     fmpApiKey: boolean;
     nodeEnv: string;
+    openAiApiKey: boolean;
+    openAiModel: string;
   };
   resilience: {
     staleCacheFallback: boolean;
@@ -100,6 +102,16 @@ export function SystemStatusPanel() {
               label="Temel analiz"
               text={health.environment.fmpApiKey ? "FMP anahtari aktif" : "FMP anahtari yok"}
               tone={health.environment.fmpApiKey ? "positive" : "warning"}
+            />
+            <SourceCard
+              icon={<KeyRound size={15} />}
+              label="AI yorum"
+              text={
+                health.environment.openAiApiKey
+                  ? `OpenAI aktif (${health.environment.openAiModel})`
+                  : "OPENAI_API_KEY yok"
+              }
+              tone={health.environment.openAiApiKey ? "positive" : "warning"}
             />
           </div>
 

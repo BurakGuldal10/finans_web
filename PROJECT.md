@@ -1038,3 +1038,34 @@ Kontrol:
 npm run lint
 npm run build
 ```
+
+## Mevcut Durum - Opsiyonel AI Yorum
+
+Eklenenler:
+
+- Yeni endpoint eklendi: `/api/ai-commentary`.
+- Dashboard'a "AI yorum" paneli eklendi.
+- Panel karar raporu, teknik analiz, coklu zaman dilimi teyidi ve trade planindan Turkce yorum uretir.
+- OpenAI API anahtari yoksa uygulama calismaya devam eder ve panel anahtar gerektigini soyler.
+- Sistem durumu panelinde OpenAI anahtari ve model durumu gosterilir.
+- `.env.example` icine `OPENAI_API_KEY` ve `OPENAI_MODEL` eklendi.
+
+Ornek yerel ortam:
+
+```text
+OPENAI_API_KEY=...
+OPENAI_MODEL=gpt-5.5
+```
+
+Notlar:
+
+- AI yorumlama yatirim tavsiyesi degildir; mevcut karar destek verisini aciklar.
+- OpenAI entegrasyonu server-side calisir; API anahtari tarayiciya gonderilmez.
+- Varsayilan model OpenAI Responses API dokumanindaki text generation ornegine uygun olarak `gpt-5.5` secildi; istenirse `OPENAI_MODEL` ile degistirilebilir.
+
+Kontrol:
+
+```text
+npm run lint
+npm run build
+```
