@@ -113,18 +113,20 @@ Adimlar:
 1. `http://127.0.0.1:3000` adresini ac.
 2. Dashboard basliginin gorundugunu kontrol et.
 3. Izleme listesi ve grafik alaninin gorundugunu kontrol et.
-4. Sekmelerin gorundugunu kontrol et:
+4. Sol panelde `Genis liste` ve `Temel liste` butonlarinin gorundugunu kontrol et.
+5. Sekmelerin gorundugunu kontrol et:
    - Analiz
    - Portfoy
    - Uyarilar
    - Gecmis
    - Sistem
-5. Her sekmeye tiklayarak ilgili panel grubunun acildigini kontrol et.
+6. Her sekmeye tiklayarak ilgili panel grubunun acildigini kontrol et.
 
 Beklenen sonuc:
 
 - Sayfa bos veya kirik gelmemeli.
 - Varsayilan kripto listesi gorunmeli.
+- Genis liste butonu secili piyasa icin daha fazla sembol yuklemeli.
 - Veri yuklenemese bile kullaniciya anlasilir hata veya eski veri uyarisi gosterilmeli.
 - Dashboard tek uzun sayfa gibi davranmamali; ana islevler sekmelerde gruplanmali.
 - Hata veya eski veri durumunda mesaj ne oldugunu ve hangi adimin denenebilecegini aciklamali.
@@ -137,12 +139,15 @@ Adimlar:
 2. `BTCUSDT` sembolunu sec.
 3. `15m`, `1h`, `4h`, `1d` zaman dilimlerini tek tek sec.
 4. Izleme listesine `AVAXUSDT` ekle.
-5. Eklenen sembolu sec ve sonra listeden kaldir.
+5. `Genis liste` butonuna bas ve listedeki sembol sayisinin arttigini kontrol et.
+6. `Temel liste` butonuna bas ve kisa listeye dondugunu kontrol et.
+7. Eklenen sembolu sec ve sonra listeden kaldir.
 
 Beklenen sonuc:
 
 - Fiyat, mum grafik, teknik indikatorler, karar raporu ve trade plani yenilenmeli.
 - Gecerli Binance USDT sembolu eklenebilmeli.
+- Genis kripto listesi 20 civari USDT paritesini yuklemeli.
 - Liste en az bir sembol kalacak sekilde sembol silmeye izin vermeli.
 
 ### 3. ABD Hisse Akisi
@@ -152,12 +157,14 @@ Adimlar:
 1. Piyasa secimini `ABD Hisse` yap.
 2. `AAPL` veya `MSFT` sembolunu sec.
 3. `1d` zaman diliminde analiz uretildigini kontrol et.
-4. Yeni sembol olarak `NVDA` eklemeyi dene.
-5. Temel analiz panelini kontrol et.
+4. `Genis liste` butonuna bas ve ABD hisse/ETF listesinin genisledigini kontrol et.
+5. Yeni sembol olarak `NVDA` eklemeyi dene.
+6. Temel analiz panelini kontrol et.
 
 Beklenen sonuc:
 
 - Yahoo Finance verisiyle fiyat ve mumlar yuklenmeli.
+- Genis ABD listesi buyuk teknoloji, finans, saglik, enerji ve ETF sembollerini icermeli.
 - FMP anahtari yoksa temel analiz paneli bunu ve `.env.local` icin `FMP_API_KEY` gerektigini acikca soylemeli.
 - FMP anahtari varsa temel metrikler ve birlesik skor gorunmeli.
 
@@ -169,11 +176,13 @@ Adimlar:
 2. `THYAO.IS` veya `GARAN.IS` sembolunu sec.
 3. Yeni sembol olarak `ASELS` gir.
 4. Sistemin sembolu `ASELS.IS` formatina cevirdigini kontrol et.
-5. Temel analiz panelini kontrol et.
+5. `Genis liste` butonuna bas ve BIST listesinin genisledigini kontrol et.
+6. Temel analiz panelini kontrol et.
 
 Beklenen sonuc:
 
 - BIST fiyatlari TRY birimiyle gorunmeli.
+- Genis BIST listesi bankacilik, sanayi, havacilik, perakende ve holding sembollerini icermeli.
 - Yahoo Finance verisi eksikse panel bozulmadan uyari veya sinirli snapshot gostermeli.
 - Teknik analiz ve trade plani BIST icin de calismali.
 

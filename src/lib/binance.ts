@@ -20,7 +20,28 @@ type BinanceExchangeInfo = {
   }>;
 };
 
-const DEFAULT_SYMBOLS = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "XRPUSDT"];
+const DEFAULT_SYMBOLS = [
+  "BTCUSDT",
+  "ETHUSDT",
+  "SOLUSDT",
+  "BNBUSDT",
+  "XRPUSDT",
+  "ADAUSDT",
+  "AVAXUSDT",
+  "DOGEUSDT",
+  "DOTUSDT",
+  "LINKUSDT",
+  "MATICUSDT",
+  "LTCUSDT",
+  "TRXUSDT",
+  "ATOMUSDT",
+  "NEARUSDT",
+  "APTUSDT",
+  "ARBUSDT",
+  "OPUSDT",
+  "INJUSDT",
+  "SUIUSDT",
+];
 const SYMBOL_PATTERN = /^[A-Z0-9]{3,20}USDT$/;
 const SUPPORTED_INTERVALS: BinanceInterval[] = ["15m", "1h", "4h", "1d"];
 
@@ -110,7 +131,7 @@ export function parseSymbolList(value: string | null) {
     .map(normalizeSymbol)
     .filter(isSupportedUsdtSymbol);
 
-  return Array.from(new Set(symbols)).slice(0, 20);
+  return Array.from(new Set(symbols)).slice(0, 80);
 }
 
 export async function validateSpotUsdtSymbol(symbol: string) {

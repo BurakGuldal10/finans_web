@@ -1558,3 +1558,29 @@ Kontrol:
 ```text
 npm run test:all
 ```
+
+## Mevcut Durum - Genis Izleme Listeleri
+
+Eklenenler:
+
+- Varsayilan izleme listeleri genisletildi:
+  - Kripto tarafinda 20 USDT paritesi
+  - ABD tarafinda 35 hisse/ETF sembolu
+  - BIST tarafinda 30 sembol
+- Izleme listesi ust siniri 20 sembolden 80 sembole cikarildi.
+- Sol izleme listesi paneline iki hizli aksiyon eklendi:
+  - `Genis liste`: Secili piyasa icin daha buyuk hazir sepeti yukler.
+  - `Temel liste`: Secili piyasa icin kisa 5 sembollu listeye doner.
+- API sembol listesi parser'lari 80 sembole kadar kabul edecek sekilde guncellendi.
+
+Notlar:
+
+- Ucretsiz Yahoo/Binance kaynaklari nedeniyle tum piyasa evrenini tek seferde canli cekmek limit, hiz ve veri lisansi sorunlari yaratabilir.
+- Daha genis kapsama icin su an en guvenli kullanim: hazir genis listeyi yuklemek ve izlenecek ek sembolleri manuel eklemek.
+- Ileride ayri bir sembol evreni/tarama endpoint'i eklenerek tum Binance USDT pariteleri veya BIST/ABD sembol listeleri kademeli taranabilir.
+
+Kontrol:
+
+```text
+npm run test:all
+```

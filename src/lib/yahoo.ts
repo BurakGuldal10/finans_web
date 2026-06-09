@@ -24,8 +24,75 @@ type YahooChartResponse = {
   };
 };
 
-const DEFAULT_STOCK_SYMBOLS = ["AAPL", "MSFT", "NVDA", "TSLA", "SPY"];
-const DEFAULT_BIST_SYMBOLS = ["THYAO.IS", "GARAN.IS", "ASELS.IS", "BIMAS.IS", "KCHOL.IS"];
+const DEFAULT_STOCK_SYMBOLS = [
+  "AAPL",
+  "MSFT",
+  "NVDA",
+  "AMZN",
+  "GOOGL",
+  "META",
+  "TSLA",
+  "AVGO",
+  "AMD",
+  "NFLX",
+  "ADBE",
+  "CRM",
+  "ORCL",
+  "INTC",
+  "QCOM",
+  "JPM",
+  "BAC",
+  "GS",
+  "V",
+  "MA",
+  "UNH",
+  "LLY",
+  "JNJ",
+  "PFE",
+  "XOM",
+  "CVX",
+  "KO",
+  "PEP",
+  "WMT",
+  "COST",
+  "DIS",
+  "NKE",
+  "SPY",
+  "QQQ",
+  "IWM",
+];
+const DEFAULT_BIST_SYMBOLS = [
+  "THYAO.IS",
+  "GARAN.IS",
+  "ASELS.IS",
+  "BIMAS.IS",
+  "KCHOL.IS",
+  "AKBNK.IS",
+  "YKBNK.IS",
+  "ISCTR.IS",
+  "SAHOL.IS",
+  "EREGL.IS",
+  "TUPRS.IS",
+  "FROTO.IS",
+  "TOASO.IS",
+  "SISE.IS",
+  "TCELL.IS",
+  "ENKAI.IS",
+  "PETKM.IS",
+  "KRDMD.IS",
+  "PGSUS.IS",
+  "SASA.IS",
+  "HEKTS.IS",
+  "KOZAL.IS",
+  "KOZAA.IS",
+  "GUBRF.IS",
+  "MGROS.IS",
+  "ULKER.IS",
+  "ARCLK.IS",
+  "VESTL.IS",
+  "DOHOL.IS",
+  "EKGYO.IS",
+];
 const STOCK_SYMBOL_PATTERN = /^[A-Z][A-Z0-9.-]{0,9}$/;
 const BIST_SYMBOL_PATTERN = /^[A-Z][A-Z0-9]{1,9}\.IS$/;
 
@@ -64,7 +131,7 @@ export function parseStockSymbolList(value: string | null) {
     .map(normalizeStockSymbol)
     .filter(isSupportedStockSymbol);
 
-  return Array.from(new Set(symbols)).slice(0, 20);
+  return Array.from(new Set(symbols)).slice(0, 80);
 }
 
 export function parseBistSymbolList(value: string | null) {
@@ -77,7 +144,7 @@ export function parseBistSymbolList(value: string | null) {
     .map(normalizeBistSymbol)
     .filter(isSupportedBistSymbol);
 
-  return Array.from(new Set(symbols)).slice(0, 20);
+  return Array.from(new Set(symbols)).slice(0, 80);
 }
 
 export async function fetchYahooTickers(symbols = DEFAULT_STOCK_SYMBOLS) {

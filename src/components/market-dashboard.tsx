@@ -92,9 +92,89 @@ type FundamentalsResponse = {
 type Timeframe = "15m" | "1h" | "4h" | "1d";
 type DashboardTab = "alerts" | "analysis" | "history" | "portfolio" | "system";
 
-const cryptoSymbols = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "XRPUSDT"];
-const stockSymbols = ["AAPL", "MSFT", "NVDA", "TSLA", "SPY"];
-const bistSymbols = ["THYAO.IS", "GARAN.IS", "ASELS.IS", "BIMAS.IS", "KCHOL.IS"];
+const basicCryptoSymbols = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "XRPUSDT"];
+const basicStockSymbols = ["AAPL", "MSFT", "NVDA", "TSLA", "SPY"];
+const basicBistSymbols = ["THYAO.IS", "GARAN.IS", "ASELS.IS", "BIMAS.IS", "KCHOL.IS"];
+const cryptoSymbols = [
+  ...basicCryptoSymbols,
+  "ADAUSDT",
+  "AVAXUSDT",
+  "DOGEUSDT",
+  "DOTUSDT",
+  "LINKUSDT",
+  "MATICUSDT",
+  "LTCUSDT",
+  "TRXUSDT",
+  "ATOMUSDT",
+  "NEARUSDT",
+  "APTUSDT",
+  "ARBUSDT",
+  "OPUSDT",
+  "INJUSDT",
+  "SUIUSDT",
+];
+const stockSymbols = [
+  ...basicStockSymbols,
+  "AMZN",
+  "GOOGL",
+  "META",
+  "AVGO",
+  "AMD",
+  "NFLX",
+  "ADBE",
+  "CRM",
+  "ORCL",
+  "INTC",
+  "QCOM",
+  "JPM",
+  "BAC",
+  "GS",
+  "V",
+  "MA",
+  "UNH",
+  "LLY",
+  "JNJ",
+  "PFE",
+  "XOM",
+  "CVX",
+  "KO",
+  "PEP",
+  "WMT",
+  "COST",
+  "DIS",
+  "NKE",
+  "QQQ",
+  "IWM",
+];
+const bistSymbols = [
+  ...basicBistSymbols,
+  "AKBNK.IS",
+  "YKBNK.IS",
+  "ISCTR.IS",
+  "SAHOL.IS",
+  "EREGL.IS",
+  "TUPRS.IS",
+  "FROTO.IS",
+  "TOASO.IS",
+  "SISE.IS",
+  "TCELL.IS",
+  "ENKAI.IS",
+  "PETKM.IS",
+  "KRDMD.IS",
+  "PGSUS.IS",
+  "SASA.IS",
+  "HEKTS.IS",
+  "KOZAL.IS",
+  "KOZAA.IS",
+  "GUBRF.IS",
+  "MGROS.IS",
+  "ULKER.IS",
+  "ARCLK.IS",
+  "VESTL.IS",
+  "DOHOL.IS",
+  "EKGYO.IS",
+];
+const maxWatchlistSymbols = 80;
 const markets: Array<{ label: string; value: MarketKind }> = [
   { label: "Kripto", value: "crypto" },
   { label: "ABD Hisse", value: "stocks" },
@@ -282,7 +362,7 @@ export function MarketDashboard() {
               .filter(isValidUsdtSymbol);
 
             if (normalized.length > 0) {
-              nextWatchlists.crypto = Array.from(new Set(normalized)).slice(0, 20);
+              nextWatchlists.crypto = Array.from(new Set(normalized)).slice(0, maxWatchlistSymbols);
             }
           }
         } catch {
@@ -300,7 +380,7 @@ export function MarketDashboard() {
               .filter(isValidStockSymbol);
 
             if (normalized.length > 0) {
-              nextWatchlists.stocks = Array.from(new Set(normalized)).slice(0, 20);
+              nextWatchlists.stocks = Array.from(new Set(normalized)).slice(0, maxWatchlistSymbols);
             }
           }
         } catch {
@@ -318,7 +398,7 @@ export function MarketDashboard() {
               .filter(isValidBistSymbol);
 
             if (normalized.length > 0) {
-              nextWatchlists.bist = Array.from(new Set(normalized)).slice(0, 20);
+              nextWatchlists.bist = Array.from(new Set(normalized)).slice(0, maxWatchlistSymbols);
             }
           }
         } catch {
@@ -400,8 +480,8 @@ export function MarketDashboard() {
       return;
     }
 
-    if (watchlist.length >= 20) {
-      setFormMessage("Izleme listesi en fazla 20 sembol olabilir.");
+    if (watchlist.length >= maxWatchlistSymbols) {
+      setFormMessage(`Izleme listesi en fazla ${maxWatchlistSymbols} sembol olabilir.`);
       return;
     }
 
@@ -450,6 +530,25 @@ export function MarketDashboard() {
       };
     });
     setFormMessage(`${symbol} kaldirildi.`);
+  }
+
+  function replaceWatchlist(symbols: string[], label: string) {
+    const next = Array.from(new Set(symbols)).slice(0, maxWatchlistSymbols);
+
+    setWatchlists((current) => ({
+      ...current,
+      [selectedMarket]: next,
+    }));
+    setSelectedSymbol(next[0]);
+    setFormMessage(`${label} yuklendi: ${next.length} sembol.`);
+  }
+
+  function loadExpandedWatchlist() {
+    replaceWatchlist(getExpandedSymbols(selectedMarket), "Genis liste");
+  }
+
+  function loadBasicWatchlist() {
+    replaceWatchlist(getBasicSymbols(selectedMarket), "Temel liste");
   }
 
   function switchMarket(market: MarketKind) {
@@ -563,6 +662,23 @@ export function MarketDashboard() {
               <Plus size={17} />
             </button>
           </form>
+
+          <div className="mb-4 grid grid-cols-2 gap-2">
+            <button
+              className="h-9 rounded-md border border-[var(--border)] bg-white/[0.03] px-3 text-sm text-white transition hover:border-emerald-300"
+              onClick={loadExpandedWatchlist}
+              type="button"
+            >
+              Genis liste
+            </button>
+            <button
+              className="h-9 rounded-md border border-[var(--border)] bg-white/[0.03] px-3 text-sm text-[var(--muted)] transition hover:border-emerald-300 hover:text-white"
+              onClick={loadBasicWatchlist}
+              type="button"
+            >
+              Temel liste
+            </button>
+          </div>
 
           {formMessage ? (
             <p className="mb-3 rounded-md border border-white/5 bg-white/[0.03] px-3 py-2 text-xs text-[var(--muted)]">
@@ -1043,6 +1159,30 @@ function getSymbolPlaceholder(market: MarketKind) {
   }
 
   return "AVAXUSDT";
+}
+
+function getExpandedSymbols(market: MarketKind) {
+  if (market === "stocks") {
+    return stockSymbols;
+  }
+
+  if (market === "bist") {
+    return bistSymbols;
+  }
+
+  return cryptoSymbols;
+}
+
+function getBasicSymbols(market: MarketKind) {
+  if (market === "stocks") {
+    return basicStockSymbols;
+  }
+
+  if (market === "bist") {
+    return basicBistSymbols;
+  }
+
+  return basicCryptoSymbols;
 }
 
 function normalizeSettings(value: Partial<AppSettings>) {
