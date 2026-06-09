@@ -131,7 +131,29 @@ export function parseSymbolList(value: string | null) {
     .map(normalizeSymbol)
     .filter(isSupportedUsdtSymbol);
 
-  return Array.from(new Set(symbols)).slice(0, 80);
+  return Array.from(new Set(symbols)).slice(0, 500);
+}
+
+export async function fetchSpotUsdtSymbols() {
+  const response = await fetch("https://api.binance.com/api/v3/exchangeInfo", {
+    next: { revalidate: 3600 },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Binance exchangeInfo request failed: ${response.status}`);
+  }
+
+  const data = (await response.json()) as BinanceExchangeInfo;
+
+  return data.symbols
+    .filter(
+      (item) =>
+        item.status === "TRADING" &&
+        item.quoteAsset === "USDT" &&
+        item.isSpotTradingAllowed === true,
+    )
+    .map((item) => item.symbol)
+    .sort();
 }
 
 export async function validateSpotUsdtSymbol(symbol: string) {

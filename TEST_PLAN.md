@@ -58,7 +58,7 @@ Beklenen sonuc:
 
 - ESLint hata vermemeli.
 - Next.js production build basariyla tamamlanmali.
-- Build ciktisinda `/api/snapshots`, `/api/analyze`, `/api/market`, `/api/portfolio`, `/api/trades`, `/api/alerts`, `/api/usage-notes`, `/api/usage-summary`, `/api/readiness`, `/api/export`, `/api/import` ve `/api/health` route'lari gorunmeli.
+- Build ciktisinda `/api/snapshots`, `/api/analyze`, `/api/market`, `/api/portfolio`, `/api/trades`, `/api/alerts`, `/api/usage-notes`, `/api/usage-summary`, `/api/universe`, `/api/readiness`, `/api/export`, `/api/import` ve `/api/health` route'lari gorunmeli.
 
 API endpoint'leri icin yerel sunucu acikken su komut calistirilir:
 
@@ -68,7 +68,7 @@ npm run test:api
 
 Beklenen sonuc:
 
-- Script `[OK]` satirlariyla health, readiness, market, analyze, snapshots, trades, portfolio, alerts, usage-notes, usage-summary, export ve import kontrollerini tamamlamali.
+- Script `[OK]` satirlariyla health, readiness, market, universe, analyze, snapshots, trades, portfolio, alerts, usage-notes, usage-summary, export ve import kontrollerini tamamlamali.
 - Export/import kontrolleri analiz gecmisi snapshot kayitlarini da kapsamalidir.
 - Script'in olusturdugu gecici kayitlar test sonunda silinmeli.
 - `LOCAL_APP_PASSWORD` aktifse bu smoke test oturum cookie'si tasimadigi icin once kilit kapali ortamda calistirilmalidir.
@@ -147,7 +147,7 @@ Beklenen sonuc:
 
 - Fiyat, mum grafik, teknik indikatorler, karar raporu ve trade plani yenilenmeli.
 - Gecerli Binance USDT sembolu eklenebilmeli.
-- Genis kripto listesi 20 civari USDT paritesini yuklemeli.
+- Genis kripto listesi Binance uzerindeki aktif USDT paritelerini 500 sembol sinirina kadar yuklemeli.
 - Liste en az bir sembol kalacak sekilde sembol silmeye izin vermeli.
 
 ### 3. ABD Hisse Akisi
@@ -164,7 +164,7 @@ Adimlar:
 Beklenen sonuc:
 
 - Yahoo Finance verisiyle fiyat ve mumlar yuklenmeli.
-- Genis ABD listesi buyuk teknoloji, finans, saglik, enerji ve ETF sembollerini icermeli.
+- Genis ABD listesi 100'den fazla teknoloji, finans, saglik, enerji ve ETF sembolunu icermeli.
 - FMP anahtari yoksa temel analiz paneli bunu ve `.env.local` icin `FMP_API_KEY` gerektigini acikca soylemeli.
 - FMP anahtari varsa temel metrikler ve birlesik skor gorunmeli.
 
@@ -182,7 +182,7 @@ Adimlar:
 Beklenen sonuc:
 
 - BIST fiyatlari TRY birimiyle gorunmeli.
-- Genis BIST listesi bankacilik, sanayi, havacilik, perakende ve holding sembollerini icermeli.
+- Genis BIST listesi 100 civari bankacilik, sanayi, havacilik, perakende ve holding sembolunu icermeli.
 - Yahoo Finance verisi eksikse panel bozulmadan uyari veya sinirli snapshot gostermeli.
 - Teknik analiz ve trade plani BIST icin de calismali.
 

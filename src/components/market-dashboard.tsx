@@ -33,6 +33,7 @@ import {
 } from "@/lib/analysis";
 import { combineStockAnalysis } from "@/lib/combined-analysis";
 import type { FundamentalAnalysis } from "@/lib/fundamentals";
+import { BIST_UNIVERSE, STOCK_UNIVERSE } from "@/lib/market-universe";
 import type { MarketKind } from "@/lib/markets";
 import { PortfolioPanel } from "@/components/portfolio-panel";
 import { ReadinessPanel } from "@/components/readiness-panel";
@@ -113,68 +114,9 @@ const cryptoSymbols = [
   "INJUSDT",
   "SUIUSDT",
 ];
-const stockSymbols = [
-  ...basicStockSymbols,
-  "AMZN",
-  "GOOGL",
-  "META",
-  "AVGO",
-  "AMD",
-  "NFLX",
-  "ADBE",
-  "CRM",
-  "ORCL",
-  "INTC",
-  "QCOM",
-  "JPM",
-  "BAC",
-  "GS",
-  "V",
-  "MA",
-  "UNH",
-  "LLY",
-  "JNJ",
-  "PFE",
-  "XOM",
-  "CVX",
-  "KO",
-  "PEP",
-  "WMT",
-  "COST",
-  "DIS",
-  "NKE",
-  "QQQ",
-  "IWM",
-];
-const bistSymbols = [
-  ...basicBistSymbols,
-  "AKBNK.IS",
-  "YKBNK.IS",
-  "ISCTR.IS",
-  "SAHOL.IS",
-  "EREGL.IS",
-  "TUPRS.IS",
-  "FROTO.IS",
-  "TOASO.IS",
-  "SISE.IS",
-  "TCELL.IS",
-  "ENKAI.IS",
-  "PETKM.IS",
-  "KRDMD.IS",
-  "PGSUS.IS",
-  "SASA.IS",
-  "HEKTS.IS",
-  "KOZAL.IS",
-  "KOZAA.IS",
-  "GUBRF.IS",
-  "MGROS.IS",
-  "ULKER.IS",
-  "ARCLK.IS",
-  "VESTL.IS",
-  "DOHOL.IS",
-  "EKGYO.IS",
-];
-const maxWatchlistSymbols = 80;
+const stockSymbols = STOCK_UNIVERSE;
+const bistSymbols = BIST_UNIVERSE;
+const maxWatchlistSymbols = 500;
 const markets: Array<{ label: string; value: MarketKind }> = [
   { label: "Kripto", value: "crypto" },
   { label: "ABD Hisse", value: "stocks" },
@@ -543,8 +485,29 @@ export function MarketDashboard() {
     setFormMessage(`${label} yuklendi: ${next.length} sembol.`);
   }
 
-  function loadExpandedWatchlist() {
-    replaceWatchlist(getExpandedSymbols(selectedMarket), "Genis liste");
+  async function loadExpandedWatchlist() {
+    setFormMessage("Genis sembol evreni yukleniyor...");
+
+    try {
+      const response = await fetch(`/api/universe?market=${selectedMarket}`, {
+        cache: "no-store",
+      });
+
+      if (!response.ok) {
+        throw new Error("Universe request failed");
+      }
+
+      const payload = (await response.json()) as { symbols?: string[]; total?: number };
+      const symbols = Array.isArray(payload.symbols) ? payload.symbols : [];
+
+      if (symbols.length === 0) {
+        throw new Error("Universe response empty");
+      }
+
+      replaceWatchlist(symbols, `Genis liste (${payload.total ?? symbols.length} sembol evreni)`);
+    } catch {
+      replaceWatchlist(getExpandedSymbols(selectedMarket), "Genis liste yedegi");
+    }
   }
 
   function loadBasicWatchlist() {

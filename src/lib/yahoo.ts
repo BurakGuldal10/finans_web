@@ -1,5 +1,6 @@
 import type { Candle } from "@/lib/analysis";
 import type { BinanceInterval } from "@/lib/binance";
+import { BIST_UNIVERSE, STOCK_UNIVERSE } from "@/lib/market-universe";
 
 type YahooChartResponse = {
   chart: {
@@ -24,84 +25,28 @@ type YahooChartResponse = {
   };
 };
 
-const DEFAULT_STOCK_SYMBOLS = [
-  "AAPL",
-  "MSFT",
-  "NVDA",
-  "AMZN",
-  "GOOGL",
-  "META",
-  "TSLA",
-  "AVGO",
-  "AMD",
-  "NFLX",
-  "ADBE",
-  "CRM",
-  "ORCL",
-  "INTC",
-  "QCOM",
-  "JPM",
-  "BAC",
-  "GS",
-  "V",
-  "MA",
-  "UNH",
-  "LLY",
-  "JNJ",
-  "PFE",
-  "XOM",
-  "CVX",
-  "KO",
-  "PEP",
-  "WMT",
-  "COST",
-  "DIS",
-  "NKE",
-  "SPY",
-  "QQQ",
-  "IWM",
-];
-const DEFAULT_BIST_SYMBOLS = [
-  "THYAO.IS",
-  "GARAN.IS",
-  "ASELS.IS",
-  "BIMAS.IS",
-  "KCHOL.IS",
-  "AKBNK.IS",
-  "YKBNK.IS",
-  "ISCTR.IS",
-  "SAHOL.IS",
-  "EREGL.IS",
-  "TUPRS.IS",
-  "FROTO.IS",
-  "TOASO.IS",
-  "SISE.IS",
-  "TCELL.IS",
-  "ENKAI.IS",
-  "PETKM.IS",
-  "KRDMD.IS",
-  "PGSUS.IS",
-  "SASA.IS",
-  "HEKTS.IS",
-  "KOZAL.IS",
-  "KOZAA.IS",
-  "GUBRF.IS",
-  "MGROS.IS",
-  "ULKER.IS",
-  "ARCLK.IS",
-  "VESTL.IS",
-  "DOHOL.IS",
-  "EKGYO.IS",
-];
+type YahooQuoteResponse = {
+  quoteResponse?: {
+    result?: Array<{
+      symbol?: string;
+      regularMarketPrice?: number;
+      regularMarketChangePercent?: number;
+      regularMarketVolume?: number;
+      regularMarketDayHigh?: number;
+      regularMarketDayLow?: number;
+    }>;
+  };
+};
+
 const STOCK_SYMBOL_PATTERN = /^[A-Z][A-Z0-9.-]{0,9}$/;
 const BIST_SYMBOL_PATTERN = /^[A-Z][A-Z0-9]{1,9}\.IS$/;
 
 export function getDefaultStockSymbols() {
-  return DEFAULT_STOCK_SYMBOLS;
+  return STOCK_UNIVERSE;
 }
 
 export function getDefaultBistSymbols() {
-  return DEFAULT_BIST_SYMBOLS;
+  return BIST_UNIVERSE;
 }
 
 export function normalizeStockSymbol(symbol: string) {
@@ -123,7 +68,7 @@ export function isSupportedBistSymbol(symbol: string) {
 
 export function parseStockSymbolList(value: string | null) {
   if (!value) {
-    return DEFAULT_STOCK_SYMBOLS;
+    return STOCK_UNIVERSE;
   }
 
   const symbols = value
@@ -131,12 +76,12 @@ export function parseStockSymbolList(value: string | null) {
     .map(normalizeStockSymbol)
     .filter(isSupportedStockSymbol);
 
-  return Array.from(new Set(symbols)).slice(0, 80);
+  return Array.from(new Set(symbols)).slice(0, 500);
 }
 
 export function parseBistSymbolList(value: string | null) {
   if (!value) {
-    return DEFAULT_BIST_SYMBOLS;
+    return BIST_UNIVERSE;
   }
 
   const symbols = value
@@ -144,11 +89,18 @@ export function parseBistSymbolList(value: string | null) {
     .map(normalizeBistSymbol)
     .filter(isSupportedBistSymbol);
 
-  return Array.from(new Set(symbols)).slice(0, 80);
+  return Array.from(new Set(symbols)).slice(0, 500);
 }
 
-export async function fetchYahooTickers(symbols = DEFAULT_STOCK_SYMBOLS) {
-  const tickers = await Promise.all(symbols.map(fetchYahooTicker));
+export async function fetchYahooTickers(symbols = STOCK_UNIVERSE) {
+  const normalizedSymbols = Array.from(new Set(symbols.map(normalizeStockSymbol))).slice(0, 500);
+  const quoteTickers = await fetchYahooQuoteTickers(normalizedSymbols).catch(() => []);
+
+  if (quoteTickers.length > 0) {
+    return quoteTickers;
+  }
+
+  const tickers = await Promise.all(normalizedSymbols.slice(0, 80).map(fetchYahooTicker));
   return tickers.filter((ticker) => ticker !== null);
 }
 
@@ -265,6 +217,50 @@ async function fetchYahooTicker(symbol: string) {
     high: latest.high,
     low: latest.low,
   };
+}
+
+async function fetchYahooQuoteTickers(symbols: string[]) {
+  const chunks = chunk(symbols, 50);
+  const results = await Promise.all(
+    chunks.map(async (symbolsChunk) => {
+      const params = new URLSearchParams({
+        symbols: symbolsChunk.join(","),
+      });
+      const response = await fetch(`https://query1.finance.yahoo.com/v7/finance/quote?${params}`, {
+        next: { revalidate: 20 },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Yahoo quote request failed: ${response.status}`);
+      }
+
+      const data = (await response.json()) as YahooQuoteResponse;
+      return data.quoteResponse?.result ?? [];
+    }),
+  );
+
+  return results
+    .flat()
+    .filter((item) => item.symbol && Number(item.regularMarketPrice) > 0)
+    .map((item) => ({
+      symbol: normalizeStockSymbol(item.symbol ?? ""),
+      name: normalizeStockSymbol(item.symbol ?? ""),
+      price: Number(item.regularMarketPrice),
+      changePercent: Number(item.regularMarketChangePercent ?? 0),
+      quoteVolume: Number(item.regularMarketVolume ?? 0),
+      high: Number(item.regularMarketDayHigh ?? item.regularMarketPrice ?? 0),
+      low: Number(item.regularMarketDayLow ?? item.regularMarketPrice ?? 0),
+    }));
+}
+
+function chunk<T>(items: T[], size: number) {
+  const chunks: T[][] = [];
+
+  for (let index = 0; index < items.length; index += size) {
+    chunks.push(items.slice(index, index + size));
+  }
+
+  return chunks;
 }
 
 function mapYahooInterval(interval: BinanceInterval) {

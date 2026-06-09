@@ -52,6 +52,11 @@ $market = Invoke-JsonRequest -Method "GET" -Path "/api/market?market=crypto&symb
 Assert-Truthy ($market.tickers.Count -ge 1) "Market cevabinda ticker yok."
 Write-Host "[OK] /api/market"
 
+$universe = Invoke-JsonRequest -Method "GET" -Path "/api/universe?market=stocks"
+Assert-Truthy ($universe.total -ge 100) "ABD sembol evreni beklenenden kucuk."
+Assert-Truthy ($universe.symbols -contains "AAPL") "ABD sembol evreninde AAPL yok."
+Write-Host "[OK] /api/universe"
+
 $analysis = Invoke-JsonRequest -Method "GET" -Path "/api/analyze?market=crypto&symbol=BTCUSDT&interval=1h"
 Assert-Truthy $analysis.analysis "Analyze cevabinda analysis yok."
 Assert-Truthy $analysis.decisionReport "Analyze cevabinda decisionReport yok."
