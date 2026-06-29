@@ -69,6 +69,7 @@ npm run test:api
 Beklenen sonuc:
 
 - Script `[OK]` satirlariyla health, readiness, market, universe, analyze, snapshots, trades, portfolio, alerts, usage-notes, usage-summary, export ve import kontrollerini tamamlamali.
+- Script BIST genis liste icin ilk 100 sembolde en az 50 fiyat donduruldugunu kontrol etmeli.
 - Export/import kontrolleri analiz gecmisi snapshot kayitlarini da kapsamalidir.
 - Script'in olusturdugu gecici kayitlar test sonunda silinmeli.
 - `LOCAL_APP_PASSWORD` aktifse bu smoke test oturum cookie'si tasimadigi icin once kilit kapali ortamda calistirilmalidir.
@@ -183,6 +184,7 @@ Beklenen sonuc:
 
 - BIST fiyatlari TRY birimiyle gorunmeli.
 - Genis BIST listesi 100 civari bankacilik, sanayi, havacilik, perakende ve holding sembolunu icermeli.
+- Genis BIST listesinde bazi semboller gecici veri donmese bile liste tamamen 502 hatasina dusmemeli.
 - Yahoo Finance verisi eksikse panel bozulmadan uyari veya sinirli snapshot gostermeli.
 - Teknik analiz ve trade plani BIST icin de calismali.
 

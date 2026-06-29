@@ -1585,3 +1585,30 @@ Kontrol:
 ```text
 npm run test:all
 ```
+
+## Mevcut Durum - BIST Genis Liste Dayanikliligi
+
+Eklenenler:
+
+- BIST 100 civari genis listede tek bir Yahoo sembolu hata verdiginde tum `/api/market` isteginin 502 ile dusmesi engellendi.
+- Yahoo fallback fiyat okuma akisi `Promise.allSettled` ile dayanıklı hale getirildi.
+- Calisabilen BIST sembolleri listeye doner, sorunlu semboller ekranda gecici olarak fiyat bekleyen satir halinde kalabilir.
+- API smoke test BIST genis liste icin ilk 100 sembolde yeterli sayida canli fiyat dondugunu kontrol eder.
+
+Kontrol sonucu:
+
+```text
+BIST ilk 100 sembol istegi: 95 fiyat dondu
+EREGL.IS analiz testi: basarili
+```
+
+Notlar:
+
+- BIST verisi Yahoo Finance uzerinden geldigi icin bazi sembollerde gecikme, eksik veri veya gecici kaynak hatasi olabilir.
+- Tek sembol hatasi artik tum BIST listesini veya analiz akisini bozmamali.
+
+Kontrol:
+
+```text
+npm run test:all
+```

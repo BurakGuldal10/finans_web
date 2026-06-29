@@ -100,8 +100,10 @@ export async function fetchYahooTickers(symbols = STOCK_UNIVERSE) {
     return quoteTickers;
   }
 
-  const tickers = await Promise.all(normalizedSymbols.slice(0, 80).map(fetchYahooTicker));
-  return tickers.filter((ticker) => ticker !== null);
+  const results = await Promise.allSettled(normalizedSymbols.slice(0, 150).map(fetchYahooTicker));
+  return results.flatMap((result) =>
+    result.status === "fulfilled" && result.value !== null ? [result.value] : [],
+  );
 }
 
 export async function fetchYahooCandles(symbol: string, interval: BinanceInterval = "1h") {

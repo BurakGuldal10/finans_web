@@ -57,6 +57,12 @@ Assert-Truthy ($universe.total -ge 100) "ABD sembol evreni beklenenden kucuk."
 Assert-Truthy ($universe.symbols -contains "AAPL") "ABD sembol evreninde AAPL yok."
 Write-Host "[OK] /api/universe"
 
+$bistUniverse = Invoke-JsonRequest -Method "GET" -Path "/api/universe?market=bist"
+$bistSymbols = ($bistUniverse.symbols | Select-Object -First 100) -join ","
+$bistMarket = Invoke-JsonRequest -Method "GET" -Path "/api/market?market=bist&symbols=$bistSymbols"
+Assert-Truthy ($bistMarket.tickers.Count -ge 50) "BIST genis liste piyasa verisi yetersiz."
+Write-Host "[OK] /api/market BIST genis liste"
+
 $analysis = Invoke-JsonRequest -Method "GET" -Path "/api/analyze?market=crypto&symbol=BTCUSDT&interval=1h"
 Assert-Truthy $analysis.analysis "Analyze cevabinda analysis yok."
 Assert-Truthy $analysis.decisionReport "Analyze cevabinda decisionReport yok."
