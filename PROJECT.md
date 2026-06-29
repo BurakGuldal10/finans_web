@@ -1612,3 +1612,28 @@ Kontrol:
 ```text
 npm run test:all
 ```
+
+## Mevcut Durum - Izleme Listesi Siralama
+
+Eklenenler:
+
+- Sol izleme listesi paneline siralama kontrolu eklendi.
+- Desteklenen siralama modlari:
+  - Varsayilan
+  - Potansiyel
+  - A-Z
+  - Degisim
+  - Hacim
+- Secilen siralama modu tarayicida saklanir.
+- Potansiyel siralama, liste seviyesinde hizli calismasi icin gunluk degisim ve hacim bilgisini birlikte kullanir.
+
+Notlar:
+
+- Potansiyel siralama yatirim tavsiyesi degildir; tum liste icin agir teknik analiz calistirmadan hizli onceliklendirme yapar.
+- Daha derin potansiyel siralamasi icin ileride arka planda sembol tarama/skorlama modulu eklenebilir.
+
+Kontrol:
+
+```text
+npm run test:all
+```

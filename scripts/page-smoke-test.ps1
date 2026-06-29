@@ -38,6 +38,8 @@ Assert-Truthy ($dashboardPage.Content -match "Gecmis") "Gecmis sekmesi HTML icin
 Assert-Truthy ($dashboardPage.Content -match "Sistem") "Sistem sekmesi HTML icinde bulunamadi."
 Assert-Truthy ($dashboardPage.Content -match "Genis liste") "Genis liste butonu HTML icinde bulunamadi."
 Assert-Truthy ($dashboardPage.Content -match "Temel liste") "Temel liste butonu HTML icinde bulunamadi."
+Assert-Truthy ($dashboardPage.Content -match "Siralama") "Siralama kontrolu HTML icinde bulunamadi."
+Assert-Truthy ($dashboardPage.Content -match "Potansiyel") "Potansiyel siralama butonu HTML icinde bulunamadi."
 Assert-Truthy ($dashboardPage.Content -match "AI yorum") "AI yorum panel basligi HTML icinde bulunamadi."
 Write-Host "[OK] Dashboard HTML"
 

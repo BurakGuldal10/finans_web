@@ -114,20 +114,27 @@ Adimlar:
 1. `http://127.0.0.1:3000` adresini ac.
 2. Dashboard basliginin gorundugunu kontrol et.
 3. Izleme listesi ve grafik alaninin gorundugunu kontrol et.
-4. Sol panelde `Genis liste` ve `Temel liste` butonlarinin gorundugunu kontrol et.
-5. Sekmelerin gorundugunu kontrol et:
+4. Sol panelde `Genis liste`, `Temel liste` ve `Siralama` kontrollerinin gorundugunu kontrol et.
+5. Siralama modlarini kontrol et:
+   - Varsayilan
+   - Potansiyel
+   - A-Z
+   - Degisim
+   - Hacim
+6. Sekmelerin gorundugunu kontrol et:
    - Analiz
    - Portfoy
    - Uyarilar
    - Gecmis
    - Sistem
-6. Her sekmeye tiklayarak ilgili panel grubunun acildigini kontrol et.
+7. Her sekmeye tiklayarak ilgili panel grubunun acildigini kontrol et.
 
 Beklenen sonuc:
 
 - Sayfa bos veya kirik gelmemeli.
 - Varsayilan kripto listesi gorunmeli.
 - Genis liste butonu secili piyasa icin daha fazla sembol yuklemeli.
+- Siralama modu degistiginde izleme listesi yeni secime gore yeniden siralanmali.
 - Veri yuklenemese bile kullaniciya anlasilir hata veya eski veri uyarisi gosterilmeli.
 - Dashboard tek uzun sayfa gibi davranmamali; ana islevler sekmelerde gruplanmali.
 - Hata veya eski veri durumunda mesaj ne oldugunu ve hangi adimin denenebilecegini aciklamali.
@@ -141,8 +148,9 @@ Adimlar:
 3. `15m`, `1h`, `4h`, `1d` zaman dilimlerini tek tek sec.
 4. Izleme listesine `AVAXUSDT` ekle.
 5. `Genis liste` butonuna bas ve listedeki sembol sayisinin arttigini kontrol et.
-6. `Temel liste` butonuna bas ve kisa listeye dondugunu kontrol et.
-7. Eklenen sembolu sec ve sonra listeden kaldir.
+6. `Potansiyel`, `Degisim`, `Hacim` ve `A-Z` siralamalarini dene.
+7. `Temel liste` butonuna bas ve kisa listeye dondugunu kontrol et.
+8. Eklenen sembolu sec ve sonra listeden kaldir.
 
 Beklenen sonuc:
 

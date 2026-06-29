@@ -92,6 +92,7 @@ type FundamentalsResponse = {
 
 type Timeframe = "15m" | "1h" | "4h" | "1d";
 type DashboardTab = "alerts" | "analysis" | "history" | "portfolio" | "system";
+type WatchlistSortMode = "default" | "potential" | "alphabetical" | "change" | "volume";
 
 const basicCryptoSymbols = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "XRPUSDT"];
 const basicStockSymbols = ["AAPL", "MSFT", "NVDA", "TSLA", "SPY"];
@@ -128,6 +129,13 @@ const timeframes: Array<{ label: string; value: Timeframe }> = [
   { label: "4s", value: "4h" },
   { label: "1g", value: "1d" },
 ];
+const watchlistSortModes: Array<{ label: string; value: WatchlistSortMode }> = [
+  { label: "Varsayilan", value: "default" },
+  { label: "Potansiyel", value: "potential" },
+  { label: "A-Z", value: "alphabetical" },
+  { label: "Degisim", value: "change" },
+  { label: "Hacim", value: "volume" },
+];
 const dashboardTabs: Array<{ description: string; label: string; value: DashboardTab }> = [
   {
     description: "Teknik veriler, karar raporu ve risk hesabi.",
@@ -161,6 +169,7 @@ const bistWatchlistStorageKey = "finansman-bist-watchlist";
 const timeframeStorageKey = "finansman-timeframe";
 const marketStorageKey = "finansman-market";
 const settingsStorageKey = "finansman-settings";
+const sortModeStorageKey = "finansman-watchlist-sort";
 const defaultSettings: AppSettings = {
   autoRefresh: true,
   browserNotifications: false,
@@ -185,6 +194,7 @@ export function MarketDashboard() {
   const [fundamentalsError, setFundamentalsError] = useState<string | null>(null);
   const [fundamentalsLoading, setFundamentalsLoading] = useState(false);
   const [settings, setSettings] = useState<AppSettings>(defaultSettings);
+  const [watchlistSortMode, setWatchlistSortMode] = useState<WatchlistSortMode>("default");
   const [activeTab, setActiveTab] = useState<DashboardTab>("analysis");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -275,8 +285,13 @@ export function MarketDashboard() {
       const savedTimeframe = window.localStorage.getItem(timeframeStorageKey);
       const savedMarket = window.localStorage.getItem(marketStorageKey);
       const savedSettings = window.localStorage.getItem(settingsStorageKey);
+      const savedSortMode = window.localStorage.getItem(sortModeStorageKey);
       if (isValidTimeframe(savedTimeframe)) {
         setSelectedTimeframe(savedTimeframe);
+      }
+
+      if (isValidWatchlistSortMode(savedSortMode)) {
+        setWatchlistSortMode(savedSortMode);
       }
 
       if (savedSettings) {
@@ -369,6 +384,10 @@ export function MarketDashboard() {
   useEffect(() => {
     window.localStorage.setItem(marketStorageKey, selectedMarket);
   }, [selectedMarket]);
+
+  useEffect(() => {
+    window.localStorage.setItem(sortModeStorageKey, watchlistSortMode);
+  }, [watchlistSortMode]);
 
   useEffect(() => {
     window.localStorage.setItem(settingsStorageKey, JSON.stringify(settings));
@@ -529,11 +548,14 @@ export function MarketDashboard() {
     [market, selectedSymbol],
   );
   const displayedTickers = useMemo(
-    () =>
-      watchlist.map((symbol) => {
+    () => {
+      const tickers = watchlist.map((symbol) => {
         return market?.tickers.find((ticker) => ticker.symbol === symbol) ?? ({ symbol } as Ticker);
-      }),
-    [market, watchlist],
+      });
+
+      return sortWatchlistTickers(tickers, watchlistSortMode);
+    },
+    [market, watchlist, watchlistSortMode],
   );
   const analysis = analysisData?.analysis;
   const combinedAnalysis =
@@ -648,6 +670,38 @@ export function MarketDashboard() {
               {formMessage}
             </p>
           ) : null}
+
+          <div className="mb-4 rounded-md border border-white/5 bg-white/[0.03] p-2">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">
+                Siralama
+              </p>
+              <p className="font-mono text-xs text-emerald-100">{displayedTickers.length}</p>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {watchlistSortModes.map((mode) => {
+                const active = mode.value === watchlistSortMode;
+
+                return (
+                  <button
+                    className={`h-8 rounded-md border px-2 text-xs font-medium transition ${
+                      active
+                        ? "border-emerald-300 bg-emerald-300/10 text-emerald-100"
+                        : "border-transparent bg-black/15 text-[var(--muted)] hover:border-emerald-300/40 hover:text-white"
+                    }`}
+                    key={mode.value}
+                    onClick={() => setWatchlistSortMode(mode.value)}
+                    type="button"
+                  >
+                    {mode.label}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="mt-2 text-xs leading-5 text-[var(--muted)]">
+              Potansiyel siralama gunluk degisim ve hacmi birlikte one alir.
+            </p>
+          </div>
 
           <div className="max-h-[360px] space-y-2 overflow-auto pr-1 lg:max-h-[calc(100vh-300px)]">
             {displayedTickers.map((ticker) => {
@@ -1098,6 +1152,61 @@ function isValidTimeframe(value: string | null): value is Timeframe {
 
 function isValidMarket(value: string | null): value is MarketKind {
   return value === "crypto" || value === "stocks" || value === "bist";
+}
+
+function isValidWatchlistSortMode(value: string | null): value is WatchlistSortMode {
+  return (
+    value === "default" ||
+    value === "potential" ||
+    value === "alphabetical" ||
+    value === "change" ||
+    value === "volume"
+  );
+}
+
+function sortWatchlistTickers(tickers: Ticker[], mode: WatchlistSortMode) {
+  if (mode === "default") {
+    return tickers;
+  }
+
+  return [...tickers].sort((left, right) => {
+    if (mode === "alphabetical") {
+      return left.symbol.localeCompare(right.symbol);
+    }
+
+    if (mode === "change") {
+      return compareNumbers(right.changePercent, left.changePercent, left.symbol, right.symbol);
+    }
+
+    if (mode === "volume") {
+      return compareNumbers(right.quoteVolume, left.quoteVolume, left.symbol, right.symbol);
+    }
+
+    const leftScore = getPotentialScore(left);
+    const rightScore = getPotentialScore(right);
+    return compareNumbers(rightScore, leftScore, left.symbol, right.symbol);
+  });
+}
+
+function getPotentialScore(ticker: Ticker) {
+  const changeScore = Number.isFinite(ticker.changePercent) ? ticker.changePercent : -100;
+  const volumeScore =
+    Number.isFinite(ticker.quoteVolume) && ticker.quoteVolume > 0
+      ? Math.log10(ticker.quoteVolume + 1)
+      : 0;
+
+  return changeScore * 3 + volumeScore;
+}
+
+function compareNumbers(left: number, right: number, leftSymbol: string, rightSymbol: string) {
+  const safeLeft = Number.isFinite(left) ? left : Number.NEGATIVE_INFINITY;
+  const safeRight = Number.isFinite(right) ? right : Number.NEGATIVE_INFINITY;
+
+  if (safeLeft === safeRight) {
+    return leftSymbol.localeCompare(rightSymbol);
+  }
+
+  return safeLeft - safeRight;
 }
 
 function getMarketSourceLabel(market: MarketKind) {
