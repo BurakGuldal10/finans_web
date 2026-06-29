@@ -1637,3 +1637,42 @@ Kontrol:
 ```text
 npm run test:all
 ```
+
+## Mevcut Durum - Dengeli Analiz Motoru
+
+Eklenenler:
+
+- Teknik analiz skorlamasi daha temkinli hale getirildi.
+- EMA/SMA/MACD/RSI gibi birbirine yakin sinyallerin toplam etkisi azaltildi.
+- Skor 100/100 seviyesine kolay cikmasin diye orta banda dogru sikistirma ve tavan kontrolleri eklendi.
+- Dusuk hacim, yuksek volatilite, asiri RSI ve sinirli mum verisi skoru otomatik daha temkinli sinirlar.
+- Pozitif verdict esigi 74'e, riskli verdict esigi 38'e ayarlandi.
+- Trade plani `watch` durusuna gecmek icin artik su kosullari birlikte ister:
+  - Pozitif teknik verdict
+  - Bullish coklu zaman dilimi teyidi
+  - En az 1.3 risk/odul
+  - Yeterli harmanlanmis skor
+- Risk/odul hesaplamasi daha anlamli hale getirildi; ilk hedef ve stop mesafesi artik yaklasik 1:1.4 uretir.
+- Karar raporu guven puani daha temkinli sinirlanir; zaman teyidi yoksa guven skoru yukari tasinmaz.
+- API smoke test analiz skorunun asiri agresif olmamasini ve risk/odulun minimum seviyeyi gecmesini kontrol eder.
+
+Kontrol sonucu:
+
+```text
+THYAO.IS score=61 verdict=neutral rr=1.40 stance=wait
+EREGL.IS score=75 verdict=positive rr=1.40 stance=wait
+GARAN.IS score=70 verdict=neutral rr=1.40 stance=wait
+BTCUSDT score=56 verdict=neutral rr=1.40 stance=wait
+AVAXUSDT score=70 verdict=neutral rr=1.40 stance=wait
+```
+
+Notlar:
+
+- Bu degisiklik uygulamayi daha az iddiali ve daha kontrollu karar destek aracina yaklastirir.
+- Skorlar yatirim tavsiyesi degildir; sadece teknik risk/teyit dengesini gosterir.
+
+Kontrol:
+
+```text
+npm run test:all
+```

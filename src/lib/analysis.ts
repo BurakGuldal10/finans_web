@@ -226,84 +226,105 @@ export function analyzeCandles(symbol: string, candles: Candle[]): AnalysisResul
   const risks: string[] = [];
 
   if (price > ema20) {
-    score += 12;
+    score += 7;
     reasons.push("Fiyat EMA20 uzerinde, kisa vadeli trend destekli.");
   } else {
-    score -= 10;
+    score -= 7;
     risks.push("Fiyat EMA20 altinda, kisa vadeli trend zayif.");
   }
 
   if (sma20 > sma50) {
-    score += 12;
+    score += 7;
     reasons.push("SMA20, SMA50 uzerinde; orta vadeli momentum olumlu.");
   } else {
-    score -= 8;
+    score -= 6;
     risks.push("SMA20, SMA50 altinda; orta vadeli momentum temkinli.");
   }
 
   if (rsi14 >= 45 && rsi14 <= 68) {
-    score += 10;
+    score += 6;
     reasons.push("RSI dengeli bolgede, asiri alim baskisi sinirli.");
   } else if (rsi14 > 72) {
-    score -= 12;
+    score -= 8;
     risks.push("RSI asiri alim bolgesine yakin, geri cekilme riski artti.");
   } else if (rsi14 < 35) {
-    score -= 6;
+    score -= 5;
     risks.push("RSI zayif bolgede, tepki icin teyit gerekir.");
   }
 
   if (macdValues.macdLine > macdValues.signal) {
-    score += 10;
+    score += 6;
     reasons.push("MACD sinyal cizgisinin uzerinde, momentum pozitif.");
   } else {
-    score -= 8;
+    score -= 6;
     risks.push("MACD sinyal cizgisinin altinda, momentum teyidi zayif.");
   }
 
   if (volumeRatio > 1.15) {
-    score += 6;
+    score += 4;
     reasons.push("Hacim son ortalamanin uzerinde, hareket teyidi guclendi.");
   } else {
+    score -= volumeRatio < 0.65 ? 3 : 1;
     risks.push("Hacim normal seviyede, kopus icin ek teyit izlenmeli.");
   }
 
   if (price > levels.resistance * 0.995) {
-    score += 6;
+    score += 3;
     reasons.push("Fiyat yakin direnc bolgesini test ediyor, kopus teyidi izlenebilir.");
   } else if (price < levels.support * 1.01) {
-    score += 4;
+    score += 2;
     reasons.push("Fiyat destek bolgesine yakin, risk daha net tanimlanabilir.");
   }
 
   if (trendStrength >= 70) {
-    score += 6;
+    score += 4;
     reasons.push("Trend gucu yuksek, fiyat ortalamalardan anlamli ayrismis.");
   } else if (trendStrength <= 35) {
-    score -= 5;
+    score -= 4;
     risks.push("Trend gucu dusuk, yatay veya kararsiz piyasa riski var.");
   }
 
   if (volatility.regime === "high") {
-    score -= 6;
+    score -= 5;
     risks.push("Volatilite yuksek, stop ve pozisyon boyutu daha temkinli olmali.");
   } else if (volatility.regime === "low") {
+    score -= 1;
     risks.push("Volatilite dusuk, hareket baslamadan once hacim teyidi gerekebilir.");
   }
 
-  const boundedScore = Math.max(0, Math.min(100, Math.round(score)));
+  let boundedScore = Math.round(50 + (score - 50) * 0.78);
+
+  if (candles.length < 60) {
+    boundedScore = Math.min(boundedScore, 62);
+    risks.push("Mum verisi sinirli; analiz guveni daha temkinli okunmali.");
+  }
+
+  if (volumeRatio < 0.75) {
+    boundedScore = Math.min(boundedScore, 70);
+  }
+
+  if (volatility.regime === "high") {
+    boundedScore = Math.min(boundedScore, 72);
+  }
+
+  if (rsi14 > 76) {
+    boundedScore = Math.min(boundedScore, 64);
+  }
+
+  boundedScore = Math.max(8, Math.min(92, boundedScore));
   const verdict =
-    boundedScore >= 68 ? "positive" : boundedScore <= 42 ? "risky" : "neutral";
+    boundedScore >= 74 ? "positive" : boundedScore <= 38 ? "risky" : "neutral";
   const lowerBuy = Math.max(price - atr14 * 0.9, 0);
   const upperBuy = Math.max(price - atr14 * 0.25, 0);
-  const stopLoss = Math.max(price - atr14 * 1.8, 0);
-  const targetOne = price + atr14 * 1.7;
-  const targetTwo = price + atr14 * 3.1;
+  const stopLoss = Math.max(price - atr14 * 1.5, 0);
+  const targetOne = price + atr14 * 2.1;
+  const targetTwo = price + atr14 * 3.5;
   const risk = Math.max(price - stopLoss, 0.00000001);
   const reward = Math.max(targetOne - price, 0);
   const actionSummary =
-    boundedScore >= 68
-      ? "Alim icin takip edilebilir; yine de destek/stop bolgesi bozulursa plan iptal edilmeli."
-      : boundedScore <= 42
+    boundedScore >= 74
+      ? "Olumlu gorunum var; yine de alim icin fiyat teyidi, hacim ve stop plani birlikte izlenmeli."
+      : boundedScore <= 38
         ? "Yeni alim icin riskli; toparlanma veya trend teyidi beklemek daha mantikli."
         : "Notr bolge; giris icin destek tepkisi veya direnc kirilimi gibi ek teyit beklenmeli.";
 
@@ -363,7 +384,11 @@ export function summarizeTimeframes(
   const riskyCount = signals.filter((signal) => signal.verdict === "risky").length;
   const aboveEmaCount = signals.filter((signal) => signal.priceVsEma20 === "above").length;
   const alignment: MultiTimeframeAnalysis["alignment"] =
-    positiveCount >= 3 && aboveEmaCount >= 3 ? "bullish" : riskyCount >= 2 && aboveEmaCount <= 1 ? "bearish" : "mixed";
+    positiveCount >= 3 && aboveEmaCount >= 3 && score >= 68
+      ? "bullish"
+      : riskyCount >= 2 && aboveEmaCount <= 1
+        ? "bearish"
+        : "mixed";
 
   return {
     alignment,
@@ -379,9 +404,12 @@ export function buildTradePlan(
 ): TradePlan {
   const scoreBlend = Math.round(analysis.score * 0.62 + multiTimeframe.score * 0.38);
   const stance: TradePlan["stance"] =
-    scoreBlend >= 68 && multiTimeframe.alignment === "bullish"
+    scoreBlend >= 72 &&
+    multiTimeframe.alignment === "bullish" &&
+    analysis.verdict === "positive" &&
+    analysis.riskReward >= 1.3
       ? "watch"
-      : scoreBlend <= 42 || multiTimeframe.alignment === "bearish"
+      : scoreBlend <= 40 || (multiTimeframe.alignment === "bearish" && analysis.score < 55)
         ? "avoid"
         : "wait";
   const title =
@@ -412,10 +440,20 @@ export function buildDecisionReport(
   const trendOk = analysis.trendStrength >= 55;
   const momentumOk = analysis.indicators.macd >= analysis.indicators.macdSignal;
   const rsiOk = analysis.indicators.rsi14 >= 42 && analysis.indicators.rsi14 <= 70;
-  const riskRewardOk = analysis.riskReward >= 1.4;
+  const riskRewardOk = analysis.riskReward >= 1.3;
   const timeframeOk = multiTimeframe.alignment === "bullish";
   const passedCount = [trendOk, momentumOk, rsiOk, riskRewardOk, timeframeOk].filter(Boolean).length;
-  const confidence = Math.round((analysis.score * 0.5 + multiTimeframe.score * 0.35 + passedCount * 20 * 0.15));
+  let confidence = Math.round(analysis.score * 0.45 + multiTimeframe.score * 0.35 + passedCount * 4);
+
+  if (tradePlan.stance !== "watch") {
+    confidence = Math.min(confidence, 72);
+  }
+
+  if (!timeframeOk) {
+    confidence = Math.min(confidence, 68);
+  }
+
+  confidence = Math.max(15, Math.min(88, confidence));
   const bias: DecisionReport["bias"] =
     tradePlan.stance === "watch" ? "positive" : tradePlan.stance === "avoid" ? "negative" : "neutral";
 
@@ -521,14 +559,14 @@ function buildTradePlanSummary(
   alignment: MultiTimeframeAnalysis["alignment"],
 ) {
   if (stance === "watch") {
-    return `Teknik skor ve zaman dilimi teyidi uyumlu. Plan skoru ${scoreBlend}/100; giris sadece fiyat teyidiyle degerlendirilmeli.`;
+    return `Teknik skor, risk/odul ve zaman dilimi teyidi birlikte izlenebilir durumda. Plan skoru ${scoreBlend}/100; giris yine fiyat teyidiyle degerlendirilmeli.`;
   }
 
   if (stance === "avoid") {
     return `Plan skoru ${scoreBlend}/100 ve zaman dilimi uyumu ${alignment}. Yeni alim icin risk/teyit dengesi zayif.`;
   }
 
-  return `Plan skoru ${scoreBlend}/100. Sinyal tamamen reddedilmiyor, ancak giris icin ek teyit beklemek daha saglikli.`;
+  return `Plan skoru ${scoreBlend}/100. Sinyal tamamen reddedilmiyor, ancak acele giris yerine ek teyit beklemek daha saglikli.`;
 }
 
 function buildEntryTrigger(
@@ -560,7 +598,7 @@ function buildRiskNote(
     return "Ust zaman dilimi teyidi zayif; acele giris yerine toparlanma teyidi beklenmeli.";
   }
 
-  if (analysis.riskReward < 1.4) {
+  if (analysis.riskReward < 1.3) {
     return "Risk/odul zayif; giris fiyati iyilesmeden pozisyon acmak verimsiz olabilir.";
   }
 

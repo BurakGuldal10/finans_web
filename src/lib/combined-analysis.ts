@@ -18,7 +18,7 @@ export function combineStockAnalysis(
   const score = Math.round(
     technical.score * technicalWeight + fundamentals.score * fundamentalWeight,
   );
-  const verdict = score >= 68 ? "positive" : score <= 42 ? "risky" : "neutral";
+  const verdict = score >= 74 ? "positive" : score <= 38 ? "risky" : "neutral";
 
   return {
     score,
@@ -35,7 +35,7 @@ function buildCombinedSummary(
   fundamentalScore: number,
 ) {
   if (verdict === "positive") {
-    if (technicalScore >= 68 && fundamentalScore >= 68) {
+    if (technicalScore >= 74 && fundamentalScore >= 68) {
       return "Teknik ve temel gorunum birlikte guclu; planli giris icin takip edilebilir.";
     }
 

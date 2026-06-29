@@ -67,6 +67,8 @@ $analysis = Invoke-JsonRequest -Method "GET" -Path "/api/analyze?market=crypto&s
 Assert-Truthy $analysis.analysis "Analyze cevabinda analysis yok."
 Assert-Truthy $analysis.decisionReport "Analyze cevabinda decisionReport yok."
 Assert-Truthy $analysis.tradePlan "Analyze cevabinda tradePlan yok."
+Assert-Truthy ($analysis.analysis.score -le 92) "Analyze skoru asiri agresif."
+Assert-Truthy ($analysis.analysis.riskReward -ge 1.2) "Analyze risk/odul orani yetersiz."
 Write-Host "[OK] /api/analyze"
 
 $snapshotId = $null

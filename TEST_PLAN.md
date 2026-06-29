@@ -70,6 +70,7 @@ Beklenen sonuc:
 
 - Script `[OK]` satirlariyla health, readiness, market, universe, analyze, snapshots, trades, portfolio, alerts, usage-notes, usage-summary, export ve import kontrollerini tamamlamali.
 - Script BIST genis liste icin ilk 100 sembolde en az 50 fiyat donduruldugunu kontrol etmeli.
+- Script analiz skorunun asiri agresif olmadigini ve risk/odulun minimum 1.2 oldugunu kontrol etmeli.
 - Export/import kontrolleri analiz gecmisi snapshot kayitlarini da kapsamalidir.
 - Script'in olusturdugu gecici kayitlar test sonunda silinmeli.
 - `LOCAL_APP_PASSWORD` aktifse bu smoke test oturum cookie'si tasimadigi icin once kilit kapali ortamda calistirilmalidir.
@@ -157,6 +158,7 @@ Beklenen sonuc:
 - Fiyat, mum grafik, teknik indikatorler, karar raporu ve trade plani yenilenmeli.
 - Gecerli Binance USDT sembolu eklenebilmeli.
 - Genis kripto listesi Binance uzerindeki aktif USDT paritelerini 500 sembol sinirina kadar yuklemeli.
+- Analiz skoru tek basina kesin al sinyali gibi davranmamali; cogunlukla `wait` veya teyit bekleyen notr senaryolar uretebilmelidir.
 - Liste en az bir sembol kalacak sekilde sembol silmeye izin vermeli.
 
 ### 3. ABD Hisse Akisi
