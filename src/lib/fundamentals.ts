@@ -17,12 +17,19 @@ export type FundamentalAnalysis = {
   raw: {
     marketCap: number;
     peRatio: number | null;
+    priceToBook: number | null;
+    enterpriseToEbitda: number | null;
     revenueGrowth: number | null;
+    earningsGrowth: number | null;
+    grossMargin: number | null;
+    operatingMargin: number | null;
     netMargin: number | null;
     debtToEquity: number | null;
     currentRatio: number | null;
     freeCashFlow: number | null;
     returnOnEquity: number | null;
+    returnOnAssets: number | null;
+    dividendYield: number | null;
   };
 };
 
@@ -52,7 +59,13 @@ type FmpCashFlow = {
 type FmpRatio = {
   currentRatio?: number;
   debtEquityRatio?: number;
+  dividendYield?: number;
+  enterpriseValueMultiple?: number;
+  grossProfitMargin?: number;
+  operatingProfitMargin?: number;
+  priceToBookRatio?: number;
   returnOnEquity?: number;
+  returnOnAssets?: number;
   netProfitMargin?: number;
   priceEarningsRatio?: number;
 };
@@ -70,13 +83,19 @@ type YahooQuoteSummaryResponse = {
         sector?: string;
       };
       defaultKeyStatistics?: {
+        enterpriseToEbitda?: YahooRawValue;
+        priceToBook?: YahooRawValue;
         trailingEps?: YahooRawValue;
       };
       financialData?: {
         currentRatio?: YahooRawValue;
         debtToEquity?: YahooRawValue;
+        earningsGrowth?: YahooRawValue;
         freeCashflow?: YahooRawValue;
+        grossMargins?: YahooRawValue;
+        operatingMargins?: YahooRawValue;
         profitMargins?: YahooRawValue;
+        returnOnAssets?: YahooRawValue;
         returnOnEquity?: YahooRawValue;
         revenueGrowth?: YahooRawValue;
       };
@@ -86,6 +105,7 @@ type YahooQuoteSummaryResponse = {
         shortName?: string;
       };
       summaryDetail?: {
+        dividendYield?: YahooRawValue;
         trailingPE?: YahooRawValue;
       };
     }>;
@@ -209,12 +229,19 @@ async function fetchYahooQuoteFundamentalSnapshot(
     sector: quote.sector ?? "BIST",
     marketCap: safeNumber(quote.marketCap) ?? 0,
     peRatio,
+    priceToBook: null,
+    enterpriseToEbitda: null,
     revenueGrowth: null,
+    earningsGrowth: null,
+    grossMargin: null,
+    operatingMargin: null,
     netMargin: null,
     debtToEquity: null,
     currentRatio: null,
     freeCashFlow: null,
     returnOnEquity: null,
+    returnOnAssets: null,
+    dividendYield: null,
   });
 }
 
@@ -254,12 +281,19 @@ async function fetchYahooMarketSnapshotFundamentals(
     raw: {
       marketCap: 0,
       peRatio: null,
+      priceToBook: null,
+      enterpriseToEbitda: null,
       revenueGrowth: null,
+      earningsGrowth: null,
+      grossMargin: null,
+      operatingMargin: null,
       netMargin: null,
       debtToEquity: null,
       currentRatio: null,
       freeCashFlow: null,
       returnOnEquity: null,
+      returnOnAssets: null,
+      dividendYield: null,
     },
   };
 }
@@ -289,12 +323,21 @@ function analyzeYahooFundamentals(
   result: NonNullable<YahooQuoteSummaryResponse["quoteSummary"]["result"]>[number],
 ): FundamentalAnalysis {
   const revenueGrowth = safePercent(readYahooRaw(result.financialData?.revenueGrowth));
+  const earningsGrowth = safePercent(readYahooRaw(result.financialData?.earningsGrowth));
+  const grossMargin = safePercent(readYahooRaw(result.financialData?.grossMargins));
+  const operatingMargin = safePercent(readYahooRaw(result.financialData?.operatingMargins));
   const netMargin = safePercent(readYahooRaw(result.financialData?.profitMargins));
   const debtToEquity = normalizeYahooDebtToEquity(readYahooRaw(result.financialData?.debtToEquity));
   const currentRatio = safeNumber(readYahooRaw(result.financialData?.currentRatio));
   const freeCashFlow = safeNumber(readYahooRaw(result.financialData?.freeCashflow));
   const returnOnEquity = safePercent(readYahooRaw(result.financialData?.returnOnEquity));
+  const returnOnAssets = safePercent(readYahooRaw(result.financialData?.returnOnAssets));
   const peRatio = safeNumber(readYahooRaw(result.summaryDetail?.trailingPE));
+  const priceToBook = safeNumber(readYahooRaw(result.defaultKeyStatistics?.priceToBook));
+  const enterpriseToEbitda = safeNumber(
+    readYahooRaw(result.defaultKeyStatistics?.enterpriseToEbitda),
+  );
+  const dividendYield = safePercent(readYahooRaw(result.summaryDetail?.dividendYield));
   const marketCap = safeNumber(readYahooRaw(result.price?.marketCap)) ?? 0;
 
   return buildFundamentalAnalysis({
@@ -303,12 +346,19 @@ function analyzeYahooFundamentals(
     sector: result.assetProfile?.sector ?? "BIST",
     marketCap,
     peRatio,
+    priceToBook,
+    enterpriseToEbitda,
     revenueGrowth,
+    earningsGrowth,
+    grossMargin,
+    operatingMargin,
     netMargin,
     debtToEquity,
     currentRatio,
     freeCashFlow,
     returnOnEquity,
+    returnOnAssets,
+    dividendYield,
   });
 }
 
@@ -347,12 +397,19 @@ function analyzeFundamentals(input: {
     sector: input.profile.sector ?? "Unknown",
     marketCap,
     peRatio,
+    priceToBook: safeNumber(input.ratios?.priceToBookRatio),
+    enterpriseToEbitda: safeNumber(input.ratios?.enterpriseValueMultiple),
     revenueGrowth,
+    earningsGrowth: null,
+    grossMargin: safePercent(input.ratios?.grossProfitMargin),
+    operatingMargin: safePercent(input.ratios?.operatingProfitMargin),
     netMargin,
     debtToEquity,
     currentRatio,
     freeCashFlow,
     returnOnEquity,
+    returnOnAssets: safePercent(input.ratios?.returnOnAssets),
+    dividendYield: safePercent(input.ratios?.dividendYield),
   });
 }
 
@@ -362,12 +419,19 @@ function buildFundamentalAnalysis(input: {
   sector: string;
   marketCap: number;
   peRatio: number | null;
+  priceToBook: number | null;
+  enterpriseToEbitda: number | null;
   revenueGrowth: number | null;
+  earningsGrowth: number | null;
+  grossMargin: number | null;
+  operatingMargin: number | null;
   netMargin: number | null;
   debtToEquity: number | null;
   currentRatio: number | null;
   freeCashFlow: number | null;
   returnOnEquity: number | null;
+  returnOnAssets: number | null;
+  dividendYield: number | null;
 }): FundamentalAnalysis {
   let score = 50;
   score += scoreRevenueGrowth(input.revenueGrowth);
@@ -391,6 +455,16 @@ function buildFundamentalAnalysis(input: {
     metrics: [
       metric("Piyasa degeri", formatLargeNumber(input.marketCap), "default"),
       metric("F/K", input.peRatio === null ? "N/A" : input.peRatio.toFixed(2), peTone(input.peRatio)),
+      metric(
+        "PD/DD",
+        input.priceToBook === null ? "N/A" : input.priceToBook.toFixed(2),
+        priceToBookTone(input.priceToBook),
+      ),
+      metric(
+        "FD/FAVOK",
+        input.enterpriseToEbitda === null ? "N/A" : input.enterpriseToEbitda.toFixed(2),
+        enterpriseToEbitdaTone(input.enterpriseToEbitda),
+      ),
       metric("Gelir buyumesi", formatPercent(input.revenueGrowth), growthTone(input.revenueGrowth)),
       metric("Net marj", formatPercent(input.netMargin), marginTone(input.netMargin)),
       metric(
@@ -413,12 +487,19 @@ function buildFundamentalAnalysis(input: {
     raw: {
       marketCap: input.marketCap,
       peRatio: input.peRatio,
+      priceToBook: input.priceToBook,
+      enterpriseToEbitda: input.enterpriseToEbitda,
       revenueGrowth: input.revenueGrowth,
+      earningsGrowth: input.earningsGrowth,
+      grossMargin: input.grossMargin,
+      operatingMargin: input.operatingMargin,
       netMargin: input.netMargin,
       debtToEquity: input.debtToEquity,
       currentRatio: input.currentRatio,
       freeCashFlow: input.freeCashFlow,
       returnOnEquity: input.returnOnEquity,
+      returnOnAssets: input.returnOnAssets,
+      dividendYield: input.dividendYield,
     },
   };
 }
@@ -538,6 +619,20 @@ function peTone(value: number | null): FundamentalMetric["tone"] {
   if (value === null || value <= 0) return "default";
   if (value <= 25) return "positive";
   if (value > 60) return "danger";
+  return "default";
+}
+
+function priceToBookTone(value: number | null): FundamentalMetric["tone"] {
+  if (value === null || value <= 0) return "default";
+  if (value <= 3) return "positive";
+  if (value > 10) return "danger";
+  return "default";
+}
+
+function enterpriseToEbitdaTone(value: number | null): FundamentalMetric["tone"] {
+  if (value === null || value <= 0) return "default";
+  if (value <= 12) return "positive";
+  if (value > 25) return "danger";
   return "default";
 }
 

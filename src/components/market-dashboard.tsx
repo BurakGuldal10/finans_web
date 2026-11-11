@@ -18,9 +18,11 @@ import { AiCommentaryPanel } from "@/components/ai-commentary-panel";
 import { AnalysisSnapshotPanel } from "@/components/analysis-snapshot-panel";
 import { AlertsPanel } from "@/components/alerts-panel";
 import { CandlestickChart } from "@/components/candlestick-chart";
+import { DailyBriefingPanel } from "@/components/daily-briefing-panel";
 import { DecisionReportPanel } from "@/components/decision-report-panel";
 import { ExportPanel } from "@/components/export-panel";
 import { FundamentalsPanel } from "@/components/fundamentals-panel";
+import { LongTermResearchPanel } from "@/components/long-term-research-panel";
 import { MarketSummaryPanel } from "@/components/market-summary-panel";
 import { PerformancePanel } from "@/components/performance-panel";
 import {
@@ -91,7 +93,7 @@ type FundamentalsResponse = {
 };
 
 type Timeframe = "15m" | "1h" | "4h" | "1d";
-type DashboardTab = "alerts" | "analysis" | "history" | "portfolio" | "system";
+type DashboardTab = "alerts" | "analysis" | "briefing" | "history" | "long-term" | "portfolio" | "system";
 type WatchlistSortMode = "default" | "potential" | "alphabetical" | "change" | "volume";
 
 const basicCryptoSymbols = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "XRPUSDT"];
@@ -151,6 +153,16 @@ const dashboardTabs: Array<{ description: string; label: string; value: Dashboar
     description: "Fiyat, skor ve RSI takip kurallari.",
     label: "Uyarilar",
     value: "alerts",
+  },
+  {
+    description: "AI altyapisi, sirketler ve kiymetli madenler.",
+    label: "Bulten",
+    value: "briefing",
+  },
+  {
+    description: "1-5 yillik bilanco, sektor ve degerleme arastirmasi.",
+    label: "Uzun Vade",
+    value: "long-term",
   },
   {
     description: "Kayitli raporlar ve yedekleme.",
@@ -849,7 +861,7 @@ export function MarketDashboard() {
           <section className="rounded-lg border border-[var(--border)] bg-[rgba(13,26,23,0.82)] p-3 shadow-2xl shadow-black/20">
             <div
               aria-label="Dashboard bolumleri"
-              className="flex snap-x gap-2 overflow-x-auto pb-1 md:grid md:grid-cols-5 md:overflow-visible md:pb-0"
+              className="flex snap-x gap-2 overflow-x-auto pb-1 md:grid md:grid-cols-6 md:overflow-visible md:pb-0"
             >
               {dashboardTabs.map((tab) => {
                 const active = tab.value === activeTab;
@@ -922,6 +934,14 @@ export function MarketDashboard() {
                       <Metric label="Destek" value={formatPrice(analysis.levels.support)} />
                       <Metric label="Direnc" value={formatPrice(analysis.levels.resistance)} />
                       <Metric label="Trend gucu" value={`${analysis.trendStrength}/100`} />
+                      <Metric
+                        label="Stop mesafesi"
+                        value={`${analysis.positionSizing.stopDistancePercent.toFixed(2)}%`}
+                      />
+                      <Metric
+                        label="1.000 birim sermayede adet"
+                        value={`${analysis.positionSizing.unitsPerThousandAtConservativeRisk.toFixed(2)} / ${analysis.positionSizing.unitsPerThousandAtStandardRisk.toFixed(2)}`}
+                      />
                       <Metric
                         label="Volatilite"
                         tone={analysis.volatility.regime === "high" ? "danger" : "default"}
@@ -1017,6 +1037,12 @@ export function MarketDashboard() {
               price={selectedTicker?.price}
               symbol={selectedSymbol}
             />
+          ) : null}
+
+          {activeTab === "briefing" ? <DailyBriefingPanel /> : null}
+
+          {activeTab === "long-term" ? (
+            <LongTermResearchPanel market={selectedMarket} symbol={selectedSymbol} />
           ) : null}
 
           {activeTab === "history" ? (

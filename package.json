@@ -9,7 +9,8 @@
     "lint": "eslint",
     "test:api": "powershell -ExecutionPolicy Bypass -File scripts/api-smoke-test.ps1",
     "test:page": "powershell -ExecutionPolicy Bypass -File scripts/page-smoke-test.ps1",
-    "test:all": "npm run lint && npm run build && npm run test:api && npm run test:page"
+    "test:all": "npm run lint && npm run build && npm run test:api && npm run test:page",
+    "agent": "node agents/runner.mjs"
   },
   "dependencies": {
     "lucide-react": "latest",

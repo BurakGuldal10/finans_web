@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>GitHub Portföy Çeşitlendirme Rehberi ve Proje Mimarileri (2026)</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+    @page {
+      size: A4;
+      margin: 14mm 14mm 14mm 14mm;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #1e293b;
+      background-color: #ffffff;
+      line-height: 1.55;
+      font-size: 10pt;
+    }
+
+    .page-break {
+      page-break-after: always;
+      break-after: page;
+    }
+
+    /* Cover Page */
+    .cover {
+      height: 98vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 40px 20px;
+      border: 2px solid #0f172a;
+      border-radius: 8px;
+      background: linear-gradient(145deg, #0f172a 0%, #1e293b 100%);
+      color: #f8fafc;
+    }
+
+    .cover-badge {
+      display: inline-block;
+      align-self: flex-start;
+      background-color: #2563eb;
+      color: #ffffff;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 8.5pt;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .cover-title {
+      font-size: 28pt;
+      font-weight: 800;
+      line-height: 1.15;
+      color: #ffffff;
+      margin-top: 20px;
+      margin-bottom: 12px;
+    }
+
+    .cover-subtitle {
+      font-size: 13pt;
+      font-weight: 400;
+      color: #94a3b8;
+      max-width: 600px;
+      line-height: 1.4;
+    }
+
+    .cover-divider {
+      width: 70px;
+      height: 4px;
+      background-color: #38bdf8;
+      margin: 25px 0;
+    }
+
+    .cover-meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      border-top: 1px solid #334155;
+      padding-top: 20px;
+    }
+
+    .meta-box h4 {
+      font-size: 8pt;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #38bdf8;
+      margin-bottom: 4px;
+    }
+
+    .meta-box p {
+      font-size: 9.5pt;
+      color: #cbd5e1;
+      font-weight: 500;
+    }
+
+    /* General Typography */
+    h1 {
+      font-size: 17pt;
+      font-weight: 800;
+      color: #0f172a;
+      border-bottom: 2px solid #0284c7;
+      padding-bottom: 6px;
+      margin-top: 15px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    h2 {
+      font-size: 12.5pt;
+      font-weight: 700;
+      color: #0f172a;
+      margin-top: 14px;
+      margin-bottom: 8px;
+    }
+
+    h3 {
+      font-size: 10.5pt;
+      font-weight: 700;
+      color: #334155;
+      margin-top: 10px;
+      margin-bottom: 6px;
+    }
+
+    p {
+      margin-bottom: 8px;
+      color: #334155;
+      text-align: justify;
+    }
+
+    ul, ol {
+      margin-left: 20px;
+      margin-bottom: 10px;
+      color: #334155;
+    }
+
+    li {
+      margin-bottom: 4px;
+    }
+
+    strong {
+      color: #0f172a;
+      font-weight: 600;
+    }
+
+    /* Cards and Callouts */
+    .callout {
+      background-color: #f8fafc;
+      border-left: 4px solid #0284c7;
+      border-radius: 4px;
+      padding: 10px 14px;
+      margin: 10px 0;
+      font-size: 9pt;
+    }
+
+    .callout.warning {
+      border-left-color: #f59e0b;
+      background-color: #fffbeb;
+    }
+
+    .callout.success {
+      border-left-color: #10b981;
+      background-color: #f0fdf4;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0;
+      font-size: 8.5pt;
+      page-break-inside: avoid;
+    }
+
+    th, td {
+      border: 1px solid #cbd5e1;
+      padding: 7px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background-color: #0f172a;
+      color: #ffffff;
+      font-weight: 600;
+      font-size: 8.5pt;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f8fafc;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 12px;
+      font-size: 7.5pt;
+      font-weight: 600;
+    }
+
+    .badge-blue { background: #e0f2fe; color: #0369a1; }
+    .badge-green { background: #dcfce7; color: #15803d; }
+    .badge-amber { background: #fef3c7; color: #b45309; }
+    .badge-purple { background: #f3e8ff; color: #7e22ce; }
+
+    /* Code Blocks */
+    pre, code {
+      font-family: 'JetBrains Mono', Consolas, Monaco, monospace;
+    }
+
+    code {
+      background-color: #f1f5f9;
+      color: #0f172a;
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-size: 8.5pt;
+    }
+
+    pre {
+      background-color: #0f172a;
+      color: #f8fafc;
+      padding: 10px 12px;
+      border-radius: 6px;
+      overflow-x: auto;
+      font-size: 8pt;
+      line-height: 1.45;
+      margin: 10px 0;
+      page-break-inside: avoid;
+      border: 1px solid #334155;
+    }
+
+    /* Diagrams & Schematics */
+    .diagram-container {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 12px;
+      margin: 12px 0;
+      page-break-inside: avoid;
+    }
+
+    .diagram-title {
+      font-size: 8.5pt;
+      font-weight: 700;
+      color: #475569;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .flow-step {
+      display: inline-block;
+      background: #ffffff;
+      border: 1.5px solid #0284c7;
+      border-radius: 5px;
+      padding: 6px 10px;
+      font-size: 8pt;
+      font-weight: 600;
+      color: #0f172a;
+    }
+
+    .flow-arrow {
+      display: inline-block;
+      margin: 0 6px;
+      color: #64748b;
+      font-weight: bold;
+    }
+
+    /* Footer styling */
+    .doc-footer {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      text-align: right;
+      font-size: 7.5pt;
+      color: #94a3b8;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- COVER PAGE -->
+  <div class="cover">
+    <div>
+      <span class="cover-badge">Stratejik Mühendislik Dokümantasyonu</span>
+      <h1 class="cover-title">GitHub Portföy Çeşitlendirme & Mimari Uygulama Rehberi</h1>
+      <p class="cover-subtitle">Fullstack, Edge Dağıtık Sistemler, Yapay Zeka Altyapısı ve Sistem Araçları ile Sıra Dışı Bir Mühendislik Portföyü İnşa Etme Kılavuzu (2026).</p>
+      <div class="cover-divider"></div>
+      <p style="color: #cbd5e1; font-size: 10pt; max-width: 550px;">
+        Sıradan kopya arayüzler ve basit "to-do app" döngüsünü kırarak; Tech Lead ve işe alım komitelerini ilk 60 saniyede ikna edecek, çalışan ve production-grade 4 anahtar projenin eksiksiz mimari tasarımı.
+      </p>
+    </div>
+
+    <div class="cover-meta">
+      <div class="meta-box">
+        <h4>Stratejik Pazar Analisti</h4>
+        <p>Atlas (Market & Tech Intelligence)</p>
+      </div>
+      <div class="meta-box">
+        <h4>Yazılım Ürün Mimarı</h4>
+        <p>Mimar Selim (MVP & System Architect)</p>
+      </div>
+      <div class="meta-box">
+        <h4>Tarih & Versiyon</h4>
+        <p>Ekim 2026 • v2.4 Comprehensive Release</p>
+      </div>
+      <div class="meta-box">
+        <h4>Hedef Kitle</h4>
+        <p>Kariyerini Güçlendirmek İsteyen Yazılım Mühendisleri</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- SECTION 1 -->
+  <h1>1. 2026 İstihdam Piyasası & Portföy Stratejisi</h1>
+
+  <div class="callout">
+    <strong>Atlas'ın Piyasa Tespiti:</strong> "2026 yılında yazılım sektöründe yapay zekanın kod üretme maliyetini sıfıra yaklaştırmasıyla birlikte; sadece arayüz kopyalayan ('HTML/CSS/React biliyorum' diyen) geliştirici profilleri elenmektedir. Şirketlerin aradığı asıl cevher: <em>Farklı mimarileri kavrayabilen, veri tabanı ve güvenlik politikalarını yönetebilen, sistemleri birbirine bağlayan ve gerçek iş problemlerini çözebilen Product-Minded Mühendislerdir.</em>"
+  </div>
+
+  <h2>1.1. İşe Alım Yöneticisinin (Tech Lead) İlk 60 Saniye Testi</h2>
+  <p>
+    Bir teknik lider GitHub profilinize tıkladığında kodun her satırını okumaz. Şu 4 kritik sinyale bakar:
+  </p>
+  <ul>
+    <li><strong>Disiplin Çeşitliliği:</strong> Aday sadece web arayüzü mü yapmış, yoksa CLI aracı, API proxy'si veya asenkron kuyruk sistemi tasarlayabilecek kadar geniş bir vizyona sahip mi?</li>
+    <li><strong>Mimari Olgunluk:</strong> Proje dokümanında (README) sistemin nasıl çalıştığını gösteren mimari diyagramlar (Mermaid / Şema) var mı?</li>
+    <li><strong>Hata Toleransı (Fault-Tolerance):</strong> Kod sadece "mutlu yolda" (happy path) mı çalışıyor, yoksa kesintiler, rate-limit'ler ve network hataları öngörülmüş mü?</li>
+    <li><strong>Test ve Otomasyon:</strong> Projede CI/CD (GitHub Actions) boru hattı kurulu mu? Testler yeşil yanıyor mu?</li>
+  </ul>
+
+  <h2>1.2. 4 Disiplinli Portföy Karşılaştırma Matrisi</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Proje Adı</th>
+        <th>Disiplin</th>
+        <th>Teknoloji Yığını</th>
+        <th>Zorluk</th>
+        <th>Süre</th>
+        <th>CV & Portföy Kazanımı</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>1. SignOffy</strong></td>
+        <td>Fullstack & B2B İş Akışı</td>
+        <td>Next.js 15, Supabase, Tailwind, React-PDF</td>
+        <td><span class="badge badge-blue">⭐⭐ Kolay-Orta</span></td>
+        <td>10-14 Gün</td>
+        <td>B2B SaaS vizyonu, RLS güvenliği, dynamic PDF, kurumsal iş mantığı.</td>
+      </tr>
+      <tr>
+        <td><strong>2. HookSentry</strong></td>
+        <td>Edge & Dağıtık Sistemler</td>
+        <td>Cloudflare Workers, Hono, Upstash Redis</td>
+        <td><span class="badge badge-amber">⭐⭐⭐ Orta</span></td>
+        <td>12-16 Gün</td>
+        <td>Yüksek throughput proxy, Dead-Letter Queue (DLQ), Replay mekanizması.</td>
+      </tr>
+      <tr>
+        <td><strong>3. GuardLLM</strong></td>
+        <td>AI Mühendisliği / Gateway</td>
+        <td>Fastify/Hono, Redis, SSE, OpenAI & Claude SDK</td>
+        <td><span class="badge badge-amber">⭐⭐⭐ Orta</span></td>
+        <td>12-15 Gün</td>
+        <td>Streaming SSE passthrough, Model Fallback, Hard cost cap, Token monitoring.</td>
+      </tr>
+      <tr>
+        <td><strong>4. EnvVault CLI</strong></td>
+        <td>CLI, Güvenlik & Sistem</td>
+        <td>Node.js / TypeScript, AES-256-GCM, Clack</td>
+        <td><span class="badge badge-green">⭐⭐ Kolay</span></td>
+        <td>5-7 Gün</td>
+        <td>Kriptografi, Terminal DX, NPM paketi yayınlama, Developer tooling.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="page-break"></div>
+
+  <!-- SECTION 2: SIGNOFFY -->
+  <h1>2. Proje 1: SignOffy (Fullstack & Kurumsal İş Akışı Motoru)</h1>
+  <p>
+    <strong>Problem & Pazar Boşluğu:</strong> Dijital ajanslar ve yazılımcılar, müşterilerin WhatsApp veya e-posta üzerinden talep ettiği küçük revizyonları takip edemez ("Scope Creep"). Ay sonunda fatura kesilemez veya "biz böyle anlaşmamıştık" itirazlarıyla ödemeler bloke olur.
+  </p>
+
+  <h2>2.1. Sistem Mimarisi & Veri Akışı</h2>
+  <div class="diagram-container">
+    <div class="diagram-title">İş Akışı Şeması</div>
+    <div style="line-height: 2;">
+      <span class="flow-step">Ajans: Revizyon & Fiyat Girişi</span>
+      <span class="flow-arrow">➔</span>
+      <span class="flow-step">Supabase: Pending Token Kaydı</span>
+      <span class="flow-arrow">➔</span>
+      <span class="flow-step">Müşteri: Magic-Link ile İnceleme</span>
+      <span class="flow-arrow">➔</span>
+      <span class="flow-step">Tek Tıkla Dijital İmza / Onay</span>
+      <span class="flow-arrow">➔</span>
+      <span class="flow-step">PDF Sözleşme Üretimi (SHA-256 Damgalı)</span>
+    </div>
+  </div>
+
+  <h2>2.2. Veritabanı Şeması (PostgreSQL / Supabase DDL)</h2>
+  <p>Bu şema, ilişkisel veri modelleme ve Row Level Security (RLS) yetkinliğinizi doğrudan kanıtlar:</p>
+
+<pre><code>-- 1. Ajans / Geliştirici Çalışma Alanı
+CREATE TABLE workspaces (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) NOT NULL,
+    owner_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 2. Onay / Revizyon Talepleri
+CREATE TABLE approval_requests (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    workspace_id UUID REFERENCES workspaces(id) ON DELETE CASCADE,
+    client_name VARCHAR(150) NOT NULL,
+    client_email VARCHAR(255) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    description TEXT NOT NULL,
+    additional_fee NUMERIC(10, 2) DEFAULT 0.00,
+    status VARCHAR(50) DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'APPROVED', 'REJECTED')),
+    access_token UUID DEFAULT gen_random_uuid() UNIQUE,
+    approved_at TIMESTAMPTZ,
+    client_signature_data TEXT, -- Base64 SVG imza veya parmak izi
+    pdf_contract_url TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Row Level Security (RLS) Güvenlik Politikası
+ALTER TABLE approval_requests ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Workspaces can only view their own requests"
+ON approval_requests FOR ALL
+USING (workspace_id IN (SELECT id FROM workspaces WHERE owner_id = auth.uid()));</code></pre>
+
+  <h2>2.3. Adım Adım 14 Günlük Uygulama Takvimi</h2>
+  <ul>
+    <li><strong>1-3. Gün:</strong> Next.js 15 (App Router), Tailwind CSS ve Supabase Auth kurulumu. Çoklu kiracı (workspace) yapısının kurulması.</li>
+    <li><strong>4-7. Gün:</strong> Revizyon talep formu ve benzersiz <code>access_token</code> üreten Server Actions katmanının kodlanması.</li>
+    <li><strong>8-10. Gün:</strong> Giriş gerektirmeyen (Public Magic-Link) müşteri onay portalı ve imza pad bileşeni (<code>react-signature-canvas</code>).</li>
+    <li><strong>11-12. Gün:</strong> `@react-pdf/renderer` ile onay anında dinamik, zaman damgalı PDF sözleşme üretilmesi ve Supabase Storage'a yüklenmesi.</li>
+    <li><strong>13-14. Gün:</strong> Vercel dağıtımı, demo verisi yükleme ve animasyonlu GitHub README oluşturma.</li>
+  </ul>
+
+  <h2>2.4. Karşılaşılacak Teknik Zorluk & Çözüm</h2>
+  <div class="callout warning">
+    <strong>Teknik Zorluk:</strong> Sunucu tarafında PDF oluştururken Türkçe karakterlerin (ş, ğ, ı, ö, ü, ç) bozulması veya timeout oluşması.<br>
+    <strong>Çözüm:</strong> `@react-pdf/renderer` motoruna Google Fonts Inter TTF fontlarını sunucu belleğinde <code>Font.register</code> ile kaydetmek ve PDF oluşturma işlemini Next.js Edge yerine Node.js çalışma zamanında çalıştırmak.
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- SECTION 3: HOOKSENTRY -->
+  <h1>3. Proje 2: HookSentry (Edge Computing & Webhook Kurtarıcı)</h1>
+  <p>
+    <strong>Problem & Pazar Boşluğu:</strong> Stripe, Shopify veya HubSpot gibi servislerden gelen webhook bildirimleri, şirket sunucusu bakımdayken veya 500 hatası verdiğinde kaybolur. Bu durum siparişlerin işlenememesine ve para kayıplarına yol açar.
+  </p>
+
+  <h2>3.1. Edge Proxy & Dead-Letter Queue Mimarisi</h2>
+  <div class="diagram-container">
+    <div class="diagram-title">Mimari Katmanlar</div>
+    <div style="line-height: 2;">
+      <span class="flow-step">Webhook Kaynağı (Stripe)</span>
+      <span class="flow-arrow">➔</span>
+      <span class="flow-step">Hono / Cloudflare Workers Proxy (&lt;15ms)</span>
+      <span class="flow-arrow">➔</span>
+      <span class="flow-step">Asıl Sunucuya İletim</span>
+      <br>
+      <span style="font-size: 8pt; color: #dc2626;">[Sunucu 500 veya Timeout verirse]</span>
+      <span class="flow-arrow">➔</span>
+      <span class="flow-step" style="border-color: #dc2626; color: #dc2626;">Upstash Redis DLQ Kuyruğu</span>
+      <span class="flow-arrow">➔</span>
+      <span class="flow-step">Slack Alarmı + Tek Tıkla Replay</span>
+    </div>
+  </div>
+
+  <h2>3.2. Exponential Backoff & Jitter Algoritması (TypeScript)</h2>
+  <p>Bu algoritma, başarısız olan isteklerin hedef sunucuyu çökertmeden akıllıca yeniden denenmesini sağlar:</p>
+
+<pre><code>// Exponential Backoff with Full Jitter
+export function calculateRetryDelay(attempt: number, baseDelayMs = 1000, maxDelayMs = 3600000): number {
+    // 2^attempt * baseDelay
+    const exponentialBackoff = Math.min(maxDelayMs, baseDelayMs * Math.pow(2, attempt));
+    // Full Jitter: 0 ile hesaplanan değer arasında rastgele bir süre (thundering herd koruması)
+    return Math.floor(Math.random() * exponentialBackoff);
+}
+
+export async function handleWebhookRelay(payload: any, targetUrl: string, attempt = 0) {
+    try {
+        const response = await fetch(targetUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+            signal: AbortSignal.timeout(5000) // 5 sn timeout
+        });
+
+        if (!response.ok) throw new Error(`HTTP_${response.status}`);
+        return { status: 'DELIVERED' };
+    } catch (err: any) {
+        if (attempt &lt; 5) {
+            const delay = calculateRetryDelay(attempt);
+            // Upstash Redis zset veya kuyruğuna planlanmış yeniden deneme ekle
+            await scheduleRetry(payload, targetUrl, attempt + 1, Date.now() + delay);
+            return { status: 'QUEUED_FOR_RETRY', nextAttemptInMs: delay };
+        } else {
+            // 5 deneme de başarısızsa Dead-Letter Queue'ya (DLQ) fırlat ve alarm çal
+            await pushToDeadLetterQueue(payload, targetUrl, err.message);
+            await triggerSlackAlert(targetUrl, err.message);
+            return { status: 'DEAD_LETTER' };
+        }
+    }
+}</code></pre>
+
+  <h2>3.3. K6 Yük Testi (Load Testing) Senaryosu</h2>
+  <p>GitHub reponuza ekleyeceğiniz bu test scripti, proxy'nizin saniyede binlerce isteği gecikmesiz karşıladığını ispatlar:</p>
+
+<pre><code>// load-test.js (k6 run load-test.js)
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+
+export const options = {
+    stages: [
+        { duration: '30s', target: 50 },  // 50 kullanıcıya çık
+        { duration: '1m', target: 200 },   // 200 kullanıcı yükü altında 1 dk çalış
+        { duration: '20s', target: 0 },    // normale dön
+    ],
+};
+
+export default function () {
+    const res = http.post('https://proxy.yourdomain.com/relay/test-endpoint', JSON.stringify({ event: 'test.ping' }));
+    check(res, {
+        'status is 200 or 202': (r) => r.status === 200 || r.status === 202,
+        'response time &lt; 50ms': (r) => r.timings.duration &lt; 50,
+    });
+    sleep(0.1);
+}</code></pre>
+
+  <div class="page-break"></div>
+
+  <!-- SECTION 4: GUARDLLM -->
+  <h1>4. Proje 3: GuardLLM (Yapay Zeka Altyapısı & Streaming Gateway)</h1>
+  <p>
+    <strong>Problem & Pazar Boşluğu:</strong> Döngüye giren otonom AI ajanları geliştiricilere binlerce dolarlık beklenmedik faturalar çıkarır. Ayrıca OpenAI veya Anthropic'te yaşanan bölgesel kesintiler doğrudan uygulamanın çökmesine yol açar.
+  </p>
+
+  <h2>4.1. Akıllı Proxy & Kesintisiz Streaming Mimarisi</h2>
+  <div class="diagram-container">
+    <div class="diagram-title">Trafik Yönlendirme ve Fallback Katmanı</div>
+    <div style="line-height: 2;">
+      <span class="flow-step">İstemci Uygulama (SDK)</span>
+      <span class="flow-arrow">➔</span>
+      <span class="flow-step">GuardLLM Proxy (Bütçe & Döngü Kontrolü)</span>
+      <span class="flow-arrow">➔</span>
+      <span class="flow-step">OpenAI API (GPT-4o)</span>
+      <br>
+      <span style="font-size: 8pt; color: #dc2626;">[OpenAI 500 / Rate Limit verirse]</span>
+      <span class="flow-arrow">➔</span>
+      <span class="flow-step" style="border-color: #10b981; color: #10b981;">Sessiz Fallback: Anthropic (Claude 3.5 Sonnet)</span>
+      <span class="flow-arrow">➔</span>
+      <span class="flow-step">İstemciye Kesintisiz SSE Akışı</span>
+    </div>
+  </div>
+
+  <h2>4.2. Çoklu Sağlayıcı Normalizasyonu (Request Transformer)</h2>
+  <p>OpenAI formatındaki isteği Claude API şemasına dönüştüren çekirdek köprü mekanizması:</p>
+
+<pre><code>// Normalizer: OpenAI -> Anthropic Messages API
+export function transformOpenAIToAnthropic(openAIBody: any) {
+    const systemMessage = openAIBody.messages.find((m: any) => m.role === 'system');
+    const userAndAssistantMessages = openAIBody.messages
+        .filter((m: any) => m.role !== 'system')
+        .map((m: any) => ({
+            role: m.role === 'user' ? 'user' : 'assistant',
+            content: m.content
+        }));
+
+    return {
+        model: 'claude-3-5-sonnet-20241022',
+        max_tokens: openAIBody.max_tokens || 1024,
+        system: systemMessage ? systemMessage.content : undefined,
+        messages: userAndAssistantMessages,
+        stream: openAIBody.stream ?? true
+    };
+}</code></pre>
+
+  <h2>4.3. Bütçe Kilidi ve Runaway Protection (Sonsuz Döngü Koruması)</h2>
+  <div class="callout success">
+    <strong>Hard Cost Cap Mantığı:</strong> Redis üzerinde <code>INCRBYFLOAT org:{id}:cost {tokenCost}</code> komutu ile her çağrıda harcanan tutar atomik olarak toplanır. Kullanıcının belirlediği limit (örneğin günlük 20$) aşıldığı mikrosaniyede, sağlayıcıya gitmeden anında <code>429 Budget Exceeded</code> cevabı döndürülür. Fatura asla patlamaz.
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- SECTION 5: ENVVAULT CLI -->
+  <h1>5. Proje 4: EnvVault CLI (Sistem Araçları & Kriptografi)</h1>
+  <p>
+    <strong>Problem & Pazar Boşluğu:</strong> <code>.env</code> dosyaları kazara GitHub'a pushlanmakta veya Slack/WhatsApp üzerinden düz metin olarak paylaşılarak ciddi güvenlik zafiyetleri yaratmaktadır.
+  </p>
+
+  <h2>5.1. Kriptografik Şifreleme Mimarisi</h2>
+  <div class="diagram-container">
+    <div class="diagram-title">AES-256-GCM Şifreleme Akışı</div>
+    <div style="line-height: 2;">
+      <span class="flow-step">.env Düz Metin</span>
+      <span class="flow-arrow">+</span>
+      <span class="flow-step">Kullanıcı Parolası (Master Key)</span>
+      <span class="flow-arrow">➔</span>
+      <span class="flow-step">PBKDF2 (100.000 Salt İterasyon)</span>
+      <span class="flow-arrow">➔</span>
+      <span class="flow-step">AES-256-GCM Şifreleme</span>
+      <span class="flow-arrow">➔</span>
+      <span class="flow-step">.env.vault (Güvenli, Git'e eklenebilir dosya)</span>
+    </div>
+  </div>
+
+  <h2>5.2. Çekirdek Kriptografi Motoru (Node.js Crypto)</h2>
+
+<pre><code>import crypto from 'node:crypto';
+
+const ALGORITHM = 'aes-256-gcm';
+const IV_LENGTH = 16;
+const SALT_LENGTH = 32;
+
+export function encryptEnv(plainText: string, masterKey: string): string {
+    const salt = crypto.randomBytes(SALT_LENGTH);
+    const key = crypto.pbkdf2Sync(masterKey, salt, 100000, 32, 'sha512');
+    const iv = crypto.randomBytes(IV_LENGTH);
+
+    const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
+    const encrypted = Buffer.concat([cipher.update(plainText, 'utf8'), cipher.final()]);
+    const tag = cipher.getAuthTag();
+
+    // Format: [Salt (32)][IV (16)][Auth Tag (16)][Encrypted Data]
+    return Buffer.concat([salt, iv, tag, encrypted]).toString('base64');
+}
+
+export function decryptEnv(cipherPayloadBase64: string, masterKey: string): string {
+    const buffer = Buffer.from(cipherPayloadBase64, 'base64');
+    const salt = buffer.subarray(0, 32);
+    const iv = buffer.subarray(32, 48);
+    const tag = buffer.subarray(48, 64);
+    const encryptedData = buffer.subarray(64);
+
+    const key = crypto.pbkdf2Sync(masterKey, salt, 100000, 32, 'sha512');
+    const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
+    decipher.setAuthTag(tag);
+
+    return decipher.update(encryptedData) + decipher.final('utf8');
+}</code></pre>
+
+  <h2>5.3. Terminal Kullanıcı Deneyimi (CLI UX)</h2>
+  <p>
+    <code>@clack/prompts</code> kullanarak terminalde modern, renkli ve interaktif bir sihirbaz (wizard) sunulur. Kullanıcı sadece <code>npx envvault</code> yazar; araç şifrelenecek dosyayı otomatik bulur, güvenli şifre ister ve tek komutla <code>.env.vault</code> üretir.
+  </p>
+
+  <div class="page-break"></div>
+
+  <!-- SECTION 6: GITHUB PRODUCTION STANDARDS -->
+  <h1>6. Production-Ready GitHub Reposu Standartları</h1>
+
+  <h2>6.1. GitHub README Mimarisi Şablonu</h2>
+  <p>Profilinizdeki her projenin README dosyası şu 6 bileşeni zorunlu olarak içermelidir:</p>
+  <ol>
+    <li><strong>Hero Section & Badge'ler:</strong> CI/CD Build durumu, Test kapsamı (% Coverage), Lisans (MIT), Node/TypeScript versiyonları.</li>
+    <li><strong>30 Saniyelik Canlı Demo (GIF / Video):</strong> Projenin çalıştığını gösteren hareketli görsel.</li>
+    <li><strong>Mimari Akış Şeması (Mermaid):</strong> Sistemin nasıl çalıştığını özetleyen net akış.</li>
+    <li><strong>Hızlı Başlangıç (Quickstart):</strong> 3 adımda projeyi klonlayıp ayağa kaldırma talimatı (<code>pnpm install && pnpm dev</code>).</li>
+    <li><strong>Benchmark / Yük Testi Sonuçları:</strong> (Varsa) K6 veya test raporu ekran görüntüleri.</li>
+    <li><strong>Teknoloji Seçim Gerekçeleri (Architecture Decision Records):</strong> Neden bu veritabanı veya framework seçildi?</li>
+  </ol>
+
+  <h2>6.2. GitHub Actions CI/CD Pipeline (Workflow YAML)</h2>
+  <p>Her commit atıldığında kod kalitesini, tipleri ve testleri denetleyen standart boru hattı:</p>
+
+<pre><code>name: CI Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Bağımlılıkları Yükle
+        run: npm ci
+
+      - name: ESLint Denetimi
+        run: npm run lint
+
+      - name: TypeScript Tip Kontrolü
+        run: npm run typecheck
+
+      - name: Birim Testleri Çalıştır
+        run: npm run test:unit -- --coverage
+
+      - name: Production Build
+        run: npm run build</code></pre>
+
+  <h2>6.3. Mimar Selim & Atlas'ın Son Tavsiyesi</h2>
+  <div class="callout success">
+    <strong>Portföy İnşa Sıralaması:</strong><br>
+    Önce <strong>EnvVault CLI</strong> ile başlayıp 1 haftada terminal ve kriptografi gücünüzü gösteren ilk repoyu tamamlayın. Ardından <strong>SignOffy</strong> ile kurumsal B2B fullstack yetkinliğini ekleyin. Son olarak <strong>HookSentry</strong> ve <strong>GuardLLM</strong> ile dağıtık sistemler ve modern yapay zeka altyapısı kurarak 2026 piyasasında iş arayan geliştiricilerin en üst %5'lik dilimine yerleşin.
+  </div>
+
+</body>
+</html>

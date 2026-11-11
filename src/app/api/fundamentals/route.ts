@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
-  MissingFmpApiKeyError,
   fetchFundamentals,
   fetchYahooFundamentals,
 } from "@/lib/fundamentals";
@@ -33,22 +32,26 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    return NextResponse.json({
-      market,
-      source: "financialmodelingprep",
-      updatedAt: new Date().toISOString(),
-      fundamentals: await fetchFundamentals(symbol),
-    });
-  } catch (error) {
-    if (error instanceof MissingFmpApiKeyError) {
-      return NextResponse.json(
-        {
-          error: "FMP_API_KEY tanimli degil. Canli temel analiz icin .env.local dosyasina FMP_API_KEY ekleyin.",
-        },
-        { status: 501 },
-      );
+    if (process.env.FMP_API_KEY) {
+      try {
+        return NextResponse.json({
+          market,
+          source: "financialmodelingprep",
+          updatedAt: new Date().toISOString(),
+          fundamentals: await fetchFundamentals(symbol),
+        });
+      } catch {
+        // FMP plani veya servis erisimi yetersizse temel panel Yahoo ile calismaya devam eder.
+      }
     }
 
+    return NextResponse.json({
+      market,
+      source: "yahoo",
+      updatedAt: new Date().toISOString(),
+      fundamentals: await fetchYahooFundamentals(symbol),
+    });
+  } catch (error) {
     return NextResponse.json(
       {
         error: error instanceof Error ? error.message : "Unknown fundamentals error",

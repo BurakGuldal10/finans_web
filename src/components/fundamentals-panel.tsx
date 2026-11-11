@@ -1,7 +1,7 @@
 "use client";
 
 import { Building2, KeyRound } from "lucide-react";
-import type { CombinedAnalysis } from "@/lib/combined-analysis";
+import type { CombinedAnalysis, LongTermThesis } from "@/lib/combined-analysis";
 import type { FundamentalAnalysis } from "@/lib/fundamentals";
 
 type FundamentalsResponse = {
@@ -43,9 +43,9 @@ export function FundamentalsPanel({ combined, data, error, loading }: Fundamenta
             <p className="font-semibold">Temel analiz verisi tamamlanamadi.</p>
             <p className="mt-1">{error}</p>
             <p className="mt-2 text-yellow-100/80">
-              ABD hisselerinde canli bilanco icin `.env.local` dosyasina `FMP_API_KEY` eklenmeli.
-              BIST tarafinda Yahoo verisi eksik donebilir; bu durumda teknik analiz calismaya devam
-              eder.
+              Uygulama once FMP&apos;yi, ardindan Yahoo yedegini dener. Ayrintili emsal ve bilanco
+              oranlari icin `.env.local` dosyasina `FMP_API_KEY` eklenebilir. BIST verisi eksik
+              donebilir; bu durumda teknik analiz calismaya devam eder.
             </p>
           </div>
         </div>
@@ -69,7 +69,8 @@ export function FundamentalsPanel({ combined, data, error, loading }: Fundamenta
           </div>
 
           {combined ? (
-            <div className="rounded-md border border-white/10 bg-white/[0.04] p-4">
+            <>
+              <div className="rounded-md border border-white/10 bg-white/[0.04] p-4">
               <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                 <div>
                   <p className="text-sm font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">
@@ -85,7 +86,9 @@ export function FundamentalsPanel({ combined, data, error, loading }: Fundamenta
                 Teknik agirlik {(combined.technicalWeight * 100).toFixed(0)}%, temel agirlik{" "}
                 {(combined.fundamentalWeight * 100).toFixed(0)}%.
               </p>
-            </div>
+              </div>
+              <LongTermThesisCard thesis={combined.longTermThesis} />
+            </>
           ) : null}
 
           <div className="grid gap-3 md:grid-cols-4">
@@ -101,6 +104,26 @@ export function FundamentalsPanel({ combined, data, error, loading }: Fundamenta
         </div>
       ) : null}
     </section>
+  );
+}
+
+function LongTermThesisCard({ thesis }: { thesis: LongTermThesis }) {
+  const stanceLabel = thesis.stance === "accumulate" ? "Kademeli artir" : thesis.stance === "avoid" ? "Yeni alimdan kacın" : "Izle ve teyit bekle";
+
+  return (
+    <div className="rounded-md border border-sky-300/20 bg-sky-300/10 p-4">
+      <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+        <div>
+          <p className="text-sm font-semibold text-white">Uzun vadeli yatirim tezi</p>
+          <p className="mt-2 text-sm leading-6 text-sky-50">{thesis.summary}</p>
+        </div>
+        <span className="rounded-md border border-sky-300/30 px-3 py-1 text-sm text-sky-100">{stanceLabel}</span>
+      </div>
+      <div className="mt-3 grid gap-2 text-xs leading-5 text-sky-50 md:grid-cols-2">
+        <p>Kalite: {thesis.qualityScore}/100 | Degerleme: {thesis.valuation} | Zamanlama: {thesis.timing}</p>
+        <p>Tez gecersizligi: {thesis.invalidation}</p>
+      </div>
+    </div>
   );
 }
 

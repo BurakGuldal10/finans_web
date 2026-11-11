@@ -17,6 +17,13 @@ export type AnalysisResult = {
     percent: number;
     regime: "low" | "normal" | "high";
   };
+  positionSizing: {
+    conservativeRiskPercent: number;
+    standardRiskPercent: number;
+    stopDistancePercent: number;
+    unitsPerThousandAtConservativeRisk: number;
+    unitsPerThousandAtStandardRisk: number;
+  };
   levels: {
     support: number;
     resistance: number;
@@ -35,6 +42,7 @@ export type AnalysisResult = {
   indicators: {
     sma20: number;
     sma50: number;
+    sma200: number;
     ema20: number;
     rsi14: number;
     macd: number;
@@ -212,6 +220,7 @@ export function analyzeCandles(symbol: string, candles: Candle[]): AnalysisResul
   const price = closes.at(-1) ?? 0;
   const sma20 = sma(closes, 20);
   const sma50 = sma(closes, 50);
+  const sma200 = sma(closes, 200);
   const ema20 = ema(closes, 20);
   const rsi14 = rsi(closes, 14);
   const macdValues = macd(closes);
@@ -321,6 +330,9 @@ export function analyzeCandles(symbol: string, candles: Candle[]): AnalysisResul
   const targetTwo = price + atr14 * 3.5;
   const risk = Math.max(price - stopLoss, 0.00000001);
   const reward = Math.max(targetOne - price, 0);
+  const stopDistancePercent = price > 0 ? (risk / price) * 100 : 0;
+  const unitsPerThousandAtConservativeRisk = 5 / risk;
+  const unitsPerThousandAtStandardRisk = 10 / risk;
   const actionSummary =
     boundedScore >= 74
       ? "Olumlu gorunum var; yine de alim icin fiyat teyidi, hacim ve stop plani birlikte izlenmeli."
@@ -335,6 +347,13 @@ export function analyzeCandles(symbol: string, candles: Candle[]): AnalysisResul
     score: boundedScore,
     trendStrength,
     volatility,
+    positionSizing: {
+      conservativeRiskPercent: 0.5,
+      standardRiskPercent: 1,
+      stopDistancePercent,
+      unitsPerThousandAtConservativeRisk,
+      unitsPerThousandAtStandardRisk,
+    },
     levels,
     buyZone: [lowerBuy, upperBuy],
     stopLoss,
@@ -348,6 +367,7 @@ export function analyzeCandles(symbol: string, candles: Candle[]): AnalysisResul
     indicators: {
       sma20,
       sma50,
+      sma200,
       ema20,
       rsi14,
       macd: macdValues.macdLine,
