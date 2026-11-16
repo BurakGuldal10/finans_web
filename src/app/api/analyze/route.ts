@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
+  type AnalysisResult,
   analyzeCandles,
   buildDecisionReport,
   buildTradePlan,
+  type Candle,
   summarizeTimeframes,
 } from "@/lib/analysis";
 import {
@@ -26,6 +28,7 @@ import {
 } from "@/lib/yahoo";
 
 const ANALYSIS_CACHE_TTL_SECONDS = 45;
+const VALIDATION_CACHE_TTL_SECONDS = 3600;
 const TIMEFRAME_LABELS: Record<BinanceInterval, string> = {
   "15m": "15 dakika",
   "1h": "1 saat",
@@ -69,19 +72,24 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const validation =
-      market === "stocks"
-        ? await validateStockSymbol(symbol)
-        : market === "bist"
-          ? await validateBistSymbol(symbol)
-          : await validateSpotUsdtSymbol(symbol);
+    const validationCache = await getCached(
+      createCacheKey(["symbol-valid", market, symbol]),
+      VALIDATION_CACHE_TTL_SECONDS,
+      async () =>
+        market === "stocks"
+          ? await validateStockSymbol(symbol)
+          : market === "bist"
+            ? await validateBistSymbol(symbol)
+            : await validateSpotUsdtSymbol(symbol),
+    );
 
-    if (!validation.valid) {
-      return NextResponse.json({ error: validation.reason }, { status: 404 });
+    if (!validationCache.value.valid) {
+      return NextResponse.json({ error: validationCache.value.reason }, { status: 404 });
     }
 
-    const cacheResult = await getCached(
-      createCacheKey(["analysis", market, symbol, interval]),
+    // 4 zaman diliminin tamamını sembol bazında önbellekle; zaman dilimi geçişlerinde 0 dış API isteği yap
+    const bundleResult = await getCached(
+      createCacheKey(["analysis-bundle", market, symbol]),
       ANALYSIS_CACHE_TTL_SECONDS,
       async () => {
         const candleSets = await Promise.all(
@@ -93,44 +101,51 @@ export async function GET(request: NextRequest) {
             interval: currentInterval,
           })),
         );
-        const selectedCandles =
-          candleSets.find((item) => item.interval === interval)?.candles ?? candleSets[1].candles;
-        const timeframeAnalyses = candleSets.map((item) => ({
-          analysis: analyzeCandles(symbol, item.candles),
-          interval: item.interval,
-          label: TIMEFRAME_LABELS[item.interval],
-        }));
 
-        const analysis =
-          timeframeAnalyses.find((item) => item.interval === interval)?.analysis ??
-          analyzeCandles(symbol, selectedCandles);
+        const candlesByInterval = {} as Record<BinanceInterval, Candle[]>;
+        const analysisByInterval = {} as Record<BinanceInterval, AnalysisResult>;
+
+        const timeframeAnalyses = candleSets.map((item) => {
+          const currentAnalysis = analyzeCandles(symbol, item.candles);
+          candlesByInterval[item.interval] = item.candles.slice(-80);
+          analysisByInterval[item.interval] = currentAnalysis;
+          return {
+            analysis: currentAnalysis,
+            interval: item.interval,
+            label: TIMEFRAME_LABELS[item.interval],
+          };
+        });
+
         const multiTimeframe = summarizeTimeframes(timeframeAnalyses);
-        const tradePlan = buildTradePlan(analysis, multiTimeframe);
 
         return {
-          analysis,
-          candles: selectedCandles.slice(-80),
-          decisionReport: buildDecisionReport(analysis, multiTimeframe, tradePlan),
+          analysisByInterval,
+          candlesByInterval,
           multiTimeframe,
-          tradePlan,
         };
       },
     );
 
+    const bundle = bundleResult.value;
+    const analysis = bundle.analysisByInterval[interval] ?? bundle.analysisByInterval["1h"];
+    const candles = bundle.candlesByInterval[interval] ?? bundle.candlesByInterval["1h"];
+    const tradePlan = buildTradePlan(analysis, bundle.multiTimeframe);
+    const decisionReport = buildDecisionReport(analysis, bundle.multiTimeframe, tradePlan);
+
     return NextResponse.json({
-      cached: cacheResult.hit,
-      cacheTtlSeconds: cacheResult.ttlSeconds,
-      stale: cacheResult.stale,
-      staleReason: cacheResult.staleReason,
+      cached: bundleResult.hit,
+      cacheTtlSeconds: bundleResult.ttlSeconds,
+      stale: bundleResult.stale,
+      staleReason: bundleResult.staleReason,
       market,
       source: market === "crypto" ? "binance" : "yahoo",
       interval,
       updatedAt: new Date().toISOString(),
-      analysis: cacheResult.value.analysis,
-      candles: cacheResult.value.candles,
-      decisionReport: cacheResult.value.decisionReport,
-      multiTimeframe: cacheResult.value.multiTimeframe,
-      tradePlan: cacheResult.value.tradePlan,
+      analysis,
+      candles,
+      decisionReport,
+      multiTimeframe: bundle.multiTimeframe,
+      tradePlan,
     });
   } catch (error) {
     return NextResponse.json(

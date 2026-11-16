@@ -17,11 +17,6 @@ export function LongTermResearchPanel({ market, symbol }: LongTermResearchPanelP
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    if (market === "crypto") {
-      setResearch(null);
-      setError(null);
-      return;
-    }
     setLoading(true);
     setError(null);
     try {
@@ -52,12 +47,6 @@ export function LongTermResearchPanel({ market, symbol }: LongTermResearchPanelP
     return () => window.clearTimeout(timer);
   }, [load]);
 
-  if (market === "crypto") {
-    return (
-      <EmptyState text="Uzun vadeli bilanço ve fiyat projeksiyon analizi için ABD Hisse veya BIST piyasasını seçin." />
-    );
-  }
-
   const horizonOptions: Array<{ label: string; value: LongTermHorizon }> = [
     { label: "3 Ay", value: "3m" },
     { label: "6 Ay", value: "6m" },
@@ -66,6 +55,8 @@ export function LongTermResearchPanel({ market, symbol }: LongTermResearchPanelP
     { label: "5 Yıl", value: "5y" },
   ];
 
+  const isCrypto = market === "crypto";
+
   return (
     <section className="space-y-4">
       <div className="rounded-lg border border-[var(--border)] bg-[rgba(13,26,23,0.82)] p-4 md:p-5">
@@ -73,11 +64,14 @@ export function LongTermResearchPanel({ market, symbol }: LongTermResearchPanelP
           <div>
             <h2 className="flex items-center gap-2 text-lg font-semibold text-white">
               <BookOpenCheck size={20} />
-              3 Ay – 5 Yıllık Bilanço Yorumu & Tahmini Fiyat Hareketleri
+              {isCrypto
+                ? "3 Ay – 5 Yıllık Kripto Döngü, Likidite & Tahmini Fiyat Senaryoları"
+                : "3 Ay – 5 Yıllık Bilanço Yorumu & Tahmini Fiyat Hareketleri"}
             </h2>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">
-              Çeyreklik bilanço dayanıklılığı, marj trendleri ve kârlılığı analiz eder;
-              volatilite ve sektörel çarpan bazlı Boğa, Baz ve Ayı tahmini fiyat senaryoları sunar.
+              {isCrypto
+                ? "Kripto varlıklarda şirket bilançosu bulunmadığından; 24s likidite derinliği, döngü momentumu, Max Drawdown dayanıklılığı ve BTC/ETH göreli gücünü analiz eder; volatilite bazlı Boğa, Baz ve Ayı fiyat senaryoları sunar."
+                : "Çeyreklik bilanço dayanıklılığı, marj trendleri ve kârlılığı analiz eder; volatilite ve sektörel çarpan bazlı Boğa, Baz ve Ayı tahmini fiyat senaryoları sunar."}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -108,14 +102,22 @@ export function LongTermResearchPanel({ market, symbol }: LongTermResearchPanelP
         </div>
       </div>
 
-      {loading ? <EmptyState text="Bilanço, emsal, volatilite ve senaryo hedef fiyat verileri hesaplanıyor..." /> : null}
+      {loading ? <EmptyState text="Tarihsel volatilite, kıyaslama ve senaryo hedef fiyat verileri hesaplanıyor..." /> : null}
       {!loading && error ? <EmptyState danger text={error} /> : null}
-      {!loading && research ? <ResearchReport research={research} /> : null}
+      {!loading && research ? <ResearchReport isCrypto={isCrypto} research={research} /> : null}
     </section>
   );
 }
 
-function ResearchReport({ research }: { research: LongTermResearch }) {
+function formatScenarioPrice(value: number) {
+  if (value === 0) return "0.00";
+  const abs = Math.abs(value);
+  if (abs < 0.01) return value.toFixed(6);
+  if (abs < 1) return value.toFixed(4);
+  return value.toFixed(2);
+}
+
+function ResearchReport({ isCrypto, research }: { isCrypto: boolean; research: LongTermResearch }) {
   const stanceLabel =
     research.stance === "accumulate_on_weakness"
       ? "Geri çekilmelerde kademeli biriktirmeyi araştır"
@@ -162,9 +164,9 @@ function ResearchReport({ research }: { research: LongTermResearch }) {
         </article>
       </div>
 
-      <PriceProjectionsCard research={research} />
+      <PriceProjectionsCard isCrypto={isCrypto} research={research} />
 
-      <QuarterlyBalanceSheetCard research={research} />
+      <QuarterlyBalanceSheetCard isCrypto={isCrypto} research={research} />
 
       <div className="grid gap-4 lg:grid-cols-2">
         <ValuationCard research={research} />
@@ -222,7 +224,7 @@ function ResearchReport({ research }: { research: LongTermResearch }) {
           ⚠️ Yasal Uyarı — Yatırım Tavsiyesi ve Danışmanlık Değildir
         </p>
         <p className="mt-1">
-          Bu modülde yer alan 3 ay – 5 yıl vadeli bilanço yorumları, puanlamalar ve &ldquo;Boğa / Baz /
+          Bu modülde yer alan 3 ay – 5 yıl vadeli bilanço/likidite yorumları, puanlamalar ve &ldquo;Boğa / Baz /
           Ayı&rdquo; tahmini fiyat hareketleri tamamen deneysel ve eğitim amaçlı matematiksel
           simülasyonlardır; <strong>kesinlikle yatırım tavsiyesi veya yatırım danışmanlığı amacıyla
           yapılmamıştır.</strong> Üçüncü taraf veriler eksik veya hatalı olabilir. Buradaki veriler
@@ -234,7 +236,7 @@ function ResearchReport({ research }: { research: LongTermResearch }) {
   );
 }
 
-function PriceProjectionsCard({ research }: { research: LongTermResearch }) {
+function PriceProjectionsCard({ isCrypto, research }: { isCrypto: boolean; research: LongTermResearch }) {
   const proj = research.projections;
   if (!proj) return null;
 
@@ -249,7 +251,9 @@ function PriceProjectionsCard({ research }: { research: LongTermResearch }) {
             Tahmini Fiyat Hareketleri & Senaryo Projeksiyonları ({proj.horizonLabel})
           </h3>
           <p className="mt-1 text-xs text-[var(--muted)]">
-            Tarihsel volatilite kanalları, kâr/gelir büyüme oranları ve sektörel çarpan duyarlılığı.
+            {isCrypto
+              ? "Tarihsel volatilite kanalları, Max Drawdown direnci ve BTC/ETH döngü duyarlılığı."
+              : "Tarihsel volatilite kanalları, kâr/gelir büyüme oranları ve sektörel çarpan duyarlılığı."}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -257,7 +261,7 @@ function PriceProjectionsCard({ research }: { research: LongTermResearch }) {
             <div className="rounded-md border border-white/10 bg-white/[0.04] px-3 py-1.5 text-right">
               <span className="block text-[10px] text-[var(--muted)] uppercase">Son Fiyat</span>
               <span className="font-mono text-sm font-semibold text-white">
-                {proj.currency}{proj.currentPrice.toFixed(2)}
+                {proj.currency}{formatScenarioPrice(proj.currentPrice)}
               </span>
             </div>
           ) : null}
@@ -307,7 +311,7 @@ function PriceProjectionsCard({ research }: { research: LongTermResearch }) {
                 <div className="mt-3">
                   <span className="text-xs text-[var(--muted)] block">Hedef Fiyat Aralığı</span>
                   <span className="font-mono text-lg font-semibold text-white">
-                    {proj.currency}{sc.targetPriceLow.toFixed(2)} – {proj.currency}{sc.targetPriceHigh.toFixed(2)}
+                    {proj.currency}{formatScenarioPrice(sc.targetPriceLow)} – {proj.currency}{formatScenarioPrice(sc.targetPriceHigh)}
                   </span>
                 </div>
 
@@ -342,7 +346,7 @@ function PriceProjectionsCard({ research }: { research: LongTermResearch }) {
   );
 }
 
-function QuarterlyBalanceSheetCard({ research }: { research: LongTermResearch }) {
+function QuarterlyBalanceSheetCard({ isCrypto, research }: { isCrypto: boolean; research: LongTermResearch }) {
   const q = research.quarterlyCommentary;
   if (!q) return null;
 
@@ -359,10 +363,14 @@ function QuarterlyBalanceSheetCard({ research }: { research: LongTermResearch })
         <div>
           <h3 className="flex items-center gap-2 text-base font-semibold text-white">
             <Activity className="text-emerald-300" size={18} />
-            Çeyreklik Bilanço Yorumu & Finansal Sağlık
+            {isCrypto
+              ? "Piyasa Yapısı, Likidite & Döngü Sağlığı"
+              : "Çeyreklik Bilanço Yorumu & Finansal Sağlık"}
           </h3>
           <p className="mt-1 text-xs text-[var(--muted)]">
-            Gelir tablosu, bilanço dayanıklılığı, borç çevirme kabiliyeti ve serbest nakit akışları.
+            {isCrypto
+              ? "Spot işlem derinliği, dönemsel getiri momentumu ve tarihsel Max Drawdown dayanıklılığı."
+              : "Gelir tablosu, bilanço dayanıklılığı, borç çevirme kabiliyeti ve serbest nakit akışları."}
           </p>
         </div>
         <span className={`inline-flex items-center rounded-md border px-3 py-1 text-xs font-semibold ${badgeColor}`}>
@@ -376,15 +384,21 @@ function QuarterlyBalanceSheetCard({ research }: { research: LongTermResearch })
 
       <div className="grid gap-3 sm:grid-cols-3 text-xs">
         <div className="rounded-md border border-white/5 bg-white/[0.03] p-3 space-y-1">
-          <span className="font-semibold text-white block">Marj İvmesi</span>
+          <span className="font-semibold text-white block">
+            {isCrypto ? "Getiri & Trend İvmesi" : "Marj İvmesi"}
+          </span>
           <p className="text-[var(--muted)] leading-5">{q.marginTrend}</p>
         </div>
         <div className="rounded-md border border-white/5 bg-white/[0.03] p-3 space-y-1">
-          <span className="font-semibold text-white block">Borç & Likidite</span>
+          <span className="font-semibold text-white block">
+            {isCrypto ? "Spot Hacim & Likidite" : "Borç & Likidite"}
+          </span>
           <p className="text-[var(--muted)] leading-5">{q.debtAndLiquidity}</p>
         </div>
         <div className="rounded-md border border-white/5 bg-white/[0.03] p-3 space-y-1">
-          <span className="font-semibold text-white block">Nakit Kalitesi</span>
+          <span className="font-semibold text-white block">
+            {isCrypto ? "Çöküş Direnci (Max DD)" : "Nakit Kalitesi"}
+          </span>
           <p className="text-[var(--muted)] leading-5">{q.cashFlowQuality}</p>
         </div>
       </div>

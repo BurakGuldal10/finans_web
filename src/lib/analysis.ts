@@ -161,14 +161,27 @@ export function atr(candles: Candle[], period = 14) {
 }
 
 export function macd(values: number[]) {
-  const macdLine = ema(values, 12) - ema(values, 26);
-  const macdHistory = values.map((_, index) => {
-    const slice = values.slice(0, index + 1);
-    return ema(slice, 12) - ema(slice, 26);
-  });
+  if (values.length === 0) {
+    return { macdLine: 0, signal: 0 };
+  }
+
+  const mult12 = 2 / (12 + 1);
+  const mult26 = 2 / (26 + 1);
+  let ema12 = values[0];
+  let ema26 = values[0];
+  const macdHistory = new Array<number>(values.length);
+
+  for (let i = 0; i < values.length; i++) {
+    const val = values[i];
+    if (i > 0) {
+      ema12 = val * mult12 + ema12 * (1 - mult12);
+      ema26 = val * mult26 + ema26 * (1 - mult26);
+    }
+    macdHistory[i] = ema12 - ema26;
+  }
 
   return {
-    macdLine,
+    macdLine: macdHistory[macdHistory.length - 1],
     signal: ema(macdHistory, 9),
   };
 }

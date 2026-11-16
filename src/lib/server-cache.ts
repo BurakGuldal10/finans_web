@@ -1,5 +1,6 @@
 type CacheEntry<T> = {
   expiresAt: number;
+  staleUntil: number;
   value: T;
 };
 
@@ -11,7 +12,29 @@ type CacheResult<T> = {
   value: T;
 };
 
+const MAX_CACHE_ENTRIES = 500;
+const STALE_GRACE_MS = 15 * 60 * 1000;
 const cache = new Map<string, CacheEntry<unknown>>();
+const inFlight = new Map<string, Promise<unknown>>();
+
+function pruneCache(now: number) {
+  if (cache.size <= MAX_CACHE_ENTRIES) {
+    return;
+  }
+
+  for (const [key, entry] of cache.entries()) {
+    if (entry.staleUntil <= now) {
+      cache.delete(key);
+    }
+  }
+
+  if (cache.size > MAX_CACHE_ENTRIES) {
+    const oldestKeys = Array.from(cache.keys()).slice(0, cache.size - MAX_CACHE_ENTRIES);
+    for (const key of oldestKeys) {
+      cache.delete(key);
+    }
+  }
+}
 
 export async function getCached<T>(
   key: string,
@@ -30,9 +53,30 @@ export async function getCached<T>(
     };
   }
 
-  let value: T;
+  let pending = inFlight.get(key) as Promise<T> | undefined;
+  if (!pending) {
+    pending = load().finally(() => {
+      inFlight.delete(key);
+    });
+    inFlight.set(key, pending);
+  }
+
   try {
-    value = await load();
+    const value = await pending;
+    const completedAt = Date.now();
+    cache.set(key, {
+      expiresAt: completedAt + ttlSeconds * 1000,
+      staleUntil: completedAt + ttlSeconds * 1000 + STALE_GRACE_MS,
+      value,
+    });
+    pruneCache(completedAt);
+
+    return {
+      hit: false,
+      stale: false,
+      ttlSeconds,
+      value,
+    };
   } catch (error) {
     if (existing) {
       return {
@@ -46,18 +90,6 @@ export async function getCached<T>(
 
     throw error;
   }
-
-  cache.set(key, {
-    expiresAt: now + ttlSeconds * 1000,
-    value,
-  });
-
-  return {
-    hit: false,
-    stale: false,
-    ttlSeconds,
-    value,
-  };
 }
 
 export function createCacheKey(parts: Array<number | string>) {

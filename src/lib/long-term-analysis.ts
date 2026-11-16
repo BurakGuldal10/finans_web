@@ -1,6 +1,8 @@
+import { fetchTickers, normalizeSymbol } from "@/lib/binance";
 import type { FundamentalAnalysis } from "@/lib/fundamentals";
 import { fetchFundamentals, fetchYahooFundamentals } from "@/lib/fundamentals";
 import type { MarketKind } from "@/lib/markets";
+import { createCacheKey, getCached } from "@/lib/server-cache";
 
 export type LongTermHorizon = "3m" | "6m" | "1y" | "3y" | "5y" | 1 | 3 | 5;
 
@@ -141,69 +143,344 @@ export function parseHorizon(horizon: LongTermHorizon) {
 
 export async function buildLongTermResearch(input: {
   horizonYears: LongTermHorizon;
-  market: Exclude<MarketKind, "crypto">;
+  market: MarketKind;
   symbol: string;
 }): Promise<LongTermResearch> {
   const parsedHorizon = parseHorizon(input.horizonYears);
-  const fundamentals = await fetchBestFundamentals(input.market, input.symbol);
-  const marketBenchmark = input.market === "bist" ? "XU100.IS" : "SPY";
-  const sectorBenchmark = input.market === "stocks" ? resolveSectorEtf(fundamentals.sector) : null;
+  const cacheKey = createCacheKey(["long-term", input.market, input.symbol, parsedHorizon.key]);
 
-  const [companyResult, marketResult, sectorResult, peersResult, newsResult, filingsResult] =
+  const cached = await getCached<LongTermResearch>(cacheKey, 180, async (): Promise<LongTermResearch> => {
+    if (input.market === "crypto") {
+      return buildCryptoLongTermResearch(input.symbol, input.horizonYears);
+    }
+
+    const fundamentals = await fetchBestFundamentals(input.market, input.symbol);
+    const marketBenchmark = input.market === "bist" ? "XU100.IS" : "SPY";
+    const sectorBenchmark = input.market === "stocks" ? resolveSectorEtf(fundamentals.sector) : null;
+
+    const [companyResult, marketResult, sectorResult, peersResult, newsResult, filingsResult] =
+      await Promise.allSettled([
+        fetchPerformance(input.symbol, input.horizonYears),
+        fetchPerformance(marketBenchmark, input.horizonYears),
+        sectorBenchmark
+          ? fetchPerformance(sectorBenchmark, input.horizonYears)
+          : Promise.resolve<PricePerformance | null>(null),
+        fetchPeerBenchmark(input.market, input.symbol),
+        fetchCompanyNews(fundamentals.companyName, input.symbol),
+        input.market === "stocks" ? fetchRecentSecFilings(input.symbol) : Promise.resolve([]),
+      ]);
+
+    const company = settledValue(
+      companyResult,
+      emptyPerformance(input.symbol),
+    );
+    const market = settledValue(marketResult, emptyPerformance(marketBenchmark));
+    const sector = settledValue(sectorResult, null);
+    const peers = settledValue(peersResult, unavailablePeers());
+    const news = settledValue(newsResult, []);
+    const filings = settledValue(filingsResult, []);
+    const dimensions = buildDimensions(fundamentals, peers, company, market, sector);
+    const availableWeight = dimensions.reduce(
+      (sum, dimension) => sum + (dimension.score === null ? 0 : dimension.weight),
+      0,
+    );
+    const weightedTotal = dimensions.reduce(
+      (sum, dimension) => sum + (dimension.score === null ? 0 : dimension.score * dimension.weight),
+      0,
+    );
+    const score = availableWeight > 0 ? Math.round(weightedTotal / availableWeight) : 50;
+    const coveragePercent = Math.round((availableWeight / 100) * 100);
+    const confidence = coveragePercent >= 85 ? "high" : coveragePercent >= 60 ? "medium" : "low";
+    const stance =
+      score >= 72 && confidence !== "low"
+        ? "accumulate_on_weakness"
+        : score < 48
+          ? "cautious"
+          : "watch";
+
+    const projections = buildPriceProjections(
+      input.symbol,
+      input.market,
+      input.horizonYears,
+      fundamentals,
+      company,
+      peers,
+    );
+    const quarterlyCommentary = buildQuarterlyCommentary(fundamentals, input.horizonYears);
+
+    return {
+      symbol: input.symbol,
+      companyName: fundamentals.companyName,
+      sector: fundamentals.sector,
+      horizonYears: input.horizonYears,
+      horizonLabel: parsedHorizon.label,
+      score,
+      confidence,
+      coveragePercent,
+      stance,
+      summary: buildSummary(score, confidence, parsedHorizon.label),
+      dimensions,
+      fundamentals,
+      peers,
+      performance: {
+        company,
+        market,
+        sector,
+        marketBenchmark,
+        sectorBenchmark,
+      },
+      projections,
+      quarterlyCommentary,
+      catalysts: buildCatalysts(fundamentals, company, market),
+      risks: buildRisks(fundamentals, peers, company, market),
+      checklist: buildChecklist(parsedHorizon.label, fundamentals, peers),
+      events: [...filings, ...news]
+        .sort((left, right) => right.date.localeCompare(left.date))
+        .slice(0, 12),
+      dataNotes: buildDataNotes(peers, filingsResult, newsResult, coveragePercent),
+      updatedAt: new Date().toISOString(),
+    };
+  });
+
+  return cached.value;
+}
+
+async function buildCryptoLongTermResearch(
+  rawSymbol: string,
+  horizon: LongTermHorizon,
+): Promise<LongTermResearch> {
+  const symbol = normalizeSymbol(rawSymbol);
+  const baseAsset = symbol.replace(/USDT$/, "");
+  const parsedHorizon = parseHorizon(horizon);
+  const marketBenchmark = "BTCUSDT";
+  const sectorBenchmark = symbol === "ETHUSDT" ? "SOLUSDT" : "ETHUSDT";
+
+  const [assetPerfResult, btcPerfResult, ethPerfResult, tickerResult, newsResult] =
     await Promise.allSettled([
-      fetchPerformance(input.symbol, input.horizonYears),
-      fetchPerformance(marketBenchmark, input.horizonYears),
-      sectorBenchmark
-        ? fetchPerformance(sectorBenchmark, input.horizonYears)
-        : Promise.resolve<PricePerformance | null>(null),
-      fetchPeerBenchmark(input.market, input.symbol),
-      fetchCompanyNews(fundamentals.companyName, input.symbol),
-      input.market === "stocks" ? fetchRecentSecFilings(input.symbol) : Promise.resolve([]),
+      fetchCryptoPerformance(symbol, horizon),
+      symbol === marketBenchmark
+        ? fetchCryptoPerformance(symbol, horizon)
+        : fetchCryptoPerformance(marketBenchmark, horizon),
+      fetchCryptoPerformance(sectorBenchmark, horizon),
+      fetchTickers([symbol]),
+      fetchCompanyNews(`${baseAsset} crypto`, baseAsset),
     ]);
 
-  const company = settledValue(
-    companyResult,
-    emptyPerformance(input.symbol),
-  );
-  const market = settledValue(marketResult, emptyPerformance(marketBenchmark));
-  const sector = settledValue(sectorResult, null);
-  const peers = settledValue(peersResult, unavailablePeers());
+  const company = settledValue(assetPerfResult, emptyPerformance(symbol));
+  const market = settledValue(btcPerfResult, emptyPerformance(marketBenchmark));
+  const sector = settledValue(ethPerfResult, null);
+  const ticker = settledValue(tickerResult, [])[0] ?? null;
   const news = settledValue(newsResult, []);
-  const filings = settledValue(filingsResult, []);
-  const dimensions = buildDimensions(fundamentals, peers, company, market, sector);
+
+  const quoteVolume = ticker?.quoteVolume ?? 0;
+  const liquidityScore =
+    quoteVolume > 0 ? clamp(Math.round((Math.log10(quoteVolume) - 5) * 22), 20, 92) : 50;
+  const momentumScore =
+    company.annualizedReturn !== null
+      ? clamp(Math.round(50 + company.annualizedReturn * 0.45), 15, 90)
+      : null;
+  const drawdownScore =
+    company.maxDrawdown !== null
+      ? scoreLower(Math.abs(company.maxDrawdown), 75, 25)
+      : null;
+  const relativeBtcScore =
+    symbol === "BTCUSDT"
+      ? 72
+      : scoreSpread(company.annualizedReturn, market.annualizedReturn);
+  const relativeEthScore = scoreSpread(
+    company.annualizedReturn,
+    sector?.annualizedReturn ?? null,
+  );
+  const riskScore = scoreLower(company.annualizedVolatility, 95, 35);
+
+  const dimensions: ScoreDimension[] = [
+    dimension("quality", "Likidite & Derinlik", 25, [liquidityScore], "24s USDT işlem hacmi ve piyasa derinliği"),
+    dimension("growth", "Döngü & Momentum", 20, [momentumScore], `${parsedHorizon.label} dönemlik trend ve getiri ivmesi`),
+    dimension("balance", "Çöküş Dayanıklılığı", 20, [drawdownScore], "Tarihsel azami gerileme (Max Drawdown) direnci"),
+    dimension("valuation", "BTC Göreli Gücü", 15, [relativeBtcScore], "Bitcoin (BTCUSDT) karşısındaki göreli getiri performansı"),
+    dimension("relative", "Ekosistem Göreli Gücü", 10, [relativeEthScore], `${sectorBenchmark} karşısındaki göreli performans`),
+    dimension("risk", "Volatilite Rejimi", 10, [riskScore], "Yıllıklandırılmış oynaklık ve fiyat riski"),
+  ];
+
   const availableWeight = dimensions.reduce(
-    (sum, dimension) => sum + (dimension.score === null ? 0 : dimension.weight),
+    (sum, item) => sum + (item.score === null ? 0 : item.weight),
     0,
   );
   const weightedTotal = dimensions.reduce(
-    (sum, dimension) => sum + (dimension.score === null ? 0 : dimension.score * dimension.weight),
+    (sum, item) => sum + (item.score === null ? 0 : item.score * item.weight),
     0,
   );
   const score = availableWeight > 0 ? Math.round(weightedTotal / availableWeight) : 50;
   const coveragePercent = Math.round((availableWeight / 100) * 100);
   const confidence = coveragePercent >= 85 ? "high" : coveragePercent >= 60 ? "medium" : "low";
   const stance =
-    score >= 72 && confidence !== "low"
+    score >= 70 && confidence !== "low"
       ? "accumulate_on_weakness"
-      : score < 48
+      : score < 46
         ? "cautious"
         : "watch";
 
-  const projections = buildPriceProjections(
-    input.symbol,
-    input.market,
-    input.horizonYears,
-    fundamentals,
-    company,
-    peers,
-  );
-  const quarterlyCommentary = buildQuarterlyCommentary(fundamentals, input.horizonYears);
+  const currentPrice = ticker?.price ?? company.latestPrice ?? null;
+  const volAnnual = (company.annualizedVolatility ?? 65) / 100;
+  const years = parsedHorizon.years;
+  const volHorizon = volAnnual * Math.sqrt(years);
+  const histAnnualReturn =
+    company.annualizedReturn !== null
+      ? clamp(company.annualizedReturn / 100, -0.35, 0.65)
+      : 0.15;
+
+  const basePriceMid = currentPrice ? currentPrice * Math.pow(1 + histAnnualReturn * 0.6, years) : 0;
+  const bullPriceMid = currentPrice
+    ? currentPrice * Math.pow(1 + Math.max(histAnnualReturn * 1.1, 0.25), years) * (1 + 0.45 * volHorizon)
+    : 0;
+  const maxDd = Math.abs(company.maxDrawdown ?? 50) / 100;
+  const bearFactor = Math.max(0.25, 1 - Math.max(volHorizon * 0.9, maxDd * 0.65));
+  const bearPriceMid = currentPrice ? currentPrice * bearFactor : 0;
+
+  const toPct = (target: number) =>
+    currentPrice && currentPrice > 0
+      ? Math.round(((target - currentPrice) / currentPrice) * 100 * 10) / 10
+      : 0;
+
+  const bullRet = toPct(bullPriceMid);
+  const bearRet = toPct(bearPriceMid);
+  const riskRewardRatio =
+    bullRet > 0 && bearRet < 0
+      ? Math.round((bullRet / Math.abs(bearRet)) * 10) / 10
+      : null;
+
+  const projections: PriceProjections = {
+    currentPrice: currentPrice ? Math.round(currentPrice * 10000) / 10000 : null,
+    currency: "$",
+    horizonKey: horizon,
+    horizonLabel: parsedHorizon.label,
+    horizonYearsValue: years,
+    scenarios: {
+      bull: {
+        name: "bull",
+        label: "Boğa (İyimser) Senaryo",
+        tone: "positive",
+        targetPriceLow: Math.round(bullPriceMid * 0.9 * 10000) / 10000,
+        targetPriceHigh: Math.round(bullPriceMid * 1.15 * 10000) / 10000,
+        targetPriceMid: Math.round(bullPriceMid * 10000) / 10000,
+        expectedReturnLowPct: toPct(bullPriceMid * 0.9),
+        expectedReturnHighPct: toPct(bullPriceMid * 1.15),
+        expectedReturnMidPct: bullRet,
+        probabilityLabel: "%25-%30 Olasılık",
+        keyDrivers: [
+          "Küresel kripto likidite genişlemesi ve BTC döngü ivmesi",
+          `${baseAsset} ağ/ekosistem hacminde ve kurumsal talepte artış`,
+          `Volatilite kanalının üst bandına (%${(volHorizon * 100).toFixed(0)} genişleme) yönelim`,
+        ],
+      },
+      base: {
+        name: "base",
+        label: "Baz (Beklenen) Senaryo",
+        tone: "default",
+        targetPriceLow: Math.round(basePriceMid * (1 - 0.2 * volHorizon) * 10000) / 10000,
+        targetPriceHigh: Math.round(basePriceMid * (1 + 0.2 * volHorizon) * 10000) / 10000,
+        targetPriceMid: Math.round(basePriceMid * 10000) / 10000,
+        expectedReturnLowPct: toPct(basePriceMid * (1 - 0.2 * volHorizon)),
+        expectedReturnHighPct: toPct(basePriceMid * (1 + 0.2 * volHorizon)),
+        expectedReturnMidPct: toPct(basePriceMid),
+        probabilityLabel: "%50-%55 Olasılık",
+        keyDrivers: [
+          "Mevcut piyasa likiditesi ve tarihsel ortalama volatilite seyri",
+          `BTC (${marketBenchmark}) ile dengeli korelasyonun korunması`,
+          `${parsedHorizon.label} vadede destek ve direnç bantları arasında dengelenme`,
+        ],
+      },
+      bear: {
+        name: "bear",
+        label: "Ayı (Kötümser) Senaryo",
+        tone: "danger",
+        targetPriceLow: Math.round(bearPriceMid * 0.85 * 10000) / 10000,
+        targetPriceHigh: Math.round(bearPriceMid * 1.08 * 10000) / 10000,
+        targetPriceMid: Math.round(bearPriceMid * 10000) / 10000,
+        expectedReturnLowPct: toPct(bearPriceMid * 0.85),
+        expectedReturnHighPct: toPct(bearPriceMid * 1.08),
+        expectedReturnMidPct: bearRet,
+        probabilityLabel: "%15-%20 Olasılık",
+        keyDrivers: [
+          "Makro likidite daralması veya kripto piyasasında riskten kaçış (risk-off)",
+          `Tarihsel azami gerileme (%${(maxDd * 100).toFixed(0)} Max Drawdown) bölgesinin test edilmesi`,
+          "Altcoin/parite hacminde sert düşüş ve yüksek volatilite baskısı",
+        ],
+      },
+    },
+    riskRewardRatio,
+    methodologyNote: `Kripto projeksiyonları şirket bilançosu içermez; Binance tarihsel %${(volAnnual * 100).toFixed(0)} yıllıklandırılmış volatilite kanalı, Max Drawdown ve BTC korelasyonu üzerinden hesaplanan matematiksel simülasyonlardır. Yatırım tavsiyesi değildir.`,
+  };
+
+  const healthStatus: BalanceSheetCommentary["healthStatus"] =
+    score >= 68 ? "strong" : score < 46 ? "cautious" : "moderate";
+
+  const quarterlyCommentary: BalanceSheetCommentary = {
+    healthStatus,
+    healthTitle:
+      healthStatus === "strong"
+        ? "Güçlü Likidite ve Olumlu Döngü Yapısı"
+        : healthStatus === "cautious"
+          ? "Yüksek Oynaklık ve Derin Gerileme Riski"
+          : "Dengeli Piyasa Yapısı ve Orta Düzey Volatilite",
+    healthSummary: `Kripto varlıklarda şirket bilançosu bulunmadığından ${symbol} için 24 saatlik likidite derinliği, ${parsedHorizon.label} vadeli trend ivmesi, BTC/ETH göreli gücü ve tarihsel çöküş dayanıklılığı (Max Drawdown) analiz edilmiştir.`,
+    marginTrend:
+      company.totalReturn !== null
+        ? `Seçilen dönemde toplam getiri %${company.totalReturn.toFixed(1)}, yıllıklandırılmış getiri %${company.annualizedReturn?.toFixed(1) ?? "N/A"}.`
+        : "Tarihsel getiri serisi sınırlı.",
+    debtAndLiquidity:
+      quoteVolume > 0
+        ? `24 saatlik Binance spot işlem hacmi $${(quoteVolume / 1e6).toFixed(1)}M USDT. ${quoteVolume > 50_000_000 ? "Yüksek piyasa derinliği." : "Orta/sınırlı likidite derinliği; kademe kaymasına (slippage) dikkat edilmeli."}`
+        : "24 saatlik hacim verisi alınamadı.",
+    cashFlowQuality:
+      company.maxDrawdown !== null
+        ? `Seçilen dönemde azami düşüş (Max Drawdown) %${Math.abs(company.maxDrawdown).toFixed(1)}, yıllık volatilite %${company.annualizedVolatility?.toFixed(1) ?? "N/A"}.`
+        : "Max Drawdown hesaplanamadı.",
+    quarterlyHighlights: [
+      `24s Hacim: $${(quoteVolume / 1e6).toFixed(1)}M USDT`,
+      company.totalReturn !== null ? `${parsedHorizon.label} Getiri: %${company.totalReturn.toFixed(1)}` : "Getiri: N/A",
+      company.maxDrawdown !== null ? `Max Drawdown: -%${Math.abs(company.maxDrawdown).toFixed(1)}` : "Max DD: N/A",
+      company.annualizedVolatility !== null ? `Yıllık Volatilite: %${company.annualizedVolatility.toFixed(1)}` : "Volatilite: N/A",
+    ],
+    keyWatchpoints: [
+      "Bitcoin (BTCUSDT) dominansı ve toplam kripto piyasa likiditesiyle olan korelasyonu izleyin.",
+      "Yüksek kaldıraçlı işlemlerden kaçının; kripto varlıklarda %40-%70 arası dönemsel geri çekilmeler olağandır.",
+      "Ağ kilit açılımları (token unlocks), protokol güncellemeleri ve regülasyon haberlerini takip edin.",
+    ],
+  };
+
+  const syntheticFundamentals: FundamentalAnalysis = {
+    symbol,
+    companyName: `${baseAsset} / USDT Kripto Varlık`,
+    sector: "Kripto & Blokzincir",
+    score,
+    health: healthStatus === "strong" ? "strong" : healthStatus === "cautious" ? "weak" : "mixed",
+    summary: quarterlyCommentary.healthSummary,
+    metrics: [],
+    raw: {
+      marketCap: quoteVolume,
+      peRatio: null,
+      priceToBook: null,
+      enterpriseToEbitda: null,
+      revenueGrowth: null,
+      earningsGrowth: null,
+      grossMargin: null,
+      operatingMargin: null,
+      netMargin: null,
+      debtToEquity: null,
+      currentRatio: null,
+      freeCashFlow: null,
+      returnOnEquity: null,
+      returnOnAssets: null,
+      dividendYield: null,
+    },
+  };
 
   return {
-    symbol: input.symbol,
-    companyName: fundamentals.companyName,
-    sector: fundamentals.sector,
-    horizonYears: input.horizonYears,
+    symbol,
+    companyName: `${baseAsset} / USDT`,
+    sector: "Kripto Varlık (Spot USDT)",
+    horizonYears: horizon,
     horizonLabel: parsedHorizon.label,
     score,
     confidence,
@@ -211,8 +488,16 @@ export async function buildLongTermResearch(input: {
     stance,
     summary: buildSummary(score, confidence, parsedHorizon.label),
     dimensions,
-    fundamentals,
-    peers,
+    fundamentals: syntheticFundamentals,
+    peers: {
+      available: false,
+      sampleSize: 2,
+      symbols: ["BTCUSDT", sectorBenchmark],
+      peMedian: null,
+      priceToBookMedian: null,
+      enterpriseToEbitdaMedian: null,
+      note: "Kripto varlıklarda F/K veya PD/DD çarpanı bulunmaz; kıyaslama BTCUSDT ve ETHUSDT göreli performansı üzerinden yapılır.",
+    },
     performance: {
       company,
       market,
@@ -222,15 +507,98 @@ export async function buildLongTermResearch(input: {
     },
     projections,
     quarterlyCommentary,
-    catalysts: buildCatalysts(fundamentals, company, market),
-    risks: buildRisks(fundamentals, peers, company, market),
-    checklist: buildChecklist(parsedHorizon.label, fundamentals, peers),
-    events: [...filings, ...news]
-      .sort((left, right) => right.date.localeCompare(left.date))
-      .slice(0, 12),
-    dataNotes: buildDataNotes(peers, filingsResult, newsResult, coveragePercent),
+    catalysts: [
+      quoteVolume > 50_000_000
+        ? `Yüksek 24s spot hacim ($${(quoteVolume / 1e6).toFixed(1)}M) kurumsal ve bireysel likiditeyi destekliyor.`
+        : "İşlem hacmindeki artışlar trend teyidi için yakından izlenmeli.",
+      company.annualizedReturn !== null && market.annualizedReturn !== null && company.annualizedReturn > market.annualizedReturn
+        ? `Seçilen ${parsedHorizon.label} dönemde BTCUSDT getirisinin üzerinde pozitif ayrışma (alfa) mevcut.`
+        : "BTCUSDT liderliğindeki piyasa döngüsü ana yön belirleyici olmaya devam ediyor.",
+    ],
+    risks: [
+      company.maxDrawdown !== null && company.maxDrawdown < -40
+        ? `Seçilen dönemde -%${Math.abs(company.maxDrawdown).toFixed(1)} azami düşüş yaşanmış; sert volatilite riski yüksek.`
+        : "Kripto piyasasında ani likidite çekilmeleri ve yüksek oynaklık her zaman temel risktir.",
+      "Şirket bilançosu veya nakit akışı çıpası olmadığından fiyatlamalar tamamen arz/talep ve makro likiditeye duyarlıdır.",
+    ],
+    checklist: quarterlyCommentary.keyWatchpoints,
+    events: news.slice(0, 10),
+    dataNotes: [
+      `Skor veri kapsamı: %${coveragePercent}.`,
+      "Kripto varlıklarda şirket bilançosu bulunmadığından; likidite derinliği, döngü momentumu, Max Drawdown ve BTC/ETH göreli gücü esas alınmıştır.",
+      "Haberler puana dahil edilmez; yalnızca ekosistem gelişmelerini takip etmek için sunulur.",
+    ],
     updatedAt: new Date().toISOString(),
   };
+}
+
+async function fetchCryptoPerformance(symbol: string, horizon: LongTermHorizon): Promise<PricePerformance> {
+  const parsed = parseHorizon(horizon);
+  const interval = parsed.years <= 1 ? "1d" : "1w";
+  const limit =
+    parsed.key === "3m"
+      ? 90
+      : parsed.key === "6m"
+        ? 180
+        : parsed.key === "1y"
+          ? 365
+          : parsed.key === "3y"
+            ? 156
+            : 260;
+
+  const cacheKey = createCacheKey(["crypto-perf", symbol, interval, limit]);
+  const cached = await getCached(cacheKey, 600, async () => {
+    const params = new URLSearchParams({
+      symbol,
+      interval,
+      limit: String(limit),
+    });
+    const response = await fetch(`https://api.binance.com/api/v3/klines?${params}`, {
+      next: { revalidate: 600 },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!response.ok) {
+      throw new Error(`Binance fiyat geçmişi alınamadı: ${response.status}`);
+    }
+    const raw = (await response.json()) as unknown[][];
+    const points: PricePoint[] = raw.flatMap((item) => {
+      const timestamp = Number(item[0]) / 1000;
+      const close = Number(item[4]);
+      return Number.isFinite(timestamp) && Number.isFinite(close) && close > 0
+        ? [{ timestamp, close }]
+        : [];
+    });
+
+    if (points.length < 2) {
+      return emptyPerformance(symbol);
+    }
+
+    const latestPrice = points.at(-1)!.close;
+    const totalReturn = (latestPrice / points[0].close - 1) * 100;
+    const elapsedYears = Math.max(
+      (points.at(-1)!.timestamp - points[0].timestamp) / (365.25 * 24 * 60 * 60),
+      0.05,
+    );
+    const returns = points.slice(1).map((point, index) => point.close / points[index].close - 1);
+    const multiplier = interval === "1d" ? Math.sqrt(365) : Math.sqrt(52);
+    let peak = points[0].close;
+    let maxDrawdown = 0;
+    for (const point of points) {
+      peak = Math.max(peak, point.close);
+      maxDrawdown = Math.min(maxDrawdown, (point.close / peak - 1) * 100);
+    }
+
+    return {
+      symbol,
+      totalReturn,
+      annualizedReturn: (Math.pow(latestPrice / points[0].close, 1 / Math.max(elapsedYears, 0.1)) - 1) * 100,
+      annualizedVolatility: standardDeviation(returns) * multiplier * 100,
+      maxDrawdown,
+      latestPrice,
+    };
+  });
+
+  return cached.value;
 }
 
 async function fetchBestFundamentals(

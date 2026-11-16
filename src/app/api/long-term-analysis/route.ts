@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isSupportedUsdtSymbol, normalizeSymbol } from "@/lib/binance";
 import { buildLongTermResearch, type LongTermHorizon } from "@/lib/long-term-analysis";
 import { normalizeMarket } from "@/lib/markets";
 import {
@@ -10,25 +11,33 @@ import {
 
 export async function GET(request: NextRequest) {
   const market = normalizeMarket(request.nextUrl.searchParams.get("market"));
-  if (market === "crypto") {
-    return NextResponse.json(
-      { error: "Uzun vadeli bilanco analizi su an ABD ve BIST hisselerini destekliyor." },
-      { status: 400 },
-    );
-  }
-
-  const rawSymbol = request.nextUrl.searchParams.get("symbol") ?? (market === "bist" ? "THYAO.IS" : "AAPL");
-  const symbol = market === "bist" ? normalizeBistSymbol(rawSymbol) : normalizeStockSymbol(rawSymbol);
+  const rawSymbol =
+    request.nextUrl.searchParams.get("symbol") ??
+    (market === "bist" ? "THYAO.IS" : market === "stocks" ? "AAPL" : "BTCUSDT");
+  const symbol =
+    market === "bist"
+      ? normalizeBistSymbol(rawSymbol)
+      : market === "stocks"
+        ? normalizeStockSymbol(rawSymbol)
+        : normalizeSymbol(rawSymbol);
   const horizonYears = normalizeHorizon(request.nextUrl.searchParams.get("horizon"));
 
-  if (market === "bist" ? !isSupportedBistSymbol(symbol) : !isSupportedStockSymbol(symbol)) {
+  if (market === "crypto" && !isSupportedUsdtSymbol(symbol)) {
+    return NextResponse.json({ error: "Gecerli bir Binance USDT paritesi girin. Ornek: BTCUSDT" }, { status: 400 });
+  }
+
+  if (market === "bist" && !isSupportedBistSymbol(symbol)) {
+    return NextResponse.json({ error: "Gecerli bir BIST sembolu girin." }, { status: 400 });
+  }
+
+  if (market === "stocks" && !isSupportedStockSymbol(symbol)) {
     return NextResponse.json({ error: "Gecerli bir hisse sembolu girin." }, { status: 400 });
   }
 
   try {
     return NextResponse.json({
       market,
-      source: "FMP/Yahoo/SEC/Google News",
+      source: market === "crypto" ? "Binance/Google News" : "FMP/Yahoo/SEC/Google News",
       research: await buildLongTermResearch({ market, symbol, horizonYears }),
     });
   } catch (error) {

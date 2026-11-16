@@ -106,7 +106,7 @@ const cryptoSymbols = [
   "DOGEUSDT",
   "DOTUSDT",
   "LINKUSDT",
-  "MATICUSDT",
+  "POLUSDT",
   "LTCUSDT",
   "TRXUSDT",
   "ATOMUSDT",
@@ -208,6 +208,7 @@ export function MarketDashboard() {
   const [settings, setSettings] = useState<AppSettings>(defaultSettings);
   const [watchlistSortMode, setWatchlistSortMode] = useState<WatchlistSortMode>("default");
   const [activeTab, setActiveTab] = useState<DashboardTab>("analysis");
+  const [isHydrated, setIsHydrated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const watchlist = watchlists[selectedMarket];
@@ -378,40 +379,51 @@ export function MarketDashboard() {
       setWatchlists(nextWatchlists);
       setSelectedMarket(nextMarket);
       setSelectedSymbol(nextWatchlists[nextMarket][0]);
+      setIsHydrated(true);
     }, 0);
 
     return () => window.clearTimeout(timer);
   }, []);
 
   useEffect(() => {
+    if (!isHydrated) return;
     window.localStorage.setItem(watchlistStorageKey, JSON.stringify(watchlists.crypto));
     window.localStorage.setItem(stockWatchlistStorageKey, JSON.stringify(watchlists.stocks));
     window.localStorage.setItem(bistWatchlistStorageKey, JSON.stringify(watchlists.bist));
-  }, [watchlists]);
+  }, [isHydrated, watchlists]);
 
   useEffect(() => {
+    if (!isHydrated) return;
     window.localStorage.setItem(timeframeStorageKey, selectedTimeframe);
-  }, [selectedTimeframe]);
+  }, [isHydrated, selectedTimeframe]);
 
   useEffect(() => {
+    if (!isHydrated) return;
     window.localStorage.setItem(marketStorageKey, selectedMarket);
-  }, [selectedMarket]);
+  }, [isHydrated, selectedMarket]);
 
   useEffect(() => {
+    if (!isHydrated) return;
     window.localStorage.setItem(sortModeStorageKey, watchlistSortMode);
-  }, [watchlistSortMode]);
+  }, [isHydrated, watchlistSortMode]);
 
   useEffect(() => {
+    if (!isHydrated) return;
     window.localStorage.setItem(settingsStorageKey, JSON.stringify(settings));
-  }, [settings]);
+  }, [isHydrated, settings]);
 
   useEffect(() => {
+    if (!isHydrated) return;
+
     const initialTimer = window.setTimeout(() => {
       refresh(selectedMarket, selectedSymbol, selectedTimeframe);
     }, 0);
     const intervalMs = Math.max(settings.refreshIntervalSeconds, 5) * 1000;
     const timer = settings.autoRefresh
       ? window.setInterval(() => {
+          if (typeof document !== "undefined" && document.hidden) {
+            return;
+          }
           refresh(selectedMarket, selectedSymbol, selectedTimeframe);
         }, intervalMs)
       : null;
@@ -422,7 +434,7 @@ export function MarketDashboard() {
         window.clearInterval(timer);
       }
     };
-  }, [refresh, selectedMarket, selectedSymbol, selectedTimeframe, settings]);
+  }, [isHydrated, refresh, selectedMarket, selectedSymbol, selectedTimeframe, settings]);
 
   async function addSymbol(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -1197,7 +1209,8 @@ function compactNumber(value: number) {
 }
 
 function normalizeCryptoSymbol(symbol: string) {
-  return symbol.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+  const cleaned = symbol.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+  return cleaned === "MATICUSDT" ? "POLUSDT" : cleaned;
 }
 
 function normalizeStockSymbol(symbol: string) {

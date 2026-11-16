@@ -269,3 +269,23 @@ npm run test:all
   - `src/components/long-term-research-panel.tsx`: Uzun vadeli bilanço ve tahmini fiyat projeksiyonları panelindeki yasal uyarı kutusu güçlendirildi.
   - `README.md`: En üstte dikkat çekici `> [!CAUTION]` yasal uyarı ve sorumluluk reddi beyanı ile birlikte proje tanıtımı, teknoloji yığını ve kurulum adımlarını içeren kapsamlı dokümantasyon oluşturuldu.
 - Doğrulama & Dağıtım: `npm run lint` ve `npm run build` ile sıfır hatayla doğrulandı ve tüm değişiklikler GitHub (`https://github.com/BurakGuldal10/finans_web.git`) `main` dalına pushlandı.
+
+### 2026-11-16 — Kripto Veri/Analiz Katmanı ve Sistem Performans Optimizasyonu
+
+- Amaç: Kripto tarafındaki veri çekme, sembol doğrulama, teknik analiz ve 3 Ay – 5 Yıl döngü/senaryo projeksiyonlarını optimize etmek ve sistem genelinde ağ/CPU darboğazlarını gidermek.
+- Tespit Edilen Sorunlar & Uygulanan Optimizasyonlar:
+  - `src/lib/binance.ts`:
+    - Her 20 saniyede bir tüm 2.500+ pariteyi (~1.5 MB JSON) indiren parametresiz `ticker/24hr` çağrısı yerine, 40 sembole kadar doğrudan hedefli `?symbols=[...]` sorgusu (~3 KB JSON) ve paylaşımlı `Map` önbelleği (`binance:all-24hr-tickers-map`) eklendi.
+    - Binance'ten delist olan `MATICUSDT` sembolü otomatik olarak `POLUSDT`'ye normalize edildi.
+    - `validateSpotUsdtSymbol` içinde bilinen semboller (`KNOWN_VALID_SYMBOLS`) ve `exchangeInfo?permissions=SPOT` 1 saatlik önbelleğe alınarak her analiz isteğinde yapılan gereksiz dış doğrulama ağ çağrıları `0 ms`'ye indirildi.
+    - Gerçek `SMA200` hesaplaması için mum limiti `120`'den `210`'a çıkarıldı ve `fetchCandles` önbelleklendi.
+  - `src/lib/analysis.ts`:
+    - `macd()` fonksiyonundaki `O(N²)` dizi dilimleme (`values.slice(0, index + 1)`) darboğazı, tek geçişli `O(N)` EMA serisi hesaplamasına dönüştürüldü (~%90 CPU tasarrufu).
+  - `src/app/api/analyze/route.ts`:
+    - 4 zaman dilimi (`15m`, `1h`, `4h`, `1d`) tek bir `analysis-bundle` önbelleğinde birleştirildi; zaman dilimi geçişlerinde dış API çağrısı sıfırlandı.
+  - `src/lib/server-cache.ts`:
+    - Eşzamanlı özdeş isteklerin dış API'leri iki kez çağırmasını önleyen `inFlight` (Request Coalescing / Deduplication) mekanizması ve bellek sınırı (`MAX_CACHE_ENTRIES = 500`) eklendi.
+  - `src/lib/long-term-analysis.ts`, `src/app/api/long-term-analysis/route.ts`, `src/components/long-term-research-panel.tsx`:
+    - Kripto varlıklar için (şirket bilançosu olmadığını açıkça belirterek) 3 Ay, 6 Ay, 1 Yıl, 3 Yıl ve 5 Yıl vadelerinde **Likidite Derinliği, Döngü Momentumu, Max Drawdown Direnci, BTC/ETH Göreli Gücü ve Boğa/Baz/Ayı Fiyat Senaryo Projeksiyonları** eklendi ve 3 dakikalık sunucu önbelleğine alındı.
+  - `src/components/market-dashboard.tsx`:
+    - İlk açılışta `localStorage` hidrasyonu kaynaklı çifte API çağrısı (`Double Fetch`) `isHydrated` kontrolüyle giderildi ve arka plan sekmelerinde (`document.hidden`) gereksiz polling durduruldu.
