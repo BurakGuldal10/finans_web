@@ -605,6 +605,22 @@ export function MarketDashboard() {
         </button>
       </header>
 
+      <div
+        aria-label="Yasal uyari bandi"
+        className="mx-auto mb-5 flex max-w-7xl items-start gap-3 rounded-lg border border-amber-400/30 bg-amber-400/10 px-4 py-3 text-xs leading-5 text-amber-100 shadow-lg shadow-black/10"
+      >
+        <AlertTriangle className="mt-0.5 shrink-0 text-amber-300" size={18} />
+        <div>
+          <span className="font-semibold text-amber-200">
+            YASAL UYARI — YATIRIM TAVSİYESİ DEĞİLDİR:{" "}
+          </span>
+          Bu platform ve içerdiği tüm grafikler, algoritmik skorlar, bilanço yorumları ve tahmini
+          fiyat projeksiyonları <strong>yalnızca yazılım geliştirme, eğitim ve deneysel araştırma</strong>{" "}
+          amacıyla hazırlanmıştır; <strong>kesinlikle yatırım danışmanlığı veya al-sat-tut tavsiyesi değildir.</strong>{" "}
+          Buradaki veriler ve simülasyonlar ciddiye alınarak finansal işlem yapılmamalıdır.
+        </div>
+      </div>
+
       <section className="mx-auto grid max-w-7xl gap-4 lg:grid-cols-[340px_minmax(0,1fr)] xl:grid-cols-[360px_minmax(0,1fr)]">
         <aside className="rounded-lg border border-[var(--border)] bg-[rgba(13,26,23,0.82)] p-4 shadow-2xl shadow-black/20">
           <div className="mb-4 flex items-center justify-between">
@@ -1076,6 +1092,39 @@ export function MarketDashboard() {
           ) : null}
         </div>
       </section>
+
+      <footer className="mx-auto mt-8 max-w-7xl rounded-lg border border-amber-400/25 bg-[rgba(13,26,23,0.9)] p-4 text-xs leading-6 text-[var(--muted)] shadow-xl shadow-black/20 md:p-5">
+        <div className="flex items-center gap-2 font-semibold uppercase tracking-[0.12em] text-amber-200">
+          <AlertTriangle size={16} />
+          <span>Yasal Uyarı ve Sorumluluk Reddi Beyanı (SPK Mevzuatı & Genel Uyarı)</span>
+        </div>
+        <p className="mt-2 text-white/85">
+          Bu web sayfası ve yazılım projesi (<strong>Finansman Asistanı</strong>), tamamen{" "}
+          <strong>eğitim, yazılım mimarisi geliştirme ve algoritmik veri görselleştirme</strong>{" "}
+          amacıyla oluşturulmuş deneysel bir çalışmadır. Uygulama içerisinde yer alan hiçbir fiyat
+          verisi, teknik gösterge, destek/direnç seviyesi, temel analiz skoru, 3 ay – 5 yıl vadeli
+          bilanço yorumu, &ldquo;Boğa / Baz / Ayı&rdquo; senaryo fiyat tahminleri, haber özetleri veya
+          yapay zeka (AI) değerlendirmeleri{" "}
+          <strong>
+            6362 sayılı Sermaye Piyasası Kanunu ve ilgili mevzuat kapsamında &ldquo;Yatırım
+            Danışmanlığı&rdquo; veya &ldquo;Yatırım Tavsiyesi&rdquo; niteliği taşımaz.
+          </strong>
+        </p>
+        <p className="mt-2">
+          Yatırım danışmanlığı hizmeti; yalnızca yetkili aracı kurumlar, portföy yönetim şirketleri ve
+          mevduat kabul etmeyen bankalar ile müşteri arasında imzalanacak yatırım danışmanlığı
+          sözleşmesi çerçevesinde sunulmaktadır. Bu platformda sunulan matematiksel projeksiyonlar ve
+          üçüncü taraf açık kaynaklardan (Yahoo Finance, Binance, Google News, FMP vb.) çekilen
+          veriler gecikmeli, eksik veya hatalı olabilir;{" "}
+          <strong className="text-amber-200">
+            bu nedenle buradaki veriler, tahminler ve sinyaller ciddiye alınmamalı ve bunlara
+            dayanılarak kesinlikle gerçek finansal işlem yapılmamalıdır.
+          </strong>{" "}
+          Uygulamadaki bilgilere dayanarak alınacak her türlü kararın hukuki ve mali sorumluluğu
+          münhasıran kullanıcıya aittir; yazılım geliştiricisi doğabilecek doğrudan veya dolaylı
+          hiçbir maddi ya da manevi zarardan sorumlu tutulamaz.
+        </p>
+      </footer>
     </main>
   );
 }

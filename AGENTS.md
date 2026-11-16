@@ -260,3 +260,12 @@ npm run test:all
 - Amaç: HookSentry projesine otomatik retry worker (`/api/v1/cron/retry`) ve `.env.example` eklemek; Finansman Asistanı'nın lint/build derlemesini doğrulayıp Git değişikliklerini kaydetmek.
 - HookSentry: `bb8c72a` commit'i ile GitHub'a pushlandı.
 - Finansman: `npm run lint` ve `npm run build` Turbopack ile sıfır hatayla doğrulandı (24 route derlendi). Uzun vadeli analiz, günlük bülten ve evrensel ajan altyapısı Git'e kaydedilmeye hazırlandı.
+
+### 2026-11-16 — Web Arayüzü ve README Yasal Uyarı / Sorumluluk Reddi Beyanı Eklendi ve GitHub'a Pushlandı
+
+- Amaç: Projenin hem web arayüzüne hem de `README.md` dokümanına, 6362 sayılı Sermaye Piyasası Kanunu (SPK) ve genel hukuki sorumluluk reddi çerçevesinde "yatırım tavsiyesi veya danışmanlık amacıyla yapılmadığı, verilerin deneysel simülasyon olduğu ve ciddiye alınarak işlem yapılmaması gerektiği" yönünde kapsamlı yasal uyarılar eklemek ve GitHub'a (`origin/main`) pushlamak.
+- Değişen Dosyalar:
+  - `src/components/market-dashboard.tsx`: Üst uyarı bandı (`aria-label="Yasal uyari bandi"`) ve sayfa altı kapsamlı SPK / Sorumluluk Reddi `<footer>` bölümü eklendi.
+  - `src/components/long-term-research-panel.tsx`: Uzun vadeli bilanço ve tahmini fiyat projeksiyonları panelindeki yasal uyarı kutusu güçlendirildi.
+  - `README.md`: En üstte dikkat çekici `> [!CAUTION]` yasal uyarı ve sorumluluk reddi beyanı ile birlikte proje tanıtımı, teknoloji yığını ve kurulum adımlarını içeren kapsamlı dokümantasyon oluşturuldu.
+- Doğrulama & Dağıtım: `npm run lint` ve `npm run build` ile sıfır hatayla doğrulandı ve tüm değişiklikler GitHub (`https://github.com/BurakGuldal10/finans_web.git`) `main` dalına pushlandı.

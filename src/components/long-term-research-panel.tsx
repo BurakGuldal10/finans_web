@@ -217,11 +217,19 @@ function ResearchReport({ research }: { research: LongTermResearch }) {
         <ListCard items={research.dataNotes} title="Veri ve yöntem notları" tone="default" />
       </div>
 
-      <p className="rounded-md border border-yellow-300/20 bg-yellow-300/10 p-4 text-xs leading-5 text-yellow-100">
-        Bu rapor kişiye özel yatırım danışmanlığı değildir. Skor geçmiş ve güncel verileri düzenler;
-        gelecek getiriyi garanti etmez. Portföy büyüklüğü, gelir ihtiyacı, likidite ve risk toleransı
-        ayrıca değerlendirilmelidir.
-      </p>
+      <div className="rounded-md border border-amber-300/30 bg-amber-300/10 p-4 text-xs leading-6 text-amber-100">
+        <p className="font-semibold uppercase tracking-[0.08em] text-amber-200">
+          ⚠️ Yasal Uyarı — Yatırım Tavsiyesi ve Danışmanlık Değildir
+        </p>
+        <p className="mt-1">
+          Bu modülde yer alan 3 ay – 5 yıl vadeli bilanço yorumları, puanlamalar ve &ldquo;Boğa / Baz /
+          Ayı&rdquo; tahmini fiyat hareketleri tamamen deneysel ve eğitim amaçlı matematiksel
+          simülasyonlardır; <strong>kesinlikle yatırım tavsiyesi veya yatırım danışmanlığı amacıyla
+          yapılmamıştır.</strong> Üçüncü taraf veriler eksik veya hatalı olabilir. Buradaki veriler
+          ve fiyat projeksiyonları ciddiye alınarak alım-satım kararı verilmemelidir; oluşabilecek
+          her türlü finansal kayıptan kullanıcı tek başına sorumludur.
+        </p>
+      </div>
     </>
   );
 }
