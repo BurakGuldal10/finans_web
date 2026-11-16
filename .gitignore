@@ -33,6 +33,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# markdown files (keep local only, do not push to GitHub except main README.md)
+# markdown files (keep local only, do not push to GitHub except root README.md)
 *.md
-!README.md
+!/README.md
